@@ -1,0 +1,5 @@
+appid: app-bank
+cluster: dev
+url: https://apldev.yoyitong.com/config
+namespace: application
+secret: 92950c46db184fc8894c2041e5c16f8a
