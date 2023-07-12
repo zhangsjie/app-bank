@@ -9,6 +9,9 @@ require (
 	github.com/google/wire v0.5.0
 	github.com/pkg/errors v0.9.1
 	github.com/satori/go.uuid v1.2.0
+	gitlab.yoyiit.com/youyi/app-base v0.0.0-20230712065459-f8b75483c813
+	gitlab.yoyiit.com/youyi/app-dingtalk v0.0.0-20230712065552-eaf776f0399c
+	gitlab.yoyiit.com/youyi/app-oa v0.0.0-20230712065801-d6dc65f3988e
 	gitlab.yoyiit.com/youyi/go-common v0.0.0-20230711173232-999a9803097f
 	gitlab.yoyiit.com/youyi/go-core v0.0.0-20230711184848-0d2f7ee4aca1
 	go.uber.org/zap v1.24.0
