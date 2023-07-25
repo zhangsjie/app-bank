@@ -2741,6 +2741,7 @@ func (s *bankService) CreateVirtualAccount(ctx context.Context, req *api.CreateV
 //	@return error
 func (s *bankService) QueryVirtualAccountBalance(ctx context.Context, organizationId int64, bankType string) (*api.VirtualAccountBalanceData, error) {
 	bankTypeStr := ""
+	var resultVirtualAccountBalance float64
 	if bankType == enum.SPDBankType {
 		bankTypeStr = "浦发银行"
 	} else if bankType == enum.GuilinBankType {
@@ -2802,6 +2803,7 @@ func (s *bankService) QueryVirtualAccountBalance(ctx context.Context, organizati
 		}
 		// 更新数据库
 		virtualAccount.VirtualAccountBalance = virtualAccountBalance
+		resultVirtualAccountBalance = virtualAccountBalance
 		err = s.baseClient.EditOrganizationBankVirtualAccount(ctx, virtualAccount)
 		if err != nil {
 			zap.L().Error(fmt.Sprintf("母账号:%s 更新虚账号: %s 金额失败\n", virtualAccountParentNo, virtualAccount.VirtualAccountNo))
@@ -2829,6 +2831,7 @@ func (s *bankService) QueryVirtualAccountBalance(ctx context.Context, organizati
 			return nil, handler.HandleError(err)
 		}
 		virtualAccount.VirtualAccountBalance = acctBalance
+		resultVirtualAccountBalance = acctBalance
 		//更新金额
 		err = s.baseClient.EditOrganizationBankVirtualAccount(ctx, virtualAccount)
 		if err != nil {
@@ -2850,7 +2853,7 @@ func (s *bankService) QueryVirtualAccountBalance(ctx context.Context, organizati
 
 	return &api.VirtualAccountBalanceData{
 		VirtualAccountNo:       virtualAccount.VirtualAccountNo,
-		VirtualBalance:         virtualAccount.VirtualAccountBalance,
+		VirtualBalance:         resultVirtualAccountBalance,
 		UpdateTime:             virtualAccount.UpdatedAt,
 		BankType:               bankTypeStr,
 		VirtualAccountName:     config.GetString(bankEnum.PinganIntelligenceAccountName, ""),
