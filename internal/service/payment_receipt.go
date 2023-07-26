@@ -16,6 +16,8 @@ import (
 	"gitlab.yoyiit.com/youyi/app-dingtalk/kitex_gen/api/dingtalk"
 	oaApi "gitlab.yoyiit.com/youyi/app-oa/kitex_gen/api"
 	"gitlab.yoyiit.com/youyi/app-oa/kitex_gen/api/oa"
+	api2 "gitlab.yoyiit.com/youyi/app-soms/kitex_gen/api"
+	"gitlab.yoyiit.com/youyi/app-soms/kitex_gen/api/soms"
 	"gitlab.yoyiit.com/youyi/go-common/enum"
 	"gitlab.yoyiit.com/youyi/go-core/config"
 	"gitlab.yoyiit.com/youyi/go-core/handler"
@@ -58,6 +60,7 @@ type paymentReceiptService struct {
 	pinganBankSDK      sdk.PinganBankSDK
 	oaClient           oa.Client
 	dingtalkClient     dingtalk.Client
+	somsClient         soms.Client
 }
 
 func (s *paymentReceiptService) ListPaymentReceipt(ctx context.Context, req *api.ListPaymentReceiptRequest) (resp *api.ListPaymentReceiptResponse, err error) {
@@ -251,6 +254,16 @@ func (s *paymentReceiptService) updatePaymentApplicationOrderStatus(ctx context.
 		}); err != nil {
 			return handler.HandleError(err)
 		}
+	}
+	//调用进销存模块
+	if orderStatus == enum.GuilinBankTransferSuccessResult && paymentApplication.BusType != "" && paymentApplication.BusType != "0" && paymentApplication.BusOrderNo != "" {
+		s.somsClient.EditSimsOrderAmount(ctx, &api2.SimsOrderAmountData{
+			ReturnFlag: "0",
+			PayType:    "1",
+			Amount:     paymentApplication.PayAmount,
+			BusType:    paymentApplication.BusType,
+			BillCode:   paymentApplication.BusOrderNo,
+		})
 	}
 	return nil
 }

@@ -12,11 +12,14 @@ import (
 	"gitlab.yoyiit.com/youyi/app-dingtalk/rpc_dingtalk"
 	"gitlab.yoyiit.com/youyi/app-oa/kitex_gen/api/oa"
 	"gitlab.yoyiit.com/youyi/app-oa/rpc_oa"
+	"gitlab.yoyiit.com/youyi/app-soms/kitex_gen/api/soms"
+	"gitlab.yoyiit.com/youyi/app-soms/rpc_soms"
 	"gitlab.yoyiit.com/youyi/go-core/store"
 )
 
 var ProviderSet = wire.NewSet(NewBankService, store.NewKafkaProducer, rpc_dingtalk.NewDingtalkClient, store.NewOSSConfig,
-	rpc_base.NewBaseClient, NewPaymentReceiptService, rpc_oa.NewOAClient, NewPdfToImageService, process.NewProcessAuthRepo)
+	rpc_base.NewBaseClient, NewPaymentReceiptService, rpc_oa.NewOAClient, NewPdfToImageService, process.NewProcessAuthRepo,
+	rpc_soms.NewSomsClient)
 
 func NewBankService(baseClient base.Client, guilinBankSDK sdk.GuilinBankSDK, spdBankSDK sdk.SPDBankSDK, pinganBankSDK sdk.PinganBankSDK,
 	bankTransferReceiptRepo repo.BankTransferReceiptRepo, kafkaProducer *store.KafkaProducer, dingtalkClient dingtalk.Client,
@@ -32,7 +35,8 @@ func NewBankService(baseClient base.Client, guilinBankSDK sdk.GuilinBankSDK, spd
 
 func NewPaymentReceiptService(paymentReceiptSubProcess *sub_process.PaymentReceiptSubProcess, baseClient base.Client,
 	paymentReceiptRepo repo.PaymentReceiptRepo, bankCodeRepo repo.BankCodeRepo, guilinBankSDK sdk.GuilinBankSDK,
-	spdBankSDK sdk.SPDBankSDK, pinganBankSDK sdk.PinganBankSDK, oaClient oa.Client, dingtalkClient dingtalk.Client, processAuthRepo process.ProcessAuthRepo) PaymentReceiptService {
+	spdBankSDK sdk.SPDBankSDK, pinganBankSDK sdk.PinganBankSDK, oaClient oa.Client, dingtalkClient dingtalk.Client,
+	processAuthRepo process.ProcessAuthRepo, somsClient soms.Client) PaymentReceiptService {
 	return &paymentReceiptService{
 		process.Process{
 			SubProcess:      paymentReceiptSubProcess,
@@ -40,7 +44,7 @@ func NewPaymentReceiptService(paymentReceiptSubProcess *sub_process.PaymentRecei
 			ProcessAuthRepo: processAuthRepo,
 		},
 		paymentReceiptRepo, baseClient, bankCodeRepo, guilinBankSDK,
-		spdBankSDK, pinganBankSDK, oaClient, dingtalkClient,
+		spdBankSDK, pinganBankSDK, oaClient, dingtalkClient, somsClient,
 	}
 }
 

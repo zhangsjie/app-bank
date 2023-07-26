@@ -16,6 +16,7 @@ import (
 	"gitlab.yoyiit.com/youyi/app-base/rpc_base"
 	"gitlab.yoyiit.com/youyi/app-dingtalk/rpc_dingtalk"
 	"gitlab.yoyiit.com/youyi/app-oa/rpc_oa"
+	"gitlab.yoyiit.com/youyi/app-soms/rpc_soms"
 	"gitlab.yoyiit.com/youyi/go-core/store"
 	"gitlab.yoyiit.com/youyi/go-core/trace"
 )
@@ -47,7 +48,8 @@ func initServer() (server.Server, error) {
 	bankService := service.NewBankService(client, guilinBankSDK, spdBankSDK, pinganBankSDK, bankTransferReceiptRepo, kafkaProducer, dingtalkClient, bankTransactionDetailRepo, bankTransactionDetailProcessInstanceRepo, ossConfig, bankCodeRepo, bankBusinessPayrollRepo, bankBusinessPayrollDetailRepo, oaClient, paymentReceiptRepo, pdfToImageService)
 	paymentReceiptSubProcess := sub_process.NewPaymentReceiptSubProcess(paymentReceiptRepo, oaClient, client)
 	processAuthRepo := process.NewProcessAuthRepo(db)
-	paymentReceiptService := service.NewPaymentReceiptService(paymentReceiptSubProcess, client, paymentReceiptRepo, bankCodeRepo, guilinBankSDK, spdBankSDK, pinganBankSDK, oaClient, dingtalkClient, processAuthRepo)
+	somsClient := rpc_soms.NewSomsClient()
+	paymentReceiptService := service.NewPaymentReceiptService(paymentReceiptSubProcess, client, paymentReceiptRepo, bankCodeRepo, guilinBankSDK, spdBankSDK, pinganBankSDK, oaClient, dingtalkClient, processAuthRepo, somsClient)
 	bank := newBankImpl(bankService, paymentReceiptService)
 	serverServer := newServer(bank)
 	return serverServer, nil
