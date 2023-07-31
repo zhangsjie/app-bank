@@ -284,3 +284,9 @@ func (s *BankImpl) CommentPaymentReceipt(ctx context.Context, req *api.PaymentRe
 	// TODO: Your code here...
 	return s.paymentReceiptService.Comment(ctx, req.ProcessInstanceId, req.Remark)
 }
+
+// AddTagPaymentReceipt implements the BankImpl interface.
+func (s *BankImpl) AddTagPaymentReceipt(ctx context.Context, req *api.PaymentReceiptData) (err error) {
+	// TODO: Your code here...
+	return s.paymentReceiptService.AddTag(ctx, req.Id, req.ProcessAddTagItemVO, req)
+}

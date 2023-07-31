@@ -448,6 +448,7 @@ struct PaymentReceiptData {
     38: string refundSuccess
     39: string receiptOrderNo
     40: string remark
+    41: ProcessAddTagItemVO processAddTagItemVO
 }
 
 struct ListPaymentReceiptRequest {
@@ -497,6 +498,17 @@ struct pinganUserAcctSignatureApplyResponse  {
 	2: string  opFlag
 	3: string  stt
 	4: string  accountNo
+}
+
+struct ProcessAddTagItemVO {
+	1: i64 tagType
+	2: i64 nodeType
+	3: list<ProcessAddTagItemUserVO> itemUsers
+	4: i64 processInstanceId
+}
+struct ProcessAddTagItemUserVO {
+	1: i64 userId
+	2: string nickName
 }
 
 service bank {
@@ -559,6 +571,7 @@ service bank {
     void sendBackPaymentApplication(1: i64 id, 2: PaymentReceiptData req, 3: string remark)
     void withDrawPaymentReceipt(1: i64 id, 2: PaymentReceiptData req)
     void commentPaymentReceipt(1: PaymentReceiptData req)
+    void addTagPaymentReceipt(1: PaymentReceiptData req)
 
     void handleSyncPaymentReceipt(1: string beginDate, 2: string endDate, 3: i64 organizationId)
     void syncPaymentReceipt(1: i64 taskId, 2: binary param, 3: i64 organizationId)
