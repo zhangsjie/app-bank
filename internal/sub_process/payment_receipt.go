@@ -26,6 +26,10 @@ type PaymentReceiptSubProcess struct {
 	baseClient         base.Client
 }
 
+func (p *PaymentReceiptSubProcess) Transmit(ctx context.Context, param interface{}) error {
+	return nil
+}
+
 func (p *PaymentReceiptSubProcess) WithDraw(ctx context.Context, id int64, param interface{}) error {
 	req := param.(*api2.ProcessResultData)
 	//跨节点删除
@@ -120,10 +124,6 @@ func (p *PaymentReceiptSubProcess) Refuse(ctx context.Context, id int64, param i
 }
 
 func (p *PaymentReceiptSubProcess) SystemRefuse(ctx context.Context, id int64, param interface{}) error {
-	return nil
-}
-
-func (p *PaymentReceiptSubProcess) Transmit(ctx context.Context, transmitUserId int64) error {
 	return nil
 }
 

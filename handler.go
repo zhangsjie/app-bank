@@ -245,7 +245,7 @@ func (s *BankImpl) PinganBankAccountSignatureQuery(ctx context.Context, req *api
 
 // TransmitPaymentReceipt implements the BankImpl interface.
 func (s *BankImpl) TransmitPaymentReceipt(ctx context.Context, processInstanceId int64, transmitUserId int64) (err error) {
-	return s.paymentReceiptService.Transmit(ctx, processInstanceId, transmitUserId)
+	return s.paymentReceiptService.Transmit(ctx, processInstanceId, transmitUserId, nil)
 }
 
 // EditBankTransactionDetailExtField implements the BankImpl interface.
