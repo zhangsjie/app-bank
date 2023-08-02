@@ -27006,6 +27006,7 @@ type ProcessAddTagItemVO struct {
 	NodeType          int64                      `thrift:"nodeType,2" frugal:"2,default,i64" json:"nodeType"`
 	ItemUsers         []*ProcessAddTagItemUserVO `thrift:"itemUsers,3" frugal:"3,default,list<ProcessAddTagItemUserVO>" json:"itemUsers"`
 	ProcessInstanceId int64                      `thrift:"processInstanceId,4" frugal:"4,default,i64" json:"processInstanceId"`
+	NodeExplain       string                     `thrift:"nodeExplain,5" frugal:"5,default,string" json:"nodeExplain"`
 }
 
 func NewProcessAddTagItemVO() *ProcessAddTagItemVO {
@@ -27031,6 +27032,10 @@ func (p *ProcessAddTagItemVO) GetItemUsers() (v []*ProcessAddTagItemUserVO) {
 func (p *ProcessAddTagItemVO) GetProcessInstanceId() (v int64) {
 	return p.ProcessInstanceId
 }
+
+func (p *ProcessAddTagItemVO) GetNodeExplain() (v string) {
+	return p.NodeExplain
+}
 func (p *ProcessAddTagItemVO) SetTagType(val int64) {
 	p.TagType = val
 }
@@ -27043,12 +27048,16 @@ func (p *ProcessAddTagItemVO) SetItemUsers(val []*ProcessAddTagItemUserVO) {
 func (p *ProcessAddTagItemVO) SetProcessInstanceId(val int64) {
 	p.ProcessInstanceId = val
 }
+func (p *ProcessAddTagItemVO) SetNodeExplain(val string) {
+	p.NodeExplain = val
+}
 
 var fieldIDToName_ProcessAddTagItemVO = map[int16]string{
 	1: "tagType",
 	2: "nodeType",
 	3: "itemUsers",
 	4: "processInstanceId",
+	5: "nodeExplain",
 }
 
 func (p *ProcessAddTagItemVO) Read(iprot thrift.TProtocol) (err error) {
@@ -27103,6 +27112,16 @@ func (p *ProcessAddTagItemVO) Read(iprot thrift.TProtocol) (err error) {
 		case 4:
 			if fieldTypeId == thrift.I64 {
 				if err = p.ReadField4(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				if err = iprot.Skip(fieldTypeId); err != nil {
+					goto SkipFieldError
+				}
+			}
+		case 5:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField5(iprot); err != nil {
 					goto ReadFieldError
 				}
 			} else {
@@ -27187,6 +27206,15 @@ func (p *ProcessAddTagItemVO) ReadField4(iprot thrift.TProtocol) error {
 	return nil
 }
 
+func (p *ProcessAddTagItemVO) ReadField5(iprot thrift.TProtocol) error {
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		p.NodeExplain = v
+	}
+	return nil
+}
+
 func (p *ProcessAddTagItemVO) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
 	if err = oprot.WriteStructBegin("ProcessAddTagItemVO"); err != nil {
@@ -27207,6 +27235,10 @@ func (p *ProcessAddTagItemVO) Write(oprot thrift.TProtocol) (err error) {
 		}
 		if err = p.writeField4(oprot); err != nil {
 			fieldId = 4
+			goto WriteFieldError
+		}
+		if err = p.writeField5(oprot); err != nil {
+			fieldId = 5
 			goto WriteFieldError
 		}
 
@@ -27304,6 +27336,23 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 4 end error: ", p), err)
 }
 
+func (p *ProcessAddTagItemVO) writeField5(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("nodeExplain", thrift.STRING, 5); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteString(p.NodeExplain); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 5 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 5 end error: ", p), err)
+}
+
 func (p *ProcessAddTagItemVO) String() string {
 	if p == nil {
 		return "<nil>"
@@ -27327,6 +27376,9 @@ func (p *ProcessAddTagItemVO) DeepEqual(ano *ProcessAddTagItemVO) bool {
 		return false
 	}
 	if !p.Field4DeepEqual(ano.ProcessInstanceId) {
+		return false
+	}
+	if !p.Field5DeepEqual(ano.NodeExplain) {
 		return false
 	}
 	return true
@@ -27362,6 +27414,13 @@ func (p *ProcessAddTagItemVO) Field3DeepEqual(src []*ProcessAddTagItemUserVO) bo
 func (p *ProcessAddTagItemVO) Field4DeepEqual(src int64) bool {
 
 	if p.ProcessInstanceId != src {
+		return false
+	}
+	return true
+}
+func (p *ProcessAddTagItemVO) Field5DeepEqual(src string) bool {
+
+	if strings.Compare(p.NodeExplain, src) != 0 {
 		return false
 	}
 	return true

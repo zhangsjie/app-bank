@@ -505,6 +505,7 @@ struct ProcessAddTagItemVO {
 	2: i64 nodeType
 	3: list<ProcessAddTagItemUserVO> itemUsers
 	4: i64 processInstanceId
+	5: string nodeExplain
 }
 struct ProcessAddTagItemUserVO {
 	1: i64 userId

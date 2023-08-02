@@ -21937,6 +21937,20 @@ func (p *ProcessAddTagItemVO) FastRead(buf []byte) (int, error) {
 					goto SkipFieldError
 				}
 			}
+		case 5:
+			if fieldTypeId == thrift.STRING {
+				l, err = p.FastReadField5(buf[offset:])
+				offset += l
+				if err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
+				offset += l
+				if err != nil {
+					goto SkipFieldError
+				}
+			}
 		default:
 			l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
 			offset += l
@@ -22041,6 +22055,20 @@ func (p *ProcessAddTagItemVO) FastReadField4(buf []byte) (int, error) {
 	return offset, nil
 }
 
+func (p *ProcessAddTagItemVO) FastReadField5(buf []byte) (int, error) {
+	offset := 0
+
+	if v, l, err := bthrift.Binary.ReadString(buf[offset:]); err != nil {
+		return offset, err
+	} else {
+		offset += l
+
+		p.NodeExplain = v
+
+	}
+	return offset, nil
+}
+
 // for compatibility
 func (p *ProcessAddTagItemVO) FastWrite(buf []byte) int {
 	return 0
@@ -22054,6 +22082,7 @@ func (p *ProcessAddTagItemVO) FastWriteNocopy(buf []byte, binaryWriter bthrift.B
 		offset += p.fastWriteField2(buf[offset:], binaryWriter)
 		offset += p.fastWriteField4(buf[offset:], binaryWriter)
 		offset += p.fastWriteField3(buf[offset:], binaryWriter)
+		offset += p.fastWriteField5(buf[offset:], binaryWriter)
 	}
 	offset += bthrift.Binary.WriteFieldStop(buf[offset:])
 	offset += bthrift.Binary.WriteStructEnd(buf[offset:])
@@ -22068,6 +22097,7 @@ func (p *ProcessAddTagItemVO) BLength() int {
 		l += p.field2Length()
 		l += p.field3Length()
 		l += p.field4Length()
+		l += p.field5Length()
 	}
 	l += bthrift.Binary.FieldStopLength()
 	l += bthrift.Binary.StructEndLength()
@@ -22117,6 +22147,15 @@ func (p *ProcessAddTagItemVO) fastWriteField4(buf []byte, binaryWriter bthrift.B
 	return offset
 }
 
+func (p *ProcessAddTagItemVO) fastWriteField5(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+	offset := 0
+	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "nodeExplain", thrift.STRING, 5)
+	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.NodeExplain)
+
+	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
+	return offset
+}
+
 func (p *ProcessAddTagItemVO) field1Length() int {
 	l := 0
 	l += bthrift.Binary.FieldBeginLength("tagType", thrift.I64, 1)
@@ -22151,6 +22190,15 @@ func (p *ProcessAddTagItemVO) field4Length() int {
 	l := 0
 	l += bthrift.Binary.FieldBeginLength("processInstanceId", thrift.I64, 4)
 	l += bthrift.Binary.I64Length(p.ProcessInstanceId)
+
+	l += bthrift.Binary.FieldEndLength()
+	return l
+}
+
+func (p *ProcessAddTagItemVO) field5Length() int {
+	l := 0
+	l += bthrift.Binary.FieldBeginLength("nodeExplain", thrift.STRING, 5)
+	l += bthrift.Binary.StringLengthNocopy(p.NodeExplain)
 
 	l += bthrift.Binary.FieldEndLength()
 	return l
