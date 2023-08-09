@@ -15,6 +15,7 @@ import (
 	"gitlab.yoyiit.com/youyi/app-base/kitex_gen/api/base"
 	dingtalkApi "gitlab.yoyiit.com/youyi/app-dingtalk/kitex_gen/api"
 	"gitlab.yoyiit.com/youyi/app-dingtalk/kitex_gen/api/dingtalk"
+	"gitlab.yoyiit.com/youyi/app-finance/kitex_gen/api/finance"
 	oaApi "gitlab.yoyiit.com/youyi/app-oa/kitex_gen/api"
 	"gitlab.yoyiit.com/youyi/app-oa/kitex_gen/api/oa"
 	"gitlab.yoyiit.com/youyi/go-common/enum"
@@ -122,6 +123,7 @@ type bankService struct {
 	oaClient                                 oa.Client
 	paymentReceiptRepo                       repo.PaymentReceiptRepo
 	pdfToImageService                        PdfToImageService
+	financeClient                            finance.Client
 }
 
 func (s *bankService) GetBankTransferReceipt(ctx context.Context, req *api.BankTransferReceiptData) (*api.BankTransferReceiptData, error) {
@@ -1147,11 +1149,20 @@ func (s *bankService) updateRelevanceElectronicDocument(ctx context.Context, sum
 				return handler.HandleError(err)
 			}
 			if paymentApplication != nil && paymentApplication.Id != 0 {
-				return handler.HandleError(s.oaClient.EditPaymentApplicationWithoutPermission(ctx, &oaApi.PaymentApplicationData{
+				err := s.oaClient.EditPaymentApplicationWithoutPermission(ctx, &oaApi.PaymentApplicationData{
 					Id:                    paymentApplication.Id,
 					ElectronicDocument:    electronicDocument,
 					ElectronicDocumentPng: electronicDocumentPng,
-				}))
+				})
+				if err != nil {
+					return handler.HandleError(err)
+				}
+				// 流水同步到财务
+				err = s.financeClient.SyncBankFlowByPayApplicationId(ctx, paymentApplication.Id)
+				if err != nil {
+					return handler.HandleError(err)
+				}
+				return nil
 			}
 		} else if paymentReceipt.Type == "2" {
 			// 报销申请单

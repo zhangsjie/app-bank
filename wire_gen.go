@@ -15,6 +15,7 @@ import (
 	"gitlab.yoyiit.com/youyi/app-base/process"
 	"gitlab.yoyiit.com/youyi/app-base/rpc_base"
 	"gitlab.yoyiit.com/youyi/app-dingtalk/rpc_dingtalk"
+	"gitlab.yoyiit.com/youyi/app-finance/rpc_finance"
 	"gitlab.yoyiit.com/youyi/app-oa/rpc_oa"
 	"gitlab.yoyiit.com/youyi/app-soms/rpc_soms"
 	"gitlab.yoyiit.com/youyi/go-core/store"
@@ -45,7 +46,8 @@ func initServer() (server.Server, error) {
 	oaClient := rpc_oa.NewOAClient()
 	paymentReceiptRepo := repo.NewPaymentReceiptRepo(db)
 	pdfToImageService := service.NewPdfToImageService(ossConfig)
-	bankService := service.NewBankService(client, guilinBankSDK, spdBankSDK, pinganBankSDK, bankTransferReceiptRepo, kafkaProducer, dingtalkClient, bankTransactionDetailRepo, bankTransactionDetailProcessInstanceRepo, ossConfig, bankCodeRepo, bankBusinessPayrollRepo, bankBusinessPayrollDetailRepo, oaClient, paymentReceiptRepo, pdfToImageService)
+	financeClient := rpc_finance.NewFinanceClient()
+	bankService := service.NewBankService(client, guilinBankSDK, spdBankSDK, pinganBankSDK, bankTransferReceiptRepo, kafkaProducer, dingtalkClient, bankTransactionDetailRepo, bankTransactionDetailProcessInstanceRepo, ossConfig, bankCodeRepo, bankBusinessPayrollRepo, bankBusinessPayrollDetailRepo, oaClient, paymentReceiptRepo, pdfToImageService, financeClient)
 	paymentReceiptSubProcess := sub_process.NewPaymentReceiptSubProcess(paymentReceiptRepo, oaClient, client)
 	processAuthRepo := process.NewProcessAuthRepo(db)
 	somsClient := rpc_soms.NewSomsClient()
