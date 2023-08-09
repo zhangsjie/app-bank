@@ -26,6 +26,16 @@ type PaymentReceiptSubProcess struct {
 	baseClient         base.Client
 }
 
+func (p *PaymentReceiptSubProcess) SubmitBefore(ctx context.Context, id int64, param interface{}) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (p *PaymentReceiptSubProcess) Cancel(ctx context.Context, processInstanceId int64) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (p *PaymentReceiptSubProcess) Transmit(ctx context.Context, param interface{}) error {
 	return nil
 }
