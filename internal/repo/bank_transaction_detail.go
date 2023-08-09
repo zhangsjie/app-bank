@@ -7,6 +7,7 @@ import (
 	"gitlab.yoyiit.com/youyi/go-core/repository"
 	"gitlab.yoyiit.com/youyi/go-core/util"
 	"strconv"
+	"strings"
 )
 
 type BankTransactionDetailDBData struct {
@@ -145,6 +146,7 @@ func (param *BankTransactionDetailDBDataParam) listConditions() []*repository.Co
 type BankTransactionDetailRepo interface {
 	repository.BaseCommonRepo
 	Get(context.Context, *BankTransactionDetailDBData) (*BankTransactionDetailDBData, error)
+	SimpleGet(context.Context, *BankTransactionDetailDBData) (*BankTransactionDetailDBData, error)
 	Count(context.Context, *BankTransactionDetailDBDataParam) (int64, error)
 	List(context.Context, string, int32, int32, *BankTransactionDetailDBDataParam) (*[]BankTransactionDetailDBData, int64, error)
 	CashFlowCount(*TransactionDetailTimeParam, int64) (*[]string, *[]float64, *[]float64, error)
@@ -161,6 +163,24 @@ func (r *bankTransactionDetailRepo) Get(ctx context.Context, param *BankTransact
 		return nil, handler.HandleError(err)
 	}
 	return data.(*BankTransactionDetailDBData), handler.HandleError(err)
+}
+
+func (r *bankTransactionDetailRepo) SimpleGet(ctx context.Context, param *BankTransactionDetailDBData) (*BankTransactionDetailDBData, error) {
+	conditions := []string{"deleted = ?"}
+	params := []interface{}{0}
+	if param.Id > 0 {
+		conditions = append(conditions, "id = ?")
+		params = append(params, param.Id)
+	}
+	if param.ElectronicReceiptFile != "" {
+		conditions = append(conditions, "electronic_receipt_file = ?")
+		params = append(params, param.ElectronicReceiptFile)
+	}
+
+	var result BankTransactionDetailDBData
+	db := r.Db.WithContext(ctx).Where(strings.Join(conditions, " and "), params...)
+	err := db.Find(&result).Error
+	return &result, handler.HandleError(err)
 }
 
 func (r *bankTransactionDetailRepo) List(ctx context.Context, order string, pageNum, pageSize int32, param *BankTransactionDetailDBDataParam) (*[]BankTransactionDetailDBData, int64, error) {

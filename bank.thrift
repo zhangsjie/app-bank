@@ -525,6 +525,7 @@ service bank {
 
     ListBankTransactionDetailResponse listBankTransactionDetail(1: ListBankTransactionDetailRequest req)
     BankTransactionDetailData getBankTransactionDetail(1: BankTransactionDetailData req)
+    BankTransactionDetailData simpleGetBankTransactionDetail(1: BankTransactionDetailData req)
     void handleTransactionDetail(1: string beginDate, 2: string endDate, 3: i64 organizationId)
     void createTransactionDetailProcessInstance(1: i64 id)
     void EditBankTransactionDetailExtField(1: BankTransactionDetailData req)

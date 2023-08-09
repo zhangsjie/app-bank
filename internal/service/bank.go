@@ -49,6 +49,7 @@ type BankService interface {
 
 	ListBankTransactionDetail(context.Context, *api.ListBankTransactionDetailRequest) (*api.ListBankTransactionDetailResponse, error)
 	GetBankTransactionDetail(context.Context, *api.BankTransactionDetailData) (*api.BankTransactionDetailData, error)
+	SimpleGetBankTransactionDetail(context.Context, *api.BankTransactionDetailData) (*api.BankTransactionDetailData, error)
 	CreateTransactionDetailProcessInstance(ctx context.Context, id int64) error
 	EditBankTransactionDetailExtField(ctx context.Context, req *api.BankTransactionDetailData) error
 
@@ -786,6 +787,27 @@ func (s *bankService) GetBankTransactionDetail(ctx context.Context, req *api.Ban
 		return nil, handler.HandleError(err)
 	}
 	merchantAccountData, err := s.baseClient.GetOrganizationBankAccount(ctx, &baseApi.OrganizationBankAccountData{
+		Id: dbData.MerchantAccountId,
+	})
+	if err != nil {
+		return nil, handler.HandleError(err)
+	}
+	return stru.ConvertBankTransactionDetailDataAndMerchantAccount(*dbData, merchantAccountData.Account), nil
+}
+
+func (s *bankService) SimpleGetBankTransactionDetail(ctx context.Context, req *api.BankTransactionDetailData) (*api.BankTransactionDetailData, error) {
+	dbData, err := s.bankTransactionDetailRepo.SimpleGet(ctx, &repo.BankTransactionDetailDBData{
+		BaseDBData: repository.BaseDBData{
+			BaseCommonDBData: repository.BaseCommonDBData{
+				Id: req.Id,
+			},
+		},
+		ElectronicReceiptFile: req.ElectronicReceiptFile,
+	})
+	if err != nil {
+		return nil, handler.HandleError(err)
+	}
+	merchantAccountData, err := s.baseClient.SimpleGetOrganizationBankAccount(ctx, &baseApi.OrganizationBankAccountData{
 		Id: dbData.MerchantAccountId,
 	})
 	if err != nil {

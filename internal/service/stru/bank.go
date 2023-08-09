@@ -180,6 +180,7 @@ func ConvertBankTransactionDetailDataAndMerchantAccount(dbData repo.BankTransact
 		OperationUser:         dbData.OperationUserName,
 		OperationComment:      dbData.OperationComment,
 		ProcessTotalStatus:    dbData.ProcessTotalStatus,
+		PayAccountType:        dbData.PayAccountType,
 	}
 }
 

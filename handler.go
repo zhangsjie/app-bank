@@ -290,3 +290,9 @@ func (s *BankImpl) AddTagPaymentReceipt(ctx context.Context, req *api.PaymentRec
 	// TODO: Your code here...
 	return s.paymentReceiptService.AddTag(ctx, req.Id, req.ProcessAddTagItemVO, req)
 }
+
+// SimpleGetBankTransactionDetail implements the BankImpl interface.
+func (s *BankImpl) SimpleGetBankTransactionDetail(ctx context.Context, req *api.BankTransactionDetailData) (resp *api.BankTransactionDetailData, err error) {
+	// TODO: Your code here...
+	return s.bankService.SimpleGetBankTransactionDetail(ctx, req)
+}
