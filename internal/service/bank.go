@@ -1157,11 +1157,11 @@ func (s *bankService) updateRelevanceElectronicDocument(ctx context.Context, sum
 				if err != nil {
 					return handler.HandleError(err)
 				}
-				// 流水同步到财务
+				/*// 流水同步到财务
 				err = s.financeClient.SyncBankFlowByPayApplicationId(ctx, paymentApplication.Id)
 				if err != nil {
 					return handler.HandleError(err)
-				}
+				}*/
 				return nil
 			}
 		} else if paymentReceipt.Type == "2" {
