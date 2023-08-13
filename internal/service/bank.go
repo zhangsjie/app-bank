@@ -1170,13 +1170,6 @@ func (s *bankService) updateRelevanceElectronicDocument(ctx context.Context, sum
 			if err != nil {
 				return handler.HandleError(err)
 			}
-
-			a, _ := json.Marshal(reimburseApplication)
-			println("==========")
-			println(string(a))
-			println(electronicDocument)
-			println(electronicDocumentPng)
-			println("++++++++++")
 			if reimburseApplication != nil && reimburseApplication.Id != 0 {
 				return handler.HandleError(s.oaClient.EditReimburseApplicationWithoutPermission(ctx, &oaApi.ReimburseApplicationData{
 					Id:                    reimburseApplication.Id,
