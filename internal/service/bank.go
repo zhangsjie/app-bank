@@ -942,8 +942,11 @@ func (s *bankService) HandleTransactionDetail(ctx context.Context, beginDate str
 		yesterdayString := util.FormatTimeyyyyMMdd(yesterday)
 		s.HandlePinganBankTransactionDetail(ctx, enum.PinganBankType, beginDate, yesterdayString, organizationId)
 	}
-
+	//若endDate==今天,那么要分成两部分来进行
 	s.HandlePinganBankVirtualTransactionDetail(ctx, enum.PinganBankType, beginDate, endDate, organizationId)
+	if endDate == util.FormatTimeyyyyMMdd(now) {
+		s.HandlePinganBankVirtualTransactionDetail(ctx, enum.PinganBankType, endDate, endDate, organizationId)
+	}
 
 	return nil
 }
@@ -1479,12 +1482,12 @@ func (s *bankService) HandlePinganBankTransactionDetail(ctx context.Context, ban
 }
 func (s *bankService) HandlePinganBankVirtualTransactionDetail(ctx context.Context, bankType string, beginDate string, endDate string, organizationId int64) error {
 	virtualBankAccounts, err := s.baseClient.ListOrganizationBankVirtualAccountData(ctx, &baseApi.ListOrganizationBankVirtualAccountRequest{
-		OrganizationId: organizationId,
-		Type:           bankType,
+		//OrganizationId: organizationId,
+		Type: bankType,
 	})
 	//使用主账号去查所有的流水,然后根据摘要中写的去判断数属于哪个子账号
-	bankAccount := config.GetString(bankEnum.PinganIntelligenceAccountNo, "")
-	datas, err := s.pinganBankSDK.ListVirtualTransactionDetail(ctx, bankAccount, beginDate, endDate)
+	bankAccountNo := config.GetString(bankEnum.PinganIntelligenceAccountNo, "")
+	datas, err := s.pinganBankSDK.ListVirtualTransactionDetail(ctx, bankAccountNo, beginDate, endDate)
 	if err != nil {
 		zap.L().Error(fmt.Sprintf("s.pinganBankSDK.HandlePinganBankVirtualTransactionDetail%s", err.Error()))
 	}
@@ -1493,12 +1496,12 @@ func (s *bankService) HandlePinganBankVirtualTransactionDetail(ctx context.Conte
 		var addDatas []repo.BankTransactionDetailDBData
 		feeMap := make(map[string]string)
 		for _, data := range datas {
-			//根据 "Purpose": "代30210294284702[鑫旷世碧园] 付款 （服务费CZ1692263918387）",
+			//根据 "Purpose": "代30210294284702[鑫旷世碧园] 付款 （服务费CZ1692263918387",
 			//寻找子账号,然后根据填入正确的组织id和accountId
 			currentOrganizationId := int64(0)
 			bankAccountId := int64(0)
 			bankAccountName := config.GetString(bankEnum.PinganIntelligenceAccountName, "")
-			subBankAccountNo := bankAccount
+			subBankAccountNo := bankAccountNo
 
 			re := regexp.MustCompile(`\d+`)
 			match := re.FindStringSubmatch(data.Purpose)
@@ -1511,7 +1514,6 @@ func (s *bankService) HandlePinganBankVirtualTransactionDetail(ctx context.Conte
 						bankAccountName = subAccount.VirtualAccountName
 						break
 					}
-
 				}
 			}
 
@@ -1597,7 +1599,7 @@ func (s *bankService) HandlePinganBankVirtualTransactionDetail(ctx context.Conte
 				request := sdkStru.PinganSameDayHistoryReceiptDataQueryRequest{
 					MrchCode:         config.GetString(bankEnum.PinganIntelligenceMrchCode, ""),
 					CnsmrSeqNo:       serialNo,
-					OutAccNo:         bankAccount,
+					OutAccNo:         bankAccountNo,
 					AccountBeginDate: data.HostDate,
 					AccountEndDate:   data.HostDate,
 					HostFlow:         data.HostTrace,
@@ -1612,10 +1614,6 @@ func (s *bankService) HandlePinganBankVirtualTransactionDetail(ctx context.Conte
 				}
 				addDatas = append(addDatas, transactionDetailDBData)
 
-				//更新单据的回单
-				if err = s.updateRelevanceElectronicDocument(ctx, "", data.HostTrace, f, enum.PinganBankType); err != nil {
-					return handler.HandleError(err)
-				}
 			}
 		}
 		if len(addDatas) > 0 {
