@@ -21,15 +21,66 @@ type PinganBankSDK interface {
 	SubAcctBalanceAdjust(ctx context.Context, req stru.PinganSubAcctBalanceAdjustRuest) (*stru.PinganSubAcctBalanceAdjustResponse, error)
 	QueryAccountBalance(ctx context.Context, accountNo string, host string, mrchCode string, zuId string) (*stru.PinganBankCorAcctBalanceQueryResponse, error)
 	ListTransactionDetail(ctx context.Context, account string, beginDate string, endDate string, zuId string) ([]stru.PinganHistoryTransactionDetailsItem, error)
+	ListVirtualTransactionDetail(ctx context.Context, account string, beginDate string, endDate string) ([]stru.PinganHistoryTransactionDetailsItem, error)
 	QueryTransferResult(ctx context.Context, ThirdVoucher, zuId, accountNo string) (*stru.PinganSignleTransferQueryResponse, error)
 	CreateVirtualAccount(ctx context.Context, req stru.PinganCreateVirtualAccountRequest) (*stru.PinganCreateVirtualAccountResponse, error)
 	QueryVirtualAccount(ctx context.Context, req stru.PinganQueryVirtualAccountBalanceRequest) (*stru.PinganQueryVirtualAccountBalanceResponse, error)
 	UploadTransactionDetailElectronic(ctx context.Context, req stru.PinganSameDayHistoryReceiptDataQueryRequest, zuId string) (string, error)
+	UploadVirtualTransactionDetailElectronic(ctx context.Context, req stru.PinganSameDayHistoryReceiptDataQueryRequest) (string, error)
+
 	UserAcctSignatureApply(ctx context.Context, accountNo string, accountName string, host string, mrchCode string) (*stru.PinganUserAcctSignatureApplyResponse, error)
 	UserAcctSignatureQuery(ctx context.Context, accountNo string, accountName string, host string, BankCustomerId string, zuId string) (*stru.PinganUserAcctSignatureApplyResponse, error)
 }
 
 type pinganBankSDK struct{}
+
+func (s *pinganBankSDK) ListVirtualTransactionDetail(ctx context.Context, account string, beginDate string, endDate string) ([]stru.PinganHistoryTransactionDetailsItem, error) {
+	pageNum := 1
+	pageSize := 30
+	var result []stru.PinganHistoryTransactionDetailsItem
+	for {
+		serialNo, sfErr := util.SonyflakeID()
+		if sfErr != nil {
+			return nil, handler.HandleError(sfErr)
+		}
+		pageNumStr := strconv.Itoa(pageNum)
+		pageSizeStr := strconv.Itoa(pageSize)
+		requestBody := &stru.PinganHistoryTransactionDetailsRequest{
+			MrchCode:   config.GetString(enum.PinganIntelligenceMrchCode, ""),
+			CnsmrSeqNo: serialNo,
+			AcctNo:     account,
+			CcyCode:    "RMB",
+			BeginDate:  beginDate,
+			EndDate:    endDate,
+			PageNo:     pageNumStr,
+			PageSize:   pageSizeStr,
+		}
+		requestBodyJson, _ := json.Marshal(requestBody)
+		request := &stru.PingAnBankRequestBody{
+			RequestBody:   string(requestBodyJson),
+			InterfaceName: "/bedl/InquiryAccountDayHistoryTransactionDetails",
+			InterfaceType: 2,
+		}
+		// 返回的对象
+		var responseData stru.PinganHistoryTransactionDetailsResponse
+		err := util.PostHttpResult(ctx, config.GetString(enum.PinganJsdkUrl, ""), request, &responseData)
+		if err != nil {
+			return nil, handler.HandleError(err)
+		}
+		err = handelPinganResult(responseData.PinganErrorResult)
+		if err != nil {
+			return nil, handler.HandleError(err)
+		}
+		result = append(result, responseData.List...)
+		if responseData.EndFlag == "N" {
+			pageNum += 1
+		} else {
+			break
+		}
+
+	}
+	return result, nil
+}
 
 // BankTransfer
 //
@@ -329,6 +380,28 @@ func (s *pinganBankSDK) UploadTransactionDetailElectronic(ctx context.Context, r
 	}
 	var fileResult stru.PinganFileResult
 	zap.L().Info(fmt.Sprintf("s.bankService.pinganBankSDK 下载pingan电子凭证请求参数%+v", request))
+	err := util.PostHttpResult(ctx, config.GetString(enum.PinganJsdkFileUrl, ""), &request, &fileResult)
+	if err != nil {
+		return "", err
+	}
+	return fileResult.FilePath, nil
+}
+
+func (s *pinganBankSDK) UploadVirtualTransactionDetailElectronic(ctx context.Context, req stru.PinganSameDayHistoryReceiptDataQueryRequest) (string, error) {
+	//平安的文件下载功能,对于当天的下载不需要填写日期,
+	todayTime := util.FormatTimeyyyyMMdd(time.Now())
+	if req.AccountBeginDate == todayTime || req.AccountEndDate == todayTime {
+		req.AccountBeginDate = ""
+		req.AccountEndDate = ""
+	}
+	reqJson, _ := json.Marshal(req)
+
+	request := &stru.PingAnBankRequestBody{
+		RequestBody:   string(reqJson),
+		InterfaceType: 2,
+	}
+	var fileResult stru.PinganFileResult
+	zap.L().Info(fmt.Sprintf("s.bankService.pinganBankSDK 下载平安智能清分电子凭证请求参数%+v", request))
 	err := util.PostHttpResult(ctx, config.GetString(enum.PinganJsdkFileUrl, ""), &request, &fileResult)
 	if err != nil {
 		return "", err
