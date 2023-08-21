@@ -1492,8 +1492,6 @@ func (s *bankService) HandlePinganBankVirtualTransactionDetail(ctx context.Conte
 	})
 	//使用主账号去查所有的流水,然后根据摘要中写的去判断数属于哪个子账号
 	bankAccount := config.GetString(bankEnum.PinganIntelligenceAccountNo, "")
-	beginDate = "20230501"
-	endDate = "20230821"
 	datas, err := s.pinganBankSDK.ListVirtualTransactionDetail(ctx, bankAccount, beginDate, endDate)
 	if err != nil {
 		zap.L().Error(fmt.Sprintf("s.pinganBankSDK.HandlePinganBankVirtualTransactionDetail%s", err.Error()))
