@@ -940,19 +940,11 @@ func (s *bankService) HandleTransactionDetail(ctx context.Context, beginDate str
 		oneDayDuration, _ := time.ParseDuration("-24h")
 		yesterday := now.Add(oneDayDuration)
 		yesterdayString := util.FormatTimeyyyyMMdd(yesterday)
-		s.HandlePinganBankTransactionDetail(ctx, enum.PinganBankType, yesterdayString, yesterdayString, organizationId)
+		s.HandlePinganBankTransactionDetail(ctx, enum.PinganBankType, beginDate, yesterdayString, organizationId)
 	}
 
-	s.HandlePinganBankVirtualTransactionDetail(ctx, enum.PinganBankType, endDate, endDate, organizationId)
-	if nowHour >= 6 {
-		//在查询一次昨天的
-		//银行要求 同一个账户重新查询第一页限制1分钟间隔,这里等待1分钟之后重新查询
-		time.Sleep(time.Duration(60) * time.Second)
-		oneDayDuration, _ := time.ParseDuration("-24h")
-		yesterday := now.Add(oneDayDuration)
-		yesterdayString := util.FormatTimeyyyyMMdd(yesterday)
-		s.HandlePinganBankVirtualTransactionDetail(ctx, enum.PinganBankType, yesterdayString, yesterdayString, organizationId)
-	}
+	s.HandlePinganBankVirtualTransactionDetail(ctx, enum.PinganBankType, beginDate, endDate, organizationId)
+
 	return nil
 }
 
