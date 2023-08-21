@@ -29,6 +29,7 @@ import (
 	"gorm.io/gorm"
 	"io/ioutil"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -941,6 +942,17 @@ func (s *bankService) HandleTransactionDetail(ctx context.Context, beginDate str
 		yesterdayString := util.FormatTimeyyyyMMdd(yesterday)
 		s.HandlePinganBankTransactionDetail(ctx, enum.PinganBankType, yesterdayString, yesterdayString, organizationId)
 	}
+
+	s.HandlePinganBankVirtualTransactionDetail(ctx, enum.PinganBankType, endDate, endDate, organizationId)
+	if nowHour >= 6 {
+		//在查询一次昨天的
+		//银行要求 同一个账户重新查询第一页限制1分钟间隔,这里等待1分钟之后重新查询
+		time.Sleep(time.Duration(60) * time.Second)
+		oneDayDuration, _ := time.ParseDuration("-24h")
+		yesterday := now.Add(oneDayDuration)
+		yesterdayString := util.FormatTimeyyyyMMdd(yesterday)
+		s.HandlePinganBankVirtualTransactionDetail(ctx, enum.PinganBankType, yesterdayString, yesterdayString, organizationId)
+	}
 	return nil
 }
 
@@ -1468,6 +1480,172 @@ func (s *bankService) HandlePinganBankTransactionDetail(ctx context.Context, ban
 						Id:       id,
 					})
 				}
+			}
+		}
+	}
+	return nil
+}
+func (s *bankService) HandlePinganBankVirtualTransactionDetail(ctx context.Context, bankType string, beginDate string, endDate string, organizationId int64) error {
+	virtualBankAccounts, err := s.baseClient.ListOrganizationBankVirtualAccountData(ctx, &baseApi.ListOrganizationBankVirtualAccountRequest{
+		OrganizationId: organizationId,
+		Type:           bankType,
+	})
+	//使用主账号去查所有的流水,然后根据摘要中写的去判断数属于哪个子账号
+	bankAccount := config.GetString(bankEnum.PinganIntelligenceAccountNo, "")
+	beginDate = "20230501"
+	endDate = "20230821"
+	datas, err := s.pinganBankSDK.ListVirtualTransactionDetail(ctx, bankAccount, beginDate, endDate)
+	if err != nil {
+		zap.L().Error(fmt.Sprintf("s.pinganBankSDK.HandlePinganBankVirtualTransactionDetail%s", err.Error()))
+	}
+	//zap.L().Info(fmt.Sprintf("s.pinganBankSDK.HandlePinganBankVirtualTransactionDetail:%+v", datas))
+	if datas != nil {
+		var addDatas []repo.BankTransactionDetailDBData
+		feeMap := make(map[string]string)
+		for _, data := range datas {
+			//根据 "Purpose": "代30210294284702[鑫旷世碧园] 付款 （服务费CZ1692263918387）",
+			//寻找子账号,然后根据填入正确的组织id和accountId
+			currentOrganizationId := int64(0)
+			bankAccountId := int64(0)
+			bankAccountName := config.GetString(bankEnum.PinganIntelligenceAccountName, "")
+			subBankAccountNo := bankAccount
+
+			re := regexp.MustCompile(`\d+`)
+			match := re.FindStringSubmatch(data.Purpose)
+			if len(match) > 0 {
+				subBankAccountNo = match[0]
+				for _, subAccount := range virtualBankAccounts {
+					if subAccount.VirtualAccountNo == subBankAccountNo {
+						currentOrganizationId = subAccount.OrganizationId
+						bankAccountId = subAccount.Id
+						bankAccountName = subAccount.VirtualAccountName
+						break
+					}
+
+				}
+			}
+
+			count, err := s.bankTransactionDetailRepo.Count(ctx, &repo.BankTransactionDetailDBDataParam{
+				BankTransactionDetailDBData: repo.BankTransactionDetailDBData{
+					BaseDBData: repository.BaseDBData{
+						OrganizationId: currentOrganizationId,
+					},
+					MerchantAccountId: bankAccountId,
+					//OrderFlowNo:       data.BussSeqNo, // 业务流水号
+					HostFlowNo: data.HostTrace, //主机流水号
+				},
+			})
+			if err != nil {
+				continue
+			}
+			// 保存交易明细
+			if count == 0 {
+				//如果本条数据AbstractStr = "FEE"就说明这笔明细是手续费,将其放入map中,
+				//最后放入对应的HostTrace的数据中
+				if data.AbstractStr == "FEE" {
+					feeMap[data.HostTrace] = data.TranAmount
+					continue
+				}
+				//  D借，出账；C贷，入账
+				payAmount := 0.00
+				recAmount := 0.00
+				TransactionType := ""
+				tranAmount, err := strconv.ParseFloat(data.TranAmount, 64)
+				if err != nil {
+					continue
+				}
+				if data.DcFlag == "C" {
+					recAmount = tranAmount
+					TransactionType = enum.GuilinBankTransactionDetailRecType
+				} else if data.DcFlag == "D" {
+					payAmount = tranAmount
+					TransactionType = enum.GuilinBankTransactionDetailPayType
+				}
+				acctBalance, err := strconv.ParseFloat(data.AcctBalance, 64)
+				if err != nil {
+					continue
+				}
+				transactionDetailDBData := repo.BankTransactionDetailDBData{
+					BaseDBData: repository.BaseDBData{
+						OrganizationId: currentOrganizationId,
+					},
+					Type:                TransactionType,
+					MerchantAccountId:   bankAccountId,
+					MerchantAccountName: bankAccountName,
+					CashFlag:            "0", // 写死0: 现钞
+					PayAmount:           payAmount,
+					RecAmount:           recAmount,
+					BsnType:             "TR", // 写死TR: 转账
+					TransferDate:        data.AcctDate,
+					TransferTime:        data.TxTime,
+					TranChannel:         "",
+					CurrencyType:        "CNY",
+					Balance:             acctBalance,
+					//OrderFlowNo:         data.BussSeqNo,
+					OrderFlowNo:        data.HostTrace,
+					HostFlowNo:         data.HostTrace,
+					VouchersType:       "",
+					VouchersNo:         "",
+					SummaryNo:          data.AbstractStr + data.AbstractStrDesc,
+					Summary:            data.Purpose,
+					AcctNo:             data.InAcctNo,
+					AccountName:        data.InAcctName,
+					AccountOpenNode:    data.InBankName,
+					ProcessTotalStatus: enum.ProcessInstanceTotalStatusRunning,
+					PayAccountType:     enum.PinganBankType,
+					ExtField1:          data.TranFee,
+				}
+
+				if data.DcFlag == "C" {
+					// 扩展字段3：用来标识-收款确认单同步状态（0-待同步 1-同步中 2-同步成功 3-同步失败）
+					transactionDetailDBData.ExtField3 = "0"
+				}
+
+				//封装请求body
+				serialNo, _ := util.SonyflakeID()
+
+				request := sdkStru.PinganSameDayHistoryReceiptDataQueryRequest{
+					MrchCode:         config.GetString(bankEnum.PinganIntelligenceMrchCode, ""),
+					CnsmrSeqNo:       serialNo,
+					OutAccNo:         bankAccount,
+					AccountBeginDate: data.HostDate,
+					AccountEndDate:   data.HostDate,
+					HostFlow:         data.HostTrace,
+				}
+				//查询回单并且转成png到oss
+				f, err := s.pinganBankSDK.UploadVirtualTransactionDetailElectronic(ctx, request)
+				if err != nil {
+					zap.L().Info(fmt.Sprintf("s.bankService.pinganBankSDK 下载pingan电子凭证失败: %v\n", err.Error()))
+				}
+				if f != "" {
+					transactionDetailDBData.ElectronicReceiptFile = f
+				}
+				addDatas = append(addDatas, transactionDetailDBData)
+
+				//更新单据的回单
+				if err = s.updateRelevanceElectronicDocument(ctx, "", data.HostTrace, f, enum.PinganBankType); err != nil {
+					return handler.HandleError(err)
+				}
+			}
+		}
+		if len(addDatas) > 0 {
+			var addDetails []repo.BankTransactionDetailDBData
+			for _, data := range addDatas {
+				if fee, ok := feeMap[data.HostFlowNo]; ok {
+					data.ExtField1 = fee
+				}
+				addDetails = append(addDetails, data)
+			}
+			ids, err := s.bankTransactionDetailRepo.BatchAdd(ctx, &addDetails)
+			if err != nil {
+				return handler.HandleError(err)
+			}
+			for _, id := range ids {
+				s.kafkaProducer.Send(kafka.BankTopic, kafka.TypeMessage{
+					Business: kafka.ProcessFinanceTransactionDetailProcessInstanceBusiness,
+					Type:     kafka.DingtalkType,
+					Id:       id,
+				})
 			}
 		}
 	}

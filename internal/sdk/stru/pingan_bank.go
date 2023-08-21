@@ -425,7 +425,7 @@ type PinganErrorResultItem struct {
 }
 
 type PinganFileResult struct {
-	FilePath string `json:"pngOssPath"`
+	FilePath string `json:"ossPath"`
 }
 
 type PinganUserAcctSignatureApplyRequest struct {
@@ -487,4 +487,59 @@ type PinganSubAcctBalanceAdjustResponse struct {
 	InSubAccNo        string `json:"InSubAccNo"`
 	InSubAccName      string `json:"InSubAccName"`
 	InSubAccBalance   string `json:"InSubAccBalance"`
+}
+
+//查询智能账号、清分台账编码的明细，可以用于对账和交易状态确认。
+// *此接口的台帐明细最长提供6个月范围的明细数据；且只提供账户签约银企直联后产生的台帐明细数据
+//（比如账户5-10日签约银企直联，5-10日之前的明细不提供）。此接口支持5个查询并发。
+// 交易明细唯一性约束条件：SubAccount+ AccountDate+ JournalNo+SeqNo+ DCFlag+ abstractCode。
+type PrimaryAcctDetailRequest struct {
+	MrchCode        string `json:"MrchCode"`        // 企业银企直联标准代码，银行提供给企业的20位唯一标识代码 (Y)
+	RecvLength      int    `json:"RecvLength"`      // 接收报文长度，报文数据长度；不包括附件内容、签名内容的长度，不够左补0 (N)
+	TradeDate       int    `json:"TradeDate"`       // 交易日期(yyyyMMdd)，yyyymmdd (N)
+	TradeTime       int    `json:"TradeTime"`       // 交易时间，hhmmss (N)
+	CnsmrSeqNo      string `json:"CnsmrSeqNo"`      // 请求方系统流水号，唯一标识一笔交易 (Y)
+	MainAccount     string `json:"MainAccount"`     // 智能账号，签约账户 (Y)
+	OpFlag          string `json:"OpFlag"`          // 查询方式，1-按智能清分帐号 2-按清分台账编码查询 (Y)
+	ReqSubAccount   string `json:"ReqSubAccount"`   // 清分台账编码，OpFlag=2时，必须输入 (N)
+	StartDate       string `json:"StartDate"`       // 开始日期，yyyyMMdd (Y)
+	EndDate         string `json:"EndDate"`         // 结束日期，yyyyMMdd (Y)
+	ReqLastSubAccNo string `json:"ReqLastSubAccNo"` // 最后一笔清分台账编码，第一次查询输入0，否则输入返回最后一笔的清分台账编码+日期+日志号+顺序号 (Y)
+	ReqLastDate     string `json:"ReqLastDate"`     // 最后一笔日期，第一次查询输入0，否则输入返回最后一笔的清分台账编码+日期+日志号+顺序号 (Y)
+	ReqLastJNo      string `json:"ReqLastJNo"`      // 最后一笔日志号，第一次查询输入0，否则输入返回最后一笔的清分台账编码+日期+日志号+顺序号 (Y)
+	ReqLastSeq      string `json:"ReqLastSeq"`      // 最后一笔顺序号，第一次查询输入0，否则输入返回最后一笔的清分台账编码+日期+日志号+顺序号 (Y)
+	HostFlowNo      string `json:"HostFlowNo"`      // 银行主机流水号，输入则过滤返回对应主机流水的明细 (N)
+	PageSize        string `json:"PageSize"`        // 每页记录数，默认100，支持自定义，必须在100~1000内（包括） (N)
+}
+
+type PrimaryAcctDetailResponse struct {
+	PinganErrorResult
+	Count    string                  `json:"Count"`    // 当前页输出记录条数 (Y)
+	AllCount string                  `json:"AllCount"` // 满足输入条件的所有记录数 (Y)
+	IsEnd    string                  `json:"IsEnd"`    // 结束标志, "Y-是 N-否" (Y)
+	List     []PrimaryAcctDetailItem `json:"list"`     // 数组类型数据 (N)
+}
+
+type PrimaryAcctDetailItem struct {
+	SubAccount      string `json:"SubAccount"`      // 清分台账编码 (N)
+	AccountDate     string `json:"AccountDate"`     // 会计日期，yyyyMMdd (N)
+	JournalNo       string `json:"JournalNo"`       // 日志号，银行主机记账流水 (N)
+	SeqNo           string `json:"SeqNo"`           // 顺序号 (N)
+	TranTime        string `json:"TranTime"`        // 交易时间，HHmmss (N)
+	MainAccount     string `json:"MainAccount"`     // 智能账号 (N)
+	MainAccountName string `json:"MainAccountName"` // 智能账号户名 (N)
+	SubAccoutName   string `json:"SubAccoutName"`   // 清分台账编码别名 (N)
+	DCFlag          string `json:"DCFlag"`          // 借贷标识, "D 借 C 贷" (N)
+	CcyCode         string `json:"CcyCode"`         // 货币 (N)
+	TranAmount      string `json:"TranAmount"`      // 交易金额 (N)
+	TxFlag          string `json:"TxFlag"`          // 调整交易标识, "T 转账 C 余额调整" (N)
+	OppAccountNo    string `json:"OppAccountNo"`    // 对方账号（实体） (N)
+	OppAccountName  string `json:"OppAccountName"`  // 对方账户户名 (N)
+	OppBankName     string `json:"OppBankName"`     // 对方行名 (N)
+	Remark          string `json:"Remark"`          // 备注 (N)
+	Balance         string `json:"Balance"`         // 交易后余额 (N)
+	BizFlowNo       string `json:"BizFlowNo"`       // 交易流水号 (N)
+	Abstract        string `json:"Abstract"`        // 摘要 (N)
+	AbstractCode    string `json:"AbstractCode"`    // 业务摘要代码 (N)
+	TranDate        string `json:"TranDate"`        // 交易日期 (N)
 }
