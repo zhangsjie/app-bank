@@ -1498,7 +1498,7 @@ func (s *bankService) HandlePinganBankVirtualTransactionDetail(ctx context.Conte
 		for _, data := range datas {
 			//根据 "Purpose": "代30210294284702[鑫旷世碧园] 付款 （服务费CZ1692263918387",
 			//寻找子账号,然后根据填入正确的组织id和accountId
-			currentOrganizationId := int64(0)
+			currentOrganizationId := int64(1)
 			bankAccountId := int64(0)
 			bankAccountName := config.GetString(bankEnum.PinganIntelligenceAccountName, "")
 			subBankAccountNo := bankAccountNo
@@ -1509,7 +1509,7 @@ func (s *bankService) HandlePinganBankVirtualTransactionDetail(ctx context.Conte
 				subBankAccountNo = match[0]
 				for _, subAccount := range virtualBankAccounts {
 					if subAccount.VirtualAccountNo == subBankAccountNo {
-						currentOrganizationId = subAccount.OrganizationId
+						//currentOrganizationId = subAccount.OrganizationId
 						bankAccountId = subAccount.Id
 						bankAccountName = subAccount.VirtualAccountName
 						break
