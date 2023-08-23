@@ -39,6 +39,7 @@ struct BankTransferReceiptData {
     35: string payAccountOpenBank
     36: string title
     37: string payAccountType
+    38: string ElectronicReceiptFile
 }
 
 struct ListBankTransferReceiptRequest {
