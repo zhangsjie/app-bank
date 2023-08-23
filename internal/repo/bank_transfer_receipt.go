@@ -42,6 +42,7 @@ type BankTransferReceiptDBData struct {
 	PayAccountOpenBankFilling string
 	PayAccountOpenBank        string
 	PayAccountType            string
+	ElectronicReceiptFile     string
 }
 
 type BankTransferReceiptDBDataParam struct {
@@ -150,12 +151,21 @@ type BankTransferReceiptRepo interface {
 	Get(context.Context, *BankTransferReceiptDBData) (*BankTransferReceiptDBData, error)
 	Count(context.Context, *BankTransferReceiptDBDataParam) (int64, error)
 	List(context.Context, string, int32, int32, *BankTransferReceiptDBDataParam) (*[]BankTransferReceiptDBData, int64, error)
+	UpdateElectronicReceiptFile(context.Context, string, string, string) error
 }
 
 type bankTransferReceiptRepo struct {
 	repository.BaseRepo
 }
 
+func (r *bankTransferReceiptRepo) UpdateElectronicReceiptFile(ctx context.Context, orderFlowNo, bankType, electronicReceiptFile string) error {
+	err := r.Db.WithContext(ctx).Model(&BankTransferReceiptDBData{}).Where("pay_account_type = ? AND order_flow_no = ?", bankType, orderFlowNo).
+		Update("electronic_receipt_file", electronicReceiptFile).Error
+	if err != nil {
+		return handler.HandleError(err)
+	}
+	return nil
+}
 func (r *bankTransferReceiptRepo) Get(ctx context.Context, param *BankTransferReceiptDBData) (*BankTransferReceiptDBData, error) {
 	data, err := r.BaseGet(ctx, repository.NewQueryBuilder().Where(param.getConditions()))
 	if data == nil {

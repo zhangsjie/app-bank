@@ -138,12 +138,12 @@ func (s *bankService) GetBankTransferReceipt(ctx context.Context, req *api.BankT
 	if err != nil {
 		return nil, handler.HandleError(err)
 	}
-	if "" != dbData.DetailHostFlowNo {
+	if "" != dbData.DetailHostFlowNo && dbData.PayAccountType == enum.GuilinBankType {
 		detailData, err := s.bankTransactionDetailRepo.Get(ctx, &repo.BankTransactionDetailDBData{
 			HostFlowNo: dbData.DetailHostFlowNo,
 		})
 		if err == nil && nil != detailData {
-			dbData.DetailHostFlowNo = detailData.ElectronicReceiptFile
+			dbData.ElectronicReceiptFile = detailData.ElectronicReceiptFile
 		}
 	}
 	return stru.ConvertBankTransferReceiptData(*dbData), nil
@@ -1119,10 +1119,10 @@ func (s *bankService) updateRelevanceElectronicDocument(ctx context.Context, sum
 				return handler.HandleError(err)
 			}
 			// 上传png
-			electronicDocumentPng, err = s.pdfToImageService.UploadPdfToImageJsdk(ctx, electronicDocument)
-			if err != nil {
+			//electronicDocumentPng, err = s.pdfToImageService.UploadPdfToImageJsdk(ctx, electronicDocument)
+			/*if err != nil {
 				return handler.HandleError(err)
-			}
+			}*/
 		}
 	case enum.SPDBankType:
 		//浦发只用更新回单即可,
@@ -1135,10 +1135,10 @@ func (s *bankService) updateRelevanceElectronicDocument(ctx context.Context, sum
 				return handler.HandleError(err)
 			}
 			// 上传png
-			electronicDocumentPng, err = s.pdfToImageService.UploadPdfToImageJsdk(ctx, electronicDocument)
+			/*electronicDocumentPng, err = s.pdfToImageService.UploadPdfToImageJsdk(ctx, electronicDocument)
 			if err != nil {
 				return handler.HandleError(err)
-			}
+			}*/
 		}
 	case enum.PinganBankType:
 		paymentReceipt, err = s.paymentReceiptRepo.GetWithoutPermission(ctx, &repo.PaymentReceiptDBData{
@@ -1569,7 +1569,7 @@ func (s *bankService) HandlePinganBankVirtualTransactionDetail(ctx context.Conte
 					RecAmount:           recAmount,
 					BsnType:             "TR", // 写死TR: 转账
 					TransferDate:        data.AcctDate,
-					TransferTime:        data.TxTime,
+					TransferTime:        data.AcctDate + data.TxTime,
 					TranChannel:         "",
 					CurrencyType:        "CNY",
 					Balance:             acctBalance,
@@ -1611,9 +1611,12 @@ func (s *bankService) HandlePinganBankVirtualTransactionDetail(ctx context.Conte
 				}
 				if f != "" {
 					transactionDetailDBData.ElectronicReceiptFile = f
+					if TransactionType == enum.GuilinBankTransactionDetailPayType {
+						//同步付款表里面的回单
+						s.bankTransferReceiptRepo.UpdateElectronicReceiptFile(ctx, data.HostTrace, enum.PinganBankType, f)
+					}
 				}
 				addDatas = append(addDatas, transactionDetailDBData)
-
 			}
 		}
 		if len(addDatas) > 0 {
