@@ -129,6 +129,7 @@ struct ListBankTransactionDetailRequest {
     20: string payAccountType
     21: string extField2
     22: string extField3
+    23: i64 merchantAccountId
 }
 
 struct ListBankTransactionDetailResponse {
