@@ -140,6 +140,9 @@ func (param *BankTransactionDetailDBDataParam) listConditions() []*repository.Co
 	} else {
 		conditions = append(conditions, repository.NewAndCondition("acct_no != '' and acct_no is not null "))
 	}
+	if param.MerchantAccountId != 0 {
+		conditions = append(conditions, repository.NewAndCondition("merchant_account_id = ?", param.MerchantAccountId))
+	}
 	return conditions
 }
 

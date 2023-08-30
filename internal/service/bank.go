@@ -758,6 +758,7 @@ func (s *bankService) ListBankTransactionDetail(ctx context.Context, req *api.Li
 			BsnType:             req.BusinessType,
 			PayAccountType:      req.PayAccountType,
 			ExtField3:           req.ExtField3,
+			MerchantAccountId:   req.MerchantAccountId,
 		},
 		PayAmountMin:      req.PayAmountMin,
 		PayAmountMax:      req.PayAmountMax,
@@ -1090,7 +1091,7 @@ func (s *bankService) HandleGuilinBankTransactionDetail(ctx context.Context, ban
 	return nil
 }
 
-//bankType 银行类型:0,桂林,1:浦发,2:平安
+// bankType 银行类型:0,桂林,1:浦发,2:平安
 func (s *bankService) updateRelevanceElectronicDocument(ctx context.Context, summary, hostFlowNo, electronicDocument, bankType string) error {
 	var paymentReceipt *repo.PaymentReceiptDBData
 	electronicDocumentPng := electronicDocument
