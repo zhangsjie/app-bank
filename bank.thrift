@@ -567,6 +567,8 @@ service bank {
 
     ListPaymentReceiptResponse listPaymentReceipt(1: ListPaymentReceiptRequest req)
     PaymentReceiptData getPaymentReceipt(1: i64 id)
+    PaymentReceiptData simpleGetPaymentReceipt(1: i64 id)
+    PaymentReceiptData simpleGetPaymentReceiptByProcessInstanceId(1: i64 id)
     void addPaymentReceipt(1: PaymentReceiptData req)
     void approvePaymentReceipt(1: i64 id, 2: PaymentReceiptData req)
     void refusePaymentReceipt(1: i64 id, 2: PaymentReceiptData req, 3: string remark)

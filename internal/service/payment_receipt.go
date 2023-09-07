@@ -33,6 +33,8 @@ type PaymentReceiptService interface {
 	process.ProcessInterface
 	ListPaymentReceipt(ctx context.Context, req *api.ListPaymentReceiptRequest) (resp *api.ListPaymentReceiptResponse, err error)
 	GetPaymentReceipt(ctx context.Context, id int64) (resp *api.PaymentReceiptData, err error)
+	SimpleGetPaymentReceipt(ctx context.Context, id int64) (resp *api.PaymentReceiptData, err error)
+	SimpleGetPaymentReceiptByProcessInstanceId(ctx context.Context, id int64) (resp *api.PaymentReceiptData, err error)
 	PaymentReceiptRun(ctx context.Context, id int64) (err error)
 	HandleSyncPaymentReceipt(ctx context.Context, beginDate string, endDate string, organizationId int64) error
 	SyncPaymentReceipt(ctx context.Context, taskId int64, param []byte, organizationId int64) (err error)
@@ -120,6 +122,34 @@ func (s *paymentReceiptService) GetPaymentReceipt(ctx context.Context, id int64)
 					Id: id,
 				},
 			},
+		},
+	})
+	if err != nil || dbData == nil {
+		return nil, handler.HandleError(err)
+	}
+	return stru.ConvertPaymentReceiptData(*dbData), nil
+}
+
+func (s *paymentReceiptService) SimpleGetPaymentReceipt(ctx context.Context, id int64) (resp *api.PaymentReceiptData, err error) {
+	dbData, err := s.paymentReceiptRepo.SimpleGet(ctx, &repo.PaymentReceiptDBData{
+		BaseProcessDBData: repository.BaseProcessDBData{
+			BaseDBData: repository.BaseDBData{
+				BaseCommonDBData: repository.BaseCommonDBData{
+					Id: id,
+				},
+			},
+		},
+	})
+	if err != nil || dbData == nil {
+		return nil, handler.HandleError(err)
+	}
+	return stru.ConvertPaymentReceiptData(*dbData), nil
+}
+
+func (s *paymentReceiptService) SimpleGetPaymentReceiptByProcessInstanceId(ctx context.Context, id int64) (resp *api.PaymentReceiptData, err error) {
+	dbData, err := s.paymentReceiptRepo.SimpleGet(ctx, &repo.PaymentReceiptDBData{
+		BaseProcessDBData: repository.BaseProcessDBData{
+			ProcessInstanceId: id,
 		},
 	})
 	if err != nil || dbData == nil {
