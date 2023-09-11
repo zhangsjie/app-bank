@@ -28,6 +28,7 @@ func NewServiceInfo() *kitex.ServiceInfo {
 		"confirmTransaction":                         kitex.NewMethodInfo(confirmTransactionHandler, newBankConfirmTransactionArgs, newBankConfirmTransactionResult, false),
 		"handleTransferReceiptResult":                kitex.NewMethodInfo(handleTransferReceiptResult_Handler, newBankHandleTransferReceiptResultArgs, newBankHandleTransferReceiptResultResult, false),
 		"listBankTransactionDetail":                  kitex.NewMethodInfo(listBankTransactionDetailHandler, newBankListBankTransactionDetailArgs, newBankListBankTransactionDetailResult, false),
+		"simpleListBankTransactionDetail":            kitex.NewMethodInfo(simpleListBankTransactionDetailHandler, newBankSimpleListBankTransactionDetailArgs, newBankSimpleListBankTransactionDetailResult, false),
 		"getBankTransactionDetail":                   kitex.NewMethodInfo(getBankTransactionDetailHandler, newBankGetBankTransactionDetailArgs, newBankGetBankTransactionDetailResult, false),
 		"simpleGetBankTransactionDetail":             kitex.NewMethodInfo(simpleGetBankTransactionDetailHandler, newBankSimpleGetBankTransactionDetailArgs, newBankSimpleGetBankTransactionDetailResult, false),
 		"handleTransactionDetail":                    kitex.NewMethodInfo(handleTransactionDetailHandler, newBankHandleTransactionDetailArgs, newBankHandleTransactionDetailResult, false),
@@ -252,6 +253,24 @@ func newBankListBankTransactionDetailArgs() interface{} {
 
 func newBankListBankTransactionDetailResult() interface{} {
 	return api.NewBankListBankTransactionDetailResult()
+}
+
+func simpleListBankTransactionDetailHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	realArg := arg.(*api.BankSimpleListBankTransactionDetailArgs)
+	realResult := result.(*api.BankSimpleListBankTransactionDetailResult)
+	success, err := handler.(api.Bank).SimpleListBankTransactionDetail(ctx, realArg.Req)
+	if err != nil {
+		return err
+	}
+	realResult.Success = success
+	return nil
+}
+func newBankSimpleListBankTransactionDetailArgs() interface{} {
+	return api.NewBankSimpleListBankTransactionDetailArgs()
+}
+
+func newBankSimpleListBankTransactionDetailResult() interface{} {
+	return api.NewBankSimpleListBankTransactionDetailResult()
 }
 
 func getBankTransactionDetailHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
@@ -1230,6 +1249,16 @@ func (p *kClient) ListBankTransactionDetail(ctx context.Context, req *api.ListBa
 	_args.Req = req
 	var _result api.BankListBankTransactionDetailResult
 	if err = p.c.Call(ctx, "listBankTransactionDetail", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) SimpleListBankTransactionDetail(ctx context.Context, req *api.ListBankTransactionDetailRequest) (r *api.ListBankTransactionDetailResponse, err error) {
+	var _args api.BankSimpleListBankTransactionDetailArgs
+	_args.Req = req
+	var _result api.BankSimpleListBankTransactionDetailResult
+	if err = p.c.Call(ctx, "simpleListBankTransactionDetail", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil

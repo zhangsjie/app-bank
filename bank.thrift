@@ -104,6 +104,7 @@ struct BankTransactionDetailData {
     34: string payAccountType
     35: string extField2
     36: string extField3
+    37: string merchantAccountOpenName
 }
 
 struct ListBankTransactionDetailRequest {
@@ -130,6 +131,7 @@ struct ListBankTransactionDetailRequest {
     21: string extField2
     22: string extField3
     23: i64 merchantAccountId
+    24: i64 organizationId
 }
 
 struct ListBankTransactionDetailResponse {
@@ -526,6 +528,7 @@ service bank {
     void handleTransferReceiptResult(1: i64 id)
 
     ListBankTransactionDetailResponse listBankTransactionDetail(1: ListBankTransactionDetailRequest req)
+    ListBankTransactionDetailResponse simpleListBankTransactionDetail(1: ListBankTransactionDetailRequest req)
     BankTransactionDetailData getBankTransactionDetail(1: BankTransactionDetailData req)
     BankTransactionDetailData simpleGetBankTransactionDetail(1: BankTransactionDetailData req)
     void handleTransactionDetail(1: string beginDate, 2: string endDate, 3: i64 organizationId)

@@ -20,6 +20,7 @@ type Client interface {
 	ConfirmTransaction(ctx context.Context, req *api.BankTransferReceiptData, callOptions ...callopt.Option) (err error)
 	HandleTransferReceiptResult_(ctx context.Context, id int64, callOptions ...callopt.Option) (err error)
 	ListBankTransactionDetail(ctx context.Context, req *api.ListBankTransactionDetailRequest, callOptions ...callopt.Option) (r *api.ListBankTransactionDetailResponse, err error)
+	SimpleListBankTransactionDetail(ctx context.Context, req *api.ListBankTransactionDetailRequest, callOptions ...callopt.Option) (r *api.ListBankTransactionDetailResponse, err error)
 	GetBankTransactionDetail(ctx context.Context, req *api.BankTransactionDetailData, callOptions ...callopt.Option) (r *api.BankTransactionDetailData, err error)
 	SimpleGetBankTransactionDetail(ctx context.Context, req *api.BankTransactionDetailData, callOptions ...callopt.Option) (r *api.BankTransactionDetailData, err error)
 	HandleTransactionDetail(ctx context.Context, beginDate string, endDate string, organizationId int64, callOptions ...callopt.Option) (err error)
@@ -143,6 +144,11 @@ func (p *kBankClient) HandleTransferReceiptResult_(ctx context.Context, id int64
 func (p *kBankClient) ListBankTransactionDetail(ctx context.Context, req *api.ListBankTransactionDetailRequest, callOptions ...callopt.Option) (r *api.ListBankTransactionDetailResponse, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.ListBankTransactionDetail(ctx, req)
+}
+
+func (p *kBankClient) SimpleListBankTransactionDetail(ctx context.Context, req *api.ListBankTransactionDetailRequest, callOptions ...callopt.Option) (r *api.ListBankTransactionDetailResponse, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.SimpleListBankTransactionDetail(ctx, req)
 }
 
 func (p *kBankClient) GetBankTransactionDetail(ctx context.Context, req *api.BankTransactionDetailData, callOptions ...callopt.Option) (r *api.BankTransactionDetailData, err error) {

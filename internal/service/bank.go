@@ -50,6 +50,7 @@ type BankService interface {
 	HandleTransferReceiptResult(ctx context.Context, id int64) error
 
 	ListBankTransactionDetail(context.Context, *api.ListBankTransactionDetailRequest) (*api.ListBankTransactionDetailResponse, error)
+	SimpleListBankTransactionDetail(ctx context.Context, req *api.ListBankTransactionDetailRequest) (*api.ListBankTransactionDetailResponse, error)
 	GetBankTransactionDetail(context.Context, *api.BankTransactionDetailData) (*api.BankTransactionDetailData, error)
 	SimpleGetBankTransactionDetail(context.Context, *api.BankTransactionDetailData) (*api.BankTransactionDetailData, error)
 	CreateTransactionDetailProcessInstance(ctx context.Context, id int64) error
@@ -779,6 +780,29 @@ func (s *bankService) ListBankTransactionDetail(ctx context.Context, req *api.Li
 	}, nil
 }
 
+func (s *bankService) SimpleListBankTransactionDetail(ctx context.Context, req *api.ListBankTransactionDetailRequest) (*api.ListBankTransactionDetailResponse, error) {
+	dbData, count, err := s.bankTransactionDetailRepo.SimpleList(ctx, req.Sort, req.PageNum, req.PageSize, &repo.BankTransactionDetailDBDataParam{
+		BankTransactionDetailDBData: repo.BankTransactionDetailDBData{
+			BaseDBData: repository.BaseDBData{
+				OrganizationId: req.OrganizationId,
+			},
+			Type: req.Type,
+		},
+		TransferTimeArray: req.TransferTimeArray,
+	})
+	if err != nil || dbData == nil {
+		return nil, handler.HandleError(err)
+	}
+	data := make([]*api.BankTransactionDetailData, len(*dbData))
+	for i, v := range *dbData {
+		data[i] = stru.ConvertBankTransactionDetailData(v)
+	}
+	return &api.ListBankTransactionDetailResponse{
+		Data:  data,
+		Count: count,
+	}, nil
+}
+
 func (s *bankService) GetBankTransactionDetail(ctx context.Context, req *api.BankTransactionDetailData) (*api.BankTransactionDetailData, error) {
 	dbData, err := s.bankTransactionDetailRepo.Get(ctx, &repo.BankTransactionDetailDBData{
 		BaseDBData: repository.BaseDBData{
@@ -817,7 +841,9 @@ func (s *bankService) SimpleGetBankTransactionDetail(ctx context.Context, req *a
 	if err != nil {
 		return nil, handler.HandleError(err)
 	}
-	return stru.ConvertBankTransactionDetailDataAndMerchantAccount(*dbData, merchantAccountData.Account), nil
+	bankTransactionDetailData := stru.ConvertBankTransactionDetailDataAndMerchantAccount(*dbData, merchantAccountData.Account)
+	bankTransactionDetailData.MerchantAccountOpenName = merchantAccountData.OpenBankName
+	return bankTransactionDetailData, nil
 }
 
 func (s *bankService) EditBankTransactionDetailExtField(ctx context.Context, req *api.BankTransactionDetailData) error {

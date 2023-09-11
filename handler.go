@@ -308,3 +308,9 @@ func (s *BankImpl) SimpleGetPaymentReceiptByProcessInstanceId(ctx context.Contex
 	// TODO: Your code here...
 	return s.paymentReceiptService.SimpleGetPaymentReceiptByProcessInstanceId(ctx, id)
 }
+
+// SimpleListBankTransactionDetail implements the BankImpl interface.
+func (s *BankImpl) SimpleListBankTransactionDetail(ctx context.Context, req *api.ListBankTransactionDetailRequest) (resp *api.ListBankTransactionDetailResponse, err error) {
+	// TODO: Your code here...
+	return s.bankService.SimpleListBankTransactionDetail(ctx, req)
+}

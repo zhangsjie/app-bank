@@ -3810,42 +3810,43 @@ func (p *ListBankTransferReceiptResponse) Field2DeepEqual(src int64) bool {
 }
 
 type BankTransactionDetailData struct {
-	Id                    int64   `thrift:"id,1" frugal:"1,default,i64" json:"id"`
-	CreatedAt             []byte  `thrift:"createdAt,2" frugal:"2,default,binary" json:"createdAt"`
-	UpdatedAt             []byte  `thrift:"updatedAt,3" frugal:"3,default,binary" json:"updatedAt"`
-	OrganizationId        int64   `thrift:"organizationId,4" frugal:"4,default,i64" json:"organizationId"`
-	MerchantAccountId     int64   `thrift:"merchantAccountId,5" frugal:"5,default,i64" json:"merchantAccountId"`
-	MerchantAccount       string  `thrift:"merchantAccount,6" frugal:"6,default,string" json:"merchantAccount"`
-	MerchantAccountName   string  `thrift:"merchantAccountName,7" frugal:"7,default,string" json:"merchantAccountName"`
-	Type                  string  `thrift:"type,8" frugal:"8,default,string" json:"type"`
-	CashFlag              string  `thrift:"cashFlag,9" frugal:"9,default,string" json:"cashFlag"`
-	PayAmount             float64 `thrift:"payAmount,10" frugal:"10,default,double" json:"payAmount"`
-	RecAmount             float64 `thrift:"recAmount,11" frugal:"11,default,double" json:"recAmount"`
-	BsnType               string  `thrift:"bsnType,12" frugal:"12,default,string" json:"bsnType"`
-	TransferDate          string  `thrift:"transferDate,13" frugal:"13,default,string" json:"transferDate"`
-	TransferTime          string  `thrift:"transferTime,14" frugal:"14,default,string" json:"transferTime"`
-	TranChannel           string  `thrift:"tranChannel,15" frugal:"15,default,string" json:"tranChannel"`
-	CurrencyType          string  `thrift:"currencyType,16" frugal:"16,default,string" json:"currencyType"`
-	Balance               float64 `thrift:"balance,17" frugal:"17,default,double" json:"balance"`
-	OrderFlowNo           string  `thrift:"orderFlowNo,18" frugal:"18,default,string" json:"orderFlowNo"`
-	HostFlowNo            string  `thrift:"hostFlowNo,19" frugal:"19,default,string" json:"hostFlowNo"`
-	VouchersType          string  `thrift:"vouchersType,20" frugal:"20,default,string" json:"vouchersType"`
-	VouchersNo            string  `thrift:"vouchersNo,21" frugal:"21,default,string" json:"vouchersNo"`
-	SummaryNo             string  `thrift:"summaryNo,22" frugal:"22,default,string" json:"summaryNo"`
-	Summary               string  `thrift:"summary,23" frugal:"23,default,string" json:"summary"`
-	AcctNo                string  `thrift:"acctNo,24" frugal:"24,default,string" json:"acctNo"`
-	AccountName           string  `thrift:"accountName,25" frugal:"25,default,string" json:"accountName"`
-	AccountOpenNode       string  `thrift:"accountOpenNode,26" frugal:"26,default,string" json:"accountOpenNode"`
-	ElectronicReceiptFile string  `thrift:"electronicReceiptFile,27" frugal:"27,default,string" json:"electronicReceiptFile"`
-	ProcessBusinessId     string  `thrift:"processBusinessId,28" frugal:"28,default,string" json:"processBusinessId"`
-	ProcessTotalStatus    string  `thrift:"processTotalStatus,29" frugal:"29,default,string" json:"processTotalStatus"`
-	OriginatorUser        string  `thrift:"originatorUser,30" frugal:"30,default,string" json:"originatorUser"`
-	OperationUser         string  `thrift:"operationUser,31" frugal:"31,default,string" json:"operationUser"`
-	OperationComment      string  `thrift:"operationComment,32" frugal:"32,default,string" json:"operationComment"`
-	ProcessInstanceId     int64   `thrift:"processInstanceId,33" frugal:"33,default,i64" json:"processInstanceId"`
-	PayAccountType        string  `thrift:"payAccountType,34" frugal:"34,default,string" json:"payAccountType"`
-	ExtField2             string  `thrift:"extField2,35" frugal:"35,default,string" json:"extField2"`
-	ExtField3             string  `thrift:"extField3,36" frugal:"36,default,string" json:"extField3"`
+	Id                      int64   `thrift:"id,1" frugal:"1,default,i64" json:"id"`
+	CreatedAt               []byte  `thrift:"createdAt,2" frugal:"2,default,binary" json:"createdAt"`
+	UpdatedAt               []byte  `thrift:"updatedAt,3" frugal:"3,default,binary" json:"updatedAt"`
+	OrganizationId          int64   `thrift:"organizationId,4" frugal:"4,default,i64" json:"organizationId"`
+	MerchantAccountId       int64   `thrift:"merchantAccountId,5" frugal:"5,default,i64" json:"merchantAccountId"`
+	MerchantAccount         string  `thrift:"merchantAccount,6" frugal:"6,default,string" json:"merchantAccount"`
+	MerchantAccountName     string  `thrift:"merchantAccountName,7" frugal:"7,default,string" json:"merchantAccountName"`
+	Type                    string  `thrift:"type,8" frugal:"8,default,string" json:"type"`
+	CashFlag                string  `thrift:"cashFlag,9" frugal:"9,default,string" json:"cashFlag"`
+	PayAmount               float64 `thrift:"payAmount,10" frugal:"10,default,double" json:"payAmount"`
+	RecAmount               float64 `thrift:"recAmount,11" frugal:"11,default,double" json:"recAmount"`
+	BsnType                 string  `thrift:"bsnType,12" frugal:"12,default,string" json:"bsnType"`
+	TransferDate            string  `thrift:"transferDate,13" frugal:"13,default,string" json:"transferDate"`
+	TransferTime            string  `thrift:"transferTime,14" frugal:"14,default,string" json:"transferTime"`
+	TranChannel             string  `thrift:"tranChannel,15" frugal:"15,default,string" json:"tranChannel"`
+	CurrencyType            string  `thrift:"currencyType,16" frugal:"16,default,string" json:"currencyType"`
+	Balance                 float64 `thrift:"balance,17" frugal:"17,default,double" json:"balance"`
+	OrderFlowNo             string  `thrift:"orderFlowNo,18" frugal:"18,default,string" json:"orderFlowNo"`
+	HostFlowNo              string  `thrift:"hostFlowNo,19" frugal:"19,default,string" json:"hostFlowNo"`
+	VouchersType            string  `thrift:"vouchersType,20" frugal:"20,default,string" json:"vouchersType"`
+	VouchersNo              string  `thrift:"vouchersNo,21" frugal:"21,default,string" json:"vouchersNo"`
+	SummaryNo               string  `thrift:"summaryNo,22" frugal:"22,default,string" json:"summaryNo"`
+	Summary                 string  `thrift:"summary,23" frugal:"23,default,string" json:"summary"`
+	AcctNo                  string  `thrift:"acctNo,24" frugal:"24,default,string" json:"acctNo"`
+	AccountName             string  `thrift:"accountName,25" frugal:"25,default,string" json:"accountName"`
+	AccountOpenNode         string  `thrift:"accountOpenNode,26" frugal:"26,default,string" json:"accountOpenNode"`
+	ElectronicReceiptFile   string  `thrift:"electronicReceiptFile,27" frugal:"27,default,string" json:"electronicReceiptFile"`
+	ProcessBusinessId       string  `thrift:"processBusinessId,28" frugal:"28,default,string" json:"processBusinessId"`
+	ProcessTotalStatus      string  `thrift:"processTotalStatus,29" frugal:"29,default,string" json:"processTotalStatus"`
+	OriginatorUser          string  `thrift:"originatorUser,30" frugal:"30,default,string" json:"originatorUser"`
+	OperationUser           string  `thrift:"operationUser,31" frugal:"31,default,string" json:"operationUser"`
+	OperationComment        string  `thrift:"operationComment,32" frugal:"32,default,string" json:"operationComment"`
+	ProcessInstanceId       int64   `thrift:"processInstanceId,33" frugal:"33,default,i64" json:"processInstanceId"`
+	PayAccountType          string  `thrift:"payAccountType,34" frugal:"34,default,string" json:"payAccountType"`
+	ExtField2               string  `thrift:"extField2,35" frugal:"35,default,string" json:"extField2"`
+	ExtField3               string  `thrift:"extField3,36" frugal:"36,default,string" json:"extField3"`
+	MerchantAccountOpenName string  `thrift:"merchantAccountOpenName,37" frugal:"37,default,string" json:"merchantAccountOpenName"`
 }
 
 func NewBankTransactionDetailData() *BankTransactionDetailData {
@@ -3999,6 +4000,10 @@ func (p *BankTransactionDetailData) GetExtField2() (v string) {
 func (p *BankTransactionDetailData) GetExtField3() (v string) {
 	return p.ExtField3
 }
+
+func (p *BankTransactionDetailData) GetMerchantAccountOpenName() (v string) {
+	return p.MerchantAccountOpenName
+}
 func (p *BankTransactionDetailData) SetId(val int64) {
 	p.Id = val
 }
@@ -4107,6 +4112,9 @@ func (p *BankTransactionDetailData) SetExtField2(val string) {
 func (p *BankTransactionDetailData) SetExtField3(val string) {
 	p.ExtField3 = val
 }
+func (p *BankTransactionDetailData) SetMerchantAccountOpenName(val string) {
+	p.MerchantAccountOpenName = val
+}
 
 var fieldIDToName_BankTransactionDetailData = map[int16]string{
 	1:  "id",
@@ -4145,6 +4153,7 @@ var fieldIDToName_BankTransactionDetailData = map[int16]string{
 	34: "payAccountType",
 	35: "extField2",
 	36: "extField3",
+	37: "merchantAccountOpenName",
 }
 
 func (p *BankTransactionDetailData) Read(iprot thrift.TProtocol) (err error) {
@@ -4526,6 +4535,16 @@ func (p *BankTransactionDetailData) Read(iprot thrift.TProtocol) (err error) {
 					goto SkipFieldError
 				}
 			}
+		case 37:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField37(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				if err = iprot.Skip(fieldTypeId); err != nil {
+					goto SkipFieldError
+				}
+			}
 		default:
 			if err = iprot.Skip(fieldTypeId); err != nil {
 				goto SkipFieldError
@@ -4880,6 +4899,15 @@ func (p *BankTransactionDetailData) ReadField36(iprot thrift.TProtocol) error {
 	return nil
 }
 
+func (p *BankTransactionDetailData) ReadField37(iprot thrift.TProtocol) error {
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		p.MerchantAccountOpenName = v
+	}
+	return nil
+}
+
 func (p *BankTransactionDetailData) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
 	if err = oprot.WriteStructBegin("BankTransactionDetailData"); err != nil {
@@ -5028,6 +5056,10 @@ func (p *BankTransactionDetailData) Write(oprot thrift.TProtocol) (err error) {
 		}
 		if err = p.writeField36(oprot); err != nil {
 			fieldId = 36
+			goto WriteFieldError
+		}
+		if err = p.writeField37(oprot); err != nil {
+			fieldId = 37
 			goto WriteFieldError
 		}
 
@@ -5661,6 +5693,23 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 36 end error: ", p), err)
 }
 
+func (p *BankTransactionDetailData) writeField37(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("merchantAccountOpenName", thrift.STRING, 37); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteString(p.MerchantAccountOpenName); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 37 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 37 end error: ", p), err)
+}
+
 func (p *BankTransactionDetailData) String() string {
 	if p == nil {
 		return "<nil>"
@@ -5780,6 +5829,9 @@ func (p *BankTransactionDetailData) DeepEqual(ano *BankTransactionDetailData) bo
 		return false
 	}
 	if !p.Field36DeepEqual(ano.ExtField3) {
+		return false
+	}
+	if !p.Field37DeepEqual(ano.MerchantAccountOpenName) {
 		return false
 	}
 	return true
@@ -6037,6 +6089,13 @@ func (p *BankTransactionDetailData) Field36DeepEqual(src string) bool {
 	}
 	return true
 }
+func (p *BankTransactionDetailData) Field37DeepEqual(src string) bool {
+
+	if strings.Compare(p.MerchantAccountOpenName, src) != 0 {
+		return false
+	}
+	return true
+}
 
 type ListBankTransactionDetailRequest struct {
 	PageNum             int32     `thrift:"pageNum,1,required" frugal:"1,required,i32" json:"pageNum"`
@@ -6062,6 +6121,7 @@ type ListBankTransactionDetailRequest struct {
 	ExtField2           string    `thrift:"extField2,21" frugal:"21,default,string" json:"extField2"`
 	ExtField3           string    `thrift:"extField3,22" frugal:"22,default,string" json:"extField3"`
 	MerchantAccountId   int64     `thrift:"merchantAccountId,23" frugal:"23,default,i64" json:"merchantAccountId"`
+	OrganizationId      int64     `thrift:"organizationId,24" frugal:"24,default,i64" json:"organizationId"`
 }
 
 func NewListBankTransactionDetailRequest() *ListBankTransactionDetailRequest {
@@ -6163,6 +6223,10 @@ func (p *ListBankTransactionDetailRequest) GetExtField3() (v string) {
 func (p *ListBankTransactionDetailRequest) GetMerchantAccountId() (v int64) {
 	return p.MerchantAccountId
 }
+
+func (p *ListBankTransactionDetailRequest) GetOrganizationId() (v int64) {
+	return p.OrganizationId
+}
 func (p *ListBankTransactionDetailRequest) SetPageNum(val int32) {
 	p.PageNum = val
 }
@@ -6232,6 +6296,9 @@ func (p *ListBankTransactionDetailRequest) SetExtField3(val string) {
 func (p *ListBankTransactionDetailRequest) SetMerchantAccountId(val int64) {
 	p.MerchantAccountId = val
 }
+func (p *ListBankTransactionDetailRequest) SetOrganizationId(val int64) {
+	p.OrganizationId = val
+}
 
 var fieldIDToName_ListBankTransactionDetailRequest = map[int16]string{
 	1:  "pageNum",
@@ -6257,6 +6324,7 @@ var fieldIDToName_ListBankTransactionDetailRequest = map[int16]string{
 	21: "extField2",
 	22: "extField3",
 	23: "merchantAccountId",
+	24: "organizationId",
 }
 
 func (p *ListBankTransactionDetailRequest) Read(iprot thrift.TProtocol) (err error) {
@@ -6505,6 +6573,16 @@ func (p *ListBankTransactionDetailRequest) Read(iprot thrift.TProtocol) (err err
 		case 23:
 			if fieldTypeId == thrift.I64 {
 				if err = p.ReadField23(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				if err = iprot.Skip(fieldTypeId); err != nil {
+					goto SkipFieldError
+				}
+			}
+		case 24:
+			if fieldTypeId == thrift.I64 {
+				if err = p.ReadField24(iprot); err != nil {
 					goto ReadFieldError
 				}
 			} else {
@@ -6799,6 +6877,15 @@ func (p *ListBankTransactionDetailRequest) ReadField23(iprot thrift.TProtocol) e
 	return nil
 }
 
+func (p *ListBankTransactionDetailRequest) ReadField24(iprot thrift.TProtocol) error {
+	if v, err := iprot.ReadI64(); err != nil {
+		return err
+	} else {
+		p.OrganizationId = v
+	}
+	return nil
+}
+
 func (p *ListBankTransactionDetailRequest) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
 	if err = oprot.WriteStructBegin("ListBankTransactionDetailRequest"); err != nil {
@@ -6895,6 +6982,10 @@ func (p *ListBankTransactionDetailRequest) Write(oprot thrift.TProtocol) (err er
 		}
 		if err = p.writeField23(oprot); err != nil {
 			fieldId = 23
+			goto WriteFieldError
+		}
+		if err = p.writeField24(oprot); err != nil {
+			fieldId = 24
 			goto WriteFieldError
 		}
 
@@ -7331,6 +7422,23 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 23 end error: ", p), err)
 }
 
+func (p *ListBankTransactionDetailRequest) writeField24(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("organizationId", thrift.I64, 24); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteI64(p.OrganizationId); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 24 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 24 end error: ", p), err)
+}
+
 func (p *ListBankTransactionDetailRequest) String() string {
 	if p == nil {
 		return "<nil>"
@@ -7411,6 +7519,9 @@ func (p *ListBankTransactionDetailRequest) DeepEqual(ano *ListBankTransactionDet
 		return false
 	}
 	if !p.Field23DeepEqual(ano.MerchantAccountId) {
+		return false
+	}
+	if !p.Field24DeepEqual(ano.OrganizationId) {
 		return false
 	}
 	return true
@@ -7591,6 +7702,13 @@ func (p *ListBankTransactionDetailRequest) Field22DeepEqual(src string) bool {
 func (p *ListBankTransactionDetailRequest) Field23DeepEqual(src int64) bool {
 
 	if p.MerchantAccountId != src {
+		return false
+	}
+	return true
+}
+func (p *ListBankTransactionDetailRequest) Field24DeepEqual(src int64) bool {
+
+	if p.OrganizationId != src {
 		return false
 	}
 	return true
@@ -27786,6 +27904,8 @@ type Bank interface {
 
 	ListBankTransactionDetail(ctx context.Context, req *ListBankTransactionDetailRequest) (r *ListBankTransactionDetailResponse, err error)
 
+	SimpleListBankTransactionDetail(ctx context.Context, req *ListBankTransactionDetailRequest) (r *ListBankTransactionDetailResponse, err error)
+
 	GetBankTransactionDetail(ctx context.Context, req *BankTransactionDetailData) (r *BankTransactionDetailData, err error)
 
 	SimpleGetBankTransactionDetail(ctx context.Context, req *BankTransactionDetailData) (r *BankTransactionDetailData, err error)
@@ -27988,6 +28108,15 @@ func (p *BankClient) ListBankTransactionDetail(ctx context.Context, req *ListBan
 	_args.Req = req
 	var _result BankListBankTransactionDetailResult
 	if err = p.Client_().Call(ctx, "listBankTransactionDetail", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+func (p *BankClient) SimpleListBankTransactionDetail(ctx context.Context, req *ListBankTransactionDetailRequest) (r *ListBankTransactionDetailResponse, err error) {
+	var _args BankSimpleListBankTransactionDetailArgs
+	_args.Req = req
+	var _result BankSimpleListBankTransactionDetailResult
+	if err = p.Client_().Call(ctx, "simpleListBankTransactionDetail", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil
@@ -28487,6 +28616,7 @@ func NewBankProcessor(handler Bank) *BankProcessor {
 	self.AddToProcessorMap("confirmTransaction", &bankProcessorConfirmTransaction{handler: handler})
 	self.AddToProcessorMap("handleTransferReceiptResult", &bankProcessorHandleTransferReceiptResult_{handler: handler})
 	self.AddToProcessorMap("listBankTransactionDetail", &bankProcessorListBankTransactionDetail{handler: handler})
+	self.AddToProcessorMap("simpleListBankTransactionDetail", &bankProcessorSimpleListBankTransactionDetail{handler: handler})
 	self.AddToProcessorMap("getBankTransactionDetail", &bankProcessorGetBankTransactionDetail{handler: handler})
 	self.AddToProcessorMap("simpleGetBankTransactionDetail", &bankProcessorSimpleGetBankTransactionDetail{handler: handler})
 	self.AddToProcessorMap("handleTransactionDetail", &bankProcessorHandleTransactionDetail{handler: handler})
@@ -28959,6 +29089,54 @@ func (p *bankProcessorListBankTransactionDetail) Process(ctx context.Context, se
 		result.Success = retval
 	}
 	if err2 = oprot.WriteMessageBegin("listBankTransactionDetail", thrift.REPLY, seqId); err2 != nil {
+		err = err2
+	}
+	if err2 = result.Write(oprot); err == nil && err2 != nil {
+		err = err2
+	}
+	if err2 = oprot.WriteMessageEnd(); err == nil && err2 != nil {
+		err = err2
+	}
+	if err2 = oprot.Flush(ctx); err == nil && err2 != nil {
+		err = err2
+	}
+	if err != nil {
+		return
+	}
+	return true, err
+}
+
+type bankProcessorSimpleListBankTransactionDetail struct {
+	handler Bank
+}
+
+func (p *bankProcessorSimpleListBankTransactionDetail) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+	args := BankSimpleListBankTransactionDetailArgs{}
+	if err = args.Read(iprot); err != nil {
+		iprot.ReadMessageEnd()
+		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
+		oprot.WriteMessageBegin("simpleListBankTransactionDetail", thrift.EXCEPTION, seqId)
+		x.Write(oprot)
+		oprot.WriteMessageEnd()
+		oprot.Flush(ctx)
+		return false, err
+	}
+
+	iprot.ReadMessageEnd()
+	var err2 error
+	result := BankSimpleListBankTransactionDetailResult{}
+	var retval *ListBankTransactionDetailResponse
+	if retval, err2 = p.handler.SimpleListBankTransactionDetail(ctx, args.Req); err2 != nil {
+		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing simpleListBankTransactionDetail: "+err2.Error())
+		oprot.WriteMessageBegin("simpleListBankTransactionDetail", thrift.EXCEPTION, seqId)
+		x.Write(oprot)
+		oprot.WriteMessageEnd()
+		oprot.Flush(ctx)
+		return true, err2
+	} else {
+		result.Success = retval
+	}
+	if err2 = oprot.WriteMessageBegin("simpleListBankTransactionDetail", thrift.REPLY, seqId); err2 != nil {
 		err = err2
 	}
 	if err2 = result.Write(oprot); err == nil && err2 != nil {
@@ -34033,6 +34211,352 @@ func (p *BankListBankTransactionDetailResult) DeepEqual(ano *BankListBankTransac
 }
 
 func (p *BankListBankTransactionDetailResult) Field0DeepEqual(src *ListBankTransactionDetailResponse) bool {
+
+	if !p.Success.DeepEqual(src) {
+		return false
+	}
+	return true
+}
+
+type BankSimpleListBankTransactionDetailArgs struct {
+	Req *ListBankTransactionDetailRequest `thrift:"req,1" frugal:"1,default,ListBankTransactionDetailRequest" json:"req"`
+}
+
+func NewBankSimpleListBankTransactionDetailArgs() *BankSimpleListBankTransactionDetailArgs {
+	return &BankSimpleListBankTransactionDetailArgs{}
+}
+
+func (p *BankSimpleListBankTransactionDetailArgs) InitDefault() {
+	*p = BankSimpleListBankTransactionDetailArgs{}
+}
+
+var BankSimpleListBankTransactionDetailArgs_Req_DEFAULT *ListBankTransactionDetailRequest
+
+func (p *BankSimpleListBankTransactionDetailArgs) GetReq() (v *ListBankTransactionDetailRequest) {
+	if !p.IsSetReq() {
+		return BankSimpleListBankTransactionDetailArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+func (p *BankSimpleListBankTransactionDetailArgs) SetReq(val *ListBankTransactionDetailRequest) {
+	p.Req = val
+}
+
+var fieldIDToName_BankSimpleListBankTransactionDetailArgs = map[int16]string{
+	1: "req",
+}
+
+func (p *BankSimpleListBankTransactionDetailArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *BankSimpleListBankTransactionDetailArgs) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+
+		switch fieldId {
+		case 1:
+			if fieldTypeId == thrift.STRUCT {
+				if err = p.ReadField1(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				if err = iprot.Skip(fieldTypeId); err != nil {
+					goto SkipFieldError
+				}
+			}
+		default:
+			if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		}
+
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_BankSimpleListBankTransactionDetailArgs[fieldId]), err)
+SkipFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *BankSimpleListBankTransactionDetailArgs) ReadField1(iprot thrift.TProtocol) error {
+	p.Req = NewListBankTransactionDetailRequest()
+	if err := p.Req.Read(iprot); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *BankSimpleListBankTransactionDetailArgs) Write(oprot thrift.TProtocol) (err error) {
+	var fieldId int16
+	if err = oprot.WriteStructBegin("simpleListBankTransactionDetail_args"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+		if err = p.writeField1(oprot); err != nil {
+			fieldId = 1
+			goto WriteFieldError
+		}
+
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *BankSimpleListBankTransactionDetailArgs) writeField1(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("req", thrift.STRUCT, 1); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := p.Req.Write(oprot); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
+}
+
+func (p *BankSimpleListBankTransactionDetailArgs) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("BankSimpleListBankTransactionDetailArgs(%+v)", *p)
+}
+
+func (p *BankSimpleListBankTransactionDetailArgs) DeepEqual(ano *BankSimpleListBankTransactionDetailArgs) bool {
+	if p == ano {
+		return true
+	} else if p == nil || ano == nil {
+		return false
+	}
+	if !p.Field1DeepEqual(ano.Req) {
+		return false
+	}
+	return true
+}
+
+func (p *BankSimpleListBankTransactionDetailArgs) Field1DeepEqual(src *ListBankTransactionDetailRequest) bool {
+
+	if !p.Req.DeepEqual(src) {
+		return false
+	}
+	return true
+}
+
+type BankSimpleListBankTransactionDetailResult struct {
+	Success *ListBankTransactionDetailResponse `thrift:"success,0,optional" frugal:"0,optional,ListBankTransactionDetailResponse" json:"success,omitempty"`
+}
+
+func NewBankSimpleListBankTransactionDetailResult() *BankSimpleListBankTransactionDetailResult {
+	return &BankSimpleListBankTransactionDetailResult{}
+}
+
+func (p *BankSimpleListBankTransactionDetailResult) InitDefault() {
+	*p = BankSimpleListBankTransactionDetailResult{}
+}
+
+var BankSimpleListBankTransactionDetailResult_Success_DEFAULT *ListBankTransactionDetailResponse
+
+func (p *BankSimpleListBankTransactionDetailResult) GetSuccess() (v *ListBankTransactionDetailResponse) {
+	if !p.IsSetSuccess() {
+		return BankSimpleListBankTransactionDetailResult_Success_DEFAULT
+	}
+	return p.Success
+}
+func (p *BankSimpleListBankTransactionDetailResult) SetSuccess(x interface{}) {
+	p.Success = x.(*ListBankTransactionDetailResponse)
+}
+
+var fieldIDToName_BankSimpleListBankTransactionDetailResult = map[int16]string{
+	0: "success",
+}
+
+func (p *BankSimpleListBankTransactionDetailResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *BankSimpleListBankTransactionDetailResult) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+
+		switch fieldId {
+		case 0:
+			if fieldTypeId == thrift.STRUCT {
+				if err = p.ReadField0(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				if err = iprot.Skip(fieldTypeId); err != nil {
+					goto SkipFieldError
+				}
+			}
+		default:
+			if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		}
+
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_BankSimpleListBankTransactionDetailResult[fieldId]), err)
+SkipFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *BankSimpleListBankTransactionDetailResult) ReadField0(iprot thrift.TProtocol) error {
+	p.Success = NewListBankTransactionDetailResponse()
+	if err := p.Success.Read(iprot); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *BankSimpleListBankTransactionDetailResult) Write(oprot thrift.TProtocol) (err error) {
+	var fieldId int16
+	if err = oprot.WriteStructBegin("simpleListBankTransactionDetail_result"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+		if err = p.writeField0(oprot); err != nil {
+			fieldId = 0
+			goto WriteFieldError
+		}
+
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *BankSimpleListBankTransactionDetailResult) writeField0(oprot thrift.TProtocol) (err error) {
+	if p.IsSetSuccess() {
+		if err = oprot.WriteFieldBegin("success", thrift.STRUCT, 0); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := p.Success.Write(oprot); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 0 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 0 end error: ", p), err)
+}
+
+func (p *BankSimpleListBankTransactionDetailResult) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("BankSimpleListBankTransactionDetailResult(%+v)", *p)
+}
+
+func (p *BankSimpleListBankTransactionDetailResult) DeepEqual(ano *BankSimpleListBankTransactionDetailResult) bool {
+	if p == ano {
+		return true
+	} else if p == nil || ano == nil {
+		return false
+	}
+	if !p.Field0DeepEqual(ano.Success) {
+		return false
+	}
+	return true
+}
+
+func (p *BankSimpleListBankTransactionDetailResult) Field0DeepEqual(src *ListBankTransactionDetailResponse) bool {
 
 	if !p.Success.DeepEqual(src) {
 		return false
