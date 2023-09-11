@@ -787,6 +787,7 @@ func (s *bankService) GetBankTransactionDetail(ctx context.Context, req *api.Ban
 			},
 		},
 	})
+
 	if err != nil {
 		return nil, handler.HandleError(err)
 	}
@@ -796,7 +797,20 @@ func (s *bankService) GetBankTransactionDetail(ctx context.Context, req *api.Ban
 	if err != nil {
 		return nil, handler.HandleError(err)
 	}
-	return stru.ConvertBankTransactionDetailDataAndMerchantAccount(*dbData, merchantAccountData.Account), nil
+	mAccountNo := merchantAccountData.Account
+	if dbData.MerchantAccountId == 0 && dbData.PayAccountType == "2" {
+		mAccountNo = config.GetString(bankEnum.PinganIntelligenceAccountNo, "")
+	}
+	if merchantAccountData == nil && dbData.PayAccountType == "2" && dbData.MerchantAccountId != 0 {
+		r, err := s.baseClient.SimpleGetOrganizationBankVirtualAccount(ctx, &baseApi.OrganizationBankVirtualAccountData{
+			Id: dbData.MerchantAccountId})
+		if err != nil {
+			return nil, handler.HandleError(err)
+		}
+		mAccountNo = r.VirtualAccountNo
+	}
+
+	return stru.ConvertBankTransactionDetailDataAndMerchantAccount(*dbData, mAccountNo), nil
 }
 
 func (s *bankService) SimpleGetBankTransactionDetail(ctx context.Context, req *api.BankTransactionDetailData) (*api.BankTransactionDetailData, error) {
@@ -1383,12 +1397,24 @@ func (s *bankService) HandlePinganBankTransactionDetail(ctx context.Context, ban
 					if err != nil {
 						continue
 					}
+
+					//对方银行
+					oppAccountNo := ""
+					oppAccountName := ""
+					oppAccountBankName := ""
+
 					if data.DcFlag == "C" {
 						recAmount = tranAmount
 						TransactionType = enum.GuilinBankTransactionDetailRecType
+						oppAccountNo = data.OutAcctNo
+						oppAccountName = data.OutAcctName
+						oppAccountBankName = data.OutBankNo
 					} else if data.DcFlag == "D" {
 						payAmount = tranAmount
 						TransactionType = enum.GuilinBankTransactionDetailPayType
+						oppAccountNo = data.InAcctNo
+						oppAccountName = data.InAcctName
+						oppAccountBankName = data.InBankNo
 					}
 					acctBalance, err := strconv.ParseFloat(data.AcctBalance, 64)
 					if err != nil {
@@ -1417,9 +1443,9 @@ func (s *bankService) HandlePinganBankTransactionDetail(ctx context.Context, ban
 						VouchersNo:         "",
 						SummaryNo:          data.AbstractStr,
 						Summary:            data.AbstractStrDesc,
-						AcctNo:             data.InAcctNo,
-						AccountName:        data.InAcctName,
-						AccountOpenNode:    data.InBankName,
+						AcctNo:             oppAccountNo,
+						AccountName:        oppAccountName,
+						AccountOpenNode:    oppAccountBankName,
 						ProcessTotalStatus: enum.ProcessInstanceTotalStatusRunning,
 						PayAccountType:     enum.PinganBankType,
 						ExtField1:          data.TranFee,
@@ -1544,15 +1570,26 @@ func (s *bankService) HandlePinganBankVirtualTransactionDetail(ctx context.Conte
 				recAmount := 0.00
 				TransactionType := ""
 				tranAmount, err := strconv.ParseFloat(data.TranAmount, 64)
+				//对方银行
+				oppAccountNo := ""
+				oppAccountName := ""
+				oppAccountBankName := ""
 				if err != nil {
 					continue
 				}
-				if data.DcFlag == "C" {
+
+				if data.DcFlag == "C" { //收钱
 					recAmount = tranAmount
 					TransactionType = enum.GuilinBankTransactionDetailRecType
-				} else if data.DcFlag == "D" {
+					oppAccountNo = data.OutAcctNo
+					oppAccountName = data.OutAcctName
+					oppAccountBankName = data.OutBankNo
+				} else if data.DcFlag == "D" { //出钱
 					payAmount = tranAmount
 					TransactionType = enum.GuilinBankTransactionDetailPayType
+					oppAccountNo = data.InAcctNo
+					oppAccountName = data.InAcctName
+					oppAccountBankName = data.InBankName
 				}
 				acctBalance, err := strconv.ParseFloat(data.AcctBalance, 64)
 				if err != nil {
@@ -1581,9 +1618,9 @@ func (s *bankService) HandlePinganBankVirtualTransactionDetail(ctx context.Conte
 					VouchersNo:         "",
 					SummaryNo:          data.AbstractStr + data.AbstractStrDesc,
 					Summary:            data.Purpose,
-					AcctNo:             data.InAcctNo,
-					AccountName:        data.InAcctName,
-					AccountOpenNode:    data.InBankName,
+					AcctNo:             oppAccountNo,
+					AccountName:        oppAccountName,
+					AccountOpenNode:    oppAccountBankName,
 					ProcessTotalStatus: enum.ProcessInstanceTotalStatusRunning,
 					PayAccountType:     enum.PinganBankType,
 					ExtField1:          data.TranFee,
