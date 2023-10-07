@@ -1287,9 +1287,9 @@ func (s *bankService) HandleSPDBankTransactionDetail(ctx context.Context, bankTy
 					// 浦发借贷标记 0-借/收 1-贷/付
 					payAmount := 0.00
 					recAmount := 0.00
-					if data.DebitFlag == "0" {
+					if data.DebitFlag == "1" {
 						recAmount = data.TransAmount
-					} else if data.DebitFlag == "1" {
+					} else if data.DebitFlag == "0" {
 						payAmount = data.TransAmount
 					}
 
