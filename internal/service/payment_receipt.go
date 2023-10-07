@@ -54,15 +54,16 @@ type PaymentReceiptService interface {
 
 type paymentReceiptService struct {
 	process.Process
-	paymentReceiptRepo repo.PaymentReceiptRepo
-	baseClient         base.Client
-	bankCodeRepo       repo.BankCodeRepo
-	guilinBankSDK      sdk.GuilinBankSDK
-	spdBankSDK         sdk.SPDBankSDK
-	pinganBankSDK      sdk.PinganBankSDK
-	oaClient           oa.Client
-	dingtalkClient     dingtalk.Client
-	somsClient         soms.Client
+	paymentReceiptRepo                       repo.PaymentReceiptRepo
+	baseClient                               base.Client
+	bankCodeRepo                             repo.BankCodeRepo
+	guilinBankSDK                            sdk.GuilinBankSDK
+	spdBankSDK                               sdk.SPDBankSDK
+	pinganBankSDK                            sdk.PinganBankSDK
+	oaClient                                 oa.Client
+	dingtalkClient                           dingtalk.Client
+	somsClient                               soms.Client
+	paymentReceiptApplicationCustomFieldRepo repo.PaymentReceiptApplicationCustomFieldRepo
 }
 
 func (s *paymentReceiptService) ListPaymentReceipt(ctx context.Context, req *api.ListPaymentReceiptRequest) (resp *api.ListPaymentReceiptResponse, err error) {
@@ -127,7 +128,30 @@ func (s *paymentReceiptService) GetPaymentReceipt(ctx context.Context, id int64)
 	if err != nil || dbData == nil {
 		return nil, handler.HandleError(err)
 	}
-	return stru.ConvertPaymentReceiptData(*dbData), nil
+
+	customFields, _, err := s.paymentReceiptApplicationCustomFieldRepo.List(ctx, "created_at", 0, 0, &repo.PaymentReceiptApplicationCustomFieldDBData{
+		PaymentReceiptId: dbData.Id,
+	})
+	if err != nil {
+		return nil, handler.HandleError(err)
+	}
+	receipt := stru.ConvertPaymentReceiptData(*dbData)
+	var resultCustomFields []*api.CustomField
+	if customFields != nil && len(*customFields) > 0 {
+		resultCustomFields = make([]*api.CustomField, len(*customFields))
+		for i, v := range *customFields {
+			resultCustomFields[i] = &api.CustomField{
+				Id:             v.Id,
+				Name:           v.ProcessCustomFieldName,
+				Value:          v.ProcessCustomFieldValue,
+				OrganizationId: v.OrganizationId,
+				Sort:           v.ProcessCustomFieldSort,
+				FieldId:        v.ProcessCustomFieldId,
+			}
+		}
+		receipt.CustomFields = resultCustomFields
+	}
+	return receipt, nil
 }
 
 func (s *paymentReceiptService) SimpleGetPaymentReceipt(ctx context.Context, id int64) (resp *api.PaymentReceiptData, err error) {
@@ -143,7 +167,30 @@ func (s *paymentReceiptService) SimpleGetPaymentReceipt(ctx context.Context, id 
 	if err != nil || dbData == nil {
 		return nil, handler.HandleError(err)
 	}
-	return stru.ConvertPaymentReceiptData(*dbData), nil
+
+	customFields, _, err := s.paymentReceiptApplicationCustomFieldRepo.List(ctx, "created_at", 0, 0, &repo.PaymentReceiptApplicationCustomFieldDBData{
+		PaymentReceiptId: dbData.Id,
+	})
+	if err != nil {
+		return nil, handler.HandleError(err)
+	}
+	receipt := stru.ConvertPaymentReceiptData(*dbData)
+	var resultCustomFields []*api.CustomField
+	if customFields != nil && len(*customFields) > 0 {
+		resultCustomFields = make([]*api.CustomField, len(*customFields))
+		for i, v := range *customFields {
+			resultCustomFields[i] = &api.CustomField{
+				Id:             v.Id,
+				Name:           v.ProcessCustomFieldName,
+				Value:          v.ProcessCustomFieldValue,
+				OrganizationId: v.OrganizationId,
+				Sort:           v.ProcessCustomFieldSort,
+				FieldId:        v.ProcessCustomFieldId,
+			}
+		}
+		receipt.CustomFields = resultCustomFields
+	}
+	return receipt, nil
 }
 
 func (s *paymentReceiptService) SimpleGetPaymentReceiptByProcessInstanceId(ctx context.Context, id int64) (resp *api.PaymentReceiptData, err error) {

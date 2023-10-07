@@ -10,7 +10,7 @@ import (
 
 var ProviderSet = wire.NewSet(trace.NewGormLogger, store.NewReadWriteSeparationDB, NewBankTransferReceiptRepo,
 	NewBankTransactionDetailRepo, NewBankTransactionDetailExternalRepo, NewBankCodeRepo, NewBankBusinessPayrollRepo,
-	NewBankBusinessPayrollDetailRepo, NewPaymentReceiptRepo)
+	NewBankBusinessPayrollDetailRepo, NewPaymentReceiptRepo, NewPaymentReceiptApplicationCustomFieldRepo)
 
 func NewBankTransferReceiptRepo(db *gorm.DB) BankTransferReceiptRepo {
 	return &bankTransferReceiptRepo{
@@ -51,5 +51,11 @@ func NewBankBusinessPayrollDetailRepo(db *gorm.DB) BankBusinessPayrollDetailRepo
 func NewPaymentReceiptRepo(db *gorm.DB) PaymentReceiptRepo {
 	return &paymentReceiptRepo{
 		BaseRepo: repository.BaseRepo{Db: db, Model: PaymentReceiptDBData{}},
+	}
+}
+
+func NewPaymentReceiptApplicationCustomFieldRepo(db *gorm.DB) PaymentReceiptApplicationCustomFieldRepo {
+	return &paymentReceiptApplicationCustomFieldRepo{
+		BaseRepo: repository.BaseRepo{Db: db, Model: PaymentReceiptApplicationCustomFieldDBData{}},
 	}
 }

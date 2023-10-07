@@ -38,7 +38,7 @@ func NewBankService(baseClient base.Client, guilinBankSDK sdk.GuilinBankSDK, spd
 func NewPaymentReceiptService(paymentReceiptSubProcess *sub_process.PaymentReceiptSubProcess, baseClient base.Client,
 	paymentReceiptRepo repo.PaymentReceiptRepo, bankCodeRepo repo.BankCodeRepo, guilinBankSDK sdk.GuilinBankSDK,
 	spdBankSDK sdk.SPDBankSDK, pinganBankSDK sdk.PinganBankSDK, oaClient oa.Client, dingtalkClient dingtalk.Client,
-	processAuthRepo process.ProcessAuthRepo, somsClient soms.Client) PaymentReceiptService {
+	processAuthRepo process.ProcessAuthRepo, somsClient soms.Client, paymentReceiptApplicationCustomFieldRepo repo.PaymentReceiptApplicationCustomFieldRepo) PaymentReceiptService {
 	return &paymentReceiptService{
 		process.Process{
 			SubProcess:      paymentReceiptSubProcess,
@@ -47,6 +47,7 @@ func NewPaymentReceiptService(paymentReceiptSubProcess *sub_process.PaymentRecei
 		},
 		paymentReceiptRepo, baseClient, bankCodeRepo, guilinBankSDK,
 		spdBankSDK, pinganBankSDK, oaClient, dingtalkClient, somsClient,
+		paymentReceiptApplicationCustomFieldRepo,
 	}
 }
 

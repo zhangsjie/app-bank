@@ -453,6 +453,7 @@ struct PaymentReceiptData {
     39: string receiptOrderNo
     40: string remark
     41: ProcessAddTagItemVO processAddTagItemVO
+    42: list<CustomField> customFields
 }
 
 struct ListPaymentReceiptRequest {
@@ -514,6 +515,16 @@ struct ProcessAddTagItemVO {
 struct ProcessAddTagItemUserVO {
 	1: i64 userId
 	2: string nickName
+}
+
+struct CustomField {
+    1: i64 id
+    2: string name
+    3: string value
+    4: string explain
+    5: i32 sort
+    6: i64 fieldId
+    7: i64 organizationId
 }
 
 service bank {

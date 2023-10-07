@@ -21,9 +21,10 @@ import (
 var _ process.SubProcess = new(PaymentReceiptSubProcess)
 
 type PaymentReceiptSubProcess struct {
-	paymentReceiptRepo repo.PaymentReceiptRepo
-	oaClient           oa.Client
-	baseClient         base.Client
+	paymentReceiptRepo                       repo.PaymentReceiptRepo
+	oaClient                                 oa.Client
+	baseClient                               base.Client
+	paymentReceiptApplicationCustomFieldRepo repo.PaymentReceiptApplicationCustomFieldRepo
 }
 
 func (p *PaymentReceiptSubProcess) SubmitBefore(ctx context.Context, id int64, param interface{}) error {
@@ -107,6 +108,24 @@ func (p *PaymentReceiptSubProcess) Create(ctx context.Context, param interface{}
 	data.OrderStatus = "0"
 	data.RefundSuccess = "0"
 	id, err := p.paymentReceiptRepo.Add(ctx, data)
+
+	if req.CustomFields != nil && len(req.CustomFields) > 0 {
+		customFields := make([]repo.PaymentReceiptApplicationCustomFieldDBData, len(req.CustomFields))
+		for i, v := range req.CustomFields {
+			var customField repo.PaymentReceiptApplicationCustomFieldDBData
+			customField.ProcessCustomFieldId = v.Id
+			customField.ProcessCustomFieldName = v.Name
+			customField.ProcessCustomFieldValue = v.Value
+			customField.ProcessCustomFieldSort = v.Sort
+			customField.OrganizationId = v.OrganizationId
+			customField.PaymentReceiptId = id
+			customFields[i] = customField
+		}
+		_, err = p.paymentReceiptApplicationCustomFieldRepo.BatchAdd(ctx, customFields)
+		if err != nil {
+			return 0, handler.HandleError(err)
+		}
+	}
 	return id, handler.HandleError(err)
 }
 
