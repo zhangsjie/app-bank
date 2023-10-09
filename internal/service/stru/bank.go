@@ -49,6 +49,7 @@ func ConvertBankTransferReceiptData(dbData repo.BankTransferReceiptDBData) *api.
 		RecAccountOpenBankFilling: dbData.RecAccountOpenBankFilling,
 		Title:                     dbData.Title,
 		PayAccountType:            dbData.PayAccountType,
+		ElectronicReceiptFile:     dbData.ElectronicReceiptFile,
 	}
 }
 

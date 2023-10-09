@@ -39,6 +39,7 @@ struct BankTransferReceiptData {
     35: string payAccountOpenBank
     36: string title
     37: string payAccountType
+    38: string ElectronicReceiptFile
 }
 
 struct ListBankTransferReceiptRequest {
@@ -103,6 +104,7 @@ struct BankTransactionDetailData {
     34: string payAccountType
     35: string extField2
     36: string extField3
+    37: string merchantAccountOpenName
 }
 
 struct ListBankTransactionDetailRequest {
@@ -128,6 +130,8 @@ struct ListBankTransactionDetailRequest {
     20: string payAccountType
     21: string extField2
     22: string extField3
+    23: i64 merchantAccountId
+    24: i64 organizationId
 }
 
 struct ListBankTransactionDetailResponse {
@@ -449,6 +453,7 @@ struct PaymentReceiptData {
     39: string receiptOrderNo
     40: string remark
     41: ProcessAddTagItemVO processAddTagItemVO
+    42: list<CustomField> customFields
 }
 
 struct ListPaymentReceiptRequest {
@@ -512,6 +517,16 @@ struct ProcessAddTagItemUserVO {
 	2: string nickName
 }
 
+struct CustomField {
+    1: i64 id
+    2: string name
+    3: string value
+    4: string explain
+    5: i32 sort
+    6: i64 fieldId
+    7: i64 organizationId
+}
+
 service bank {
     ListBankTransferReceiptResponse listBankTransferReceipt(1: ListBankTransferReceiptRequest req)
     BankTransferReceiptData getBankTransferReceipt(1: BankTransferReceiptData req)
@@ -524,6 +539,7 @@ service bank {
     void handleTransferReceiptResult(1: i64 id)
 
     ListBankTransactionDetailResponse listBankTransactionDetail(1: ListBankTransactionDetailRequest req)
+    ListBankTransactionDetailResponse simpleListBankTransactionDetail(1: ListBankTransactionDetailRequest req)
     BankTransactionDetailData getBankTransactionDetail(1: BankTransactionDetailData req)
     BankTransactionDetailData simpleGetBankTransactionDetail(1: BankTransactionDetailData req)
     void handleTransactionDetail(1: string beginDate, 2: string endDate, 3: i64 organizationId)
@@ -565,6 +581,8 @@ service bank {
 
     ListPaymentReceiptResponse listPaymentReceipt(1: ListPaymentReceiptRequest req)
     PaymentReceiptData getPaymentReceipt(1: i64 id)
+    PaymentReceiptData simpleGetPaymentReceipt(1: i64 id)
+    PaymentReceiptData simpleGetPaymentReceiptByProcessInstanceId(1: i64 id)
     void addPaymentReceipt(1: PaymentReceiptData req)
     void approvePaymentReceipt(1: i64 id, 2: PaymentReceiptData req)
     void refusePaymentReceipt(1: i64 id, 2: PaymentReceiptData req, 3: string remark)

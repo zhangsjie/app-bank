@@ -33,6 +33,8 @@ type PaymentReceiptService interface {
 	process.ProcessInterface
 	ListPaymentReceipt(ctx context.Context, req *api.ListPaymentReceiptRequest) (resp *api.ListPaymentReceiptResponse, err error)
 	GetPaymentReceipt(ctx context.Context, id int64) (resp *api.PaymentReceiptData, err error)
+	SimpleGetPaymentReceipt(ctx context.Context, id int64) (resp *api.PaymentReceiptData, err error)
+	SimpleGetPaymentReceiptByProcessInstanceId(ctx context.Context, id int64) (resp *api.PaymentReceiptData, err error)
 	PaymentReceiptRun(ctx context.Context, id int64) (err error)
 	HandleSyncPaymentReceipt(ctx context.Context, beginDate string, endDate string, organizationId int64) error
 	SyncPaymentReceipt(ctx context.Context, taskId int64, param []byte, organizationId int64) (err error)
@@ -52,15 +54,16 @@ type PaymentReceiptService interface {
 
 type paymentReceiptService struct {
 	process.Process
-	paymentReceiptRepo repo.PaymentReceiptRepo
-	baseClient         base.Client
-	bankCodeRepo       repo.BankCodeRepo
-	guilinBankSDK      sdk.GuilinBankSDK
-	spdBankSDK         sdk.SPDBankSDK
-	pinganBankSDK      sdk.PinganBankSDK
-	oaClient           oa.Client
-	dingtalkClient     dingtalk.Client
-	somsClient         soms.Client
+	paymentReceiptRepo                       repo.PaymentReceiptRepo
+	baseClient                               base.Client
+	bankCodeRepo                             repo.BankCodeRepo
+	guilinBankSDK                            sdk.GuilinBankSDK
+	spdBankSDK                               sdk.SPDBankSDK
+	pinganBankSDK                            sdk.PinganBankSDK
+	oaClient                                 oa.Client
+	dingtalkClient                           dingtalk.Client
+	somsClient                               soms.Client
+	paymentReceiptApplicationCustomFieldRepo repo.PaymentReceiptApplicationCustomFieldRepo
 }
 
 func (s *paymentReceiptService) ListPaymentReceipt(ctx context.Context, req *api.ListPaymentReceiptRequest) (resp *api.ListPaymentReceiptResponse, err error) {
@@ -125,6 +128,80 @@ func (s *paymentReceiptService) GetPaymentReceipt(ctx context.Context, id int64)
 	if err != nil || dbData == nil {
 		return nil, handler.HandleError(err)
 	}
+
+	customFields, _, err := s.paymentReceiptApplicationCustomFieldRepo.List(ctx, "created_at", 0, 0, &repo.PaymentReceiptApplicationCustomFieldDBData{
+		PaymentReceiptId: dbData.Id,
+	})
+	if err != nil {
+		return nil, handler.HandleError(err)
+	}
+	receipt := stru.ConvertPaymentReceiptData(*dbData)
+	var resultCustomFields []*api.CustomField
+	if customFields != nil && len(*customFields) > 0 {
+		resultCustomFields = make([]*api.CustomField, len(*customFields))
+		for i, v := range *customFields {
+			resultCustomFields[i] = &api.CustomField{
+				Id:             v.Id,
+				Name:           v.ProcessCustomFieldName,
+				Value:          v.ProcessCustomFieldValue,
+				OrganizationId: v.OrganizationId,
+				Sort:           v.ProcessCustomFieldSort,
+				FieldId:        v.ProcessCustomFieldId,
+			}
+		}
+		receipt.CustomFields = resultCustomFields
+	}
+	return receipt, nil
+}
+
+func (s *paymentReceiptService) SimpleGetPaymentReceipt(ctx context.Context, id int64) (resp *api.PaymentReceiptData, err error) {
+	dbData, err := s.paymentReceiptRepo.SimpleGet(ctx, &repo.PaymentReceiptDBData{
+		BaseProcessDBData: repository.BaseProcessDBData{
+			BaseDBData: repository.BaseDBData{
+				BaseCommonDBData: repository.BaseCommonDBData{
+					Id: id,
+				},
+			},
+		},
+	})
+	if err != nil || dbData == nil {
+		return nil, handler.HandleError(err)
+	}
+
+	customFields, _, err := s.paymentReceiptApplicationCustomFieldRepo.List(ctx, "created_at", 0, 0, &repo.PaymentReceiptApplicationCustomFieldDBData{
+		PaymentReceiptId: dbData.Id,
+	})
+	if err != nil {
+		return nil, handler.HandleError(err)
+	}
+	receipt := stru.ConvertPaymentReceiptData(*dbData)
+	var resultCustomFields []*api.CustomField
+	if customFields != nil && len(*customFields) > 0 {
+		resultCustomFields = make([]*api.CustomField, len(*customFields))
+		for i, v := range *customFields {
+			resultCustomFields[i] = &api.CustomField{
+				Id:             v.Id,
+				Name:           v.ProcessCustomFieldName,
+				Value:          v.ProcessCustomFieldValue,
+				OrganizationId: v.OrganizationId,
+				Sort:           v.ProcessCustomFieldSort,
+				FieldId:        v.ProcessCustomFieldId,
+			}
+		}
+		receipt.CustomFields = resultCustomFields
+	}
+	return receipt, nil
+}
+
+func (s *paymentReceiptService) SimpleGetPaymentReceiptByProcessInstanceId(ctx context.Context, id int64) (resp *api.PaymentReceiptData, err error) {
+	dbData, err := s.paymentReceiptRepo.SimpleGet(ctx, &repo.PaymentReceiptDBData{
+		BaseProcessDBData: repository.BaseProcessDBData{
+			ProcessInstanceId: id,
+		},
+	})
+	if err != nil || dbData == nil {
+		return nil, handler.HandleError(err)
+	}
 	return stru.ConvertPaymentReceiptData(*dbData), nil
 }
 
@@ -146,83 +223,97 @@ func (s *paymentReceiptService) PaymentReceiptRun(ctx context.Context, id int64)
 	}
 	if paymentReceipt.OrderStatus != "" {
 		if paymentReceipt.OrderStatus == "0" {
-			if paymentReceipt.PayAccount == "" {
-				return handler.HandleNewError("PayAccount must not empty")
-			}
-			if paymentReceipt.PayAccountName == "" {
-				return handler.HandleNewError("PayAccountName must not empty")
-			}
-			if paymentReceipt.ReceiveAccount == "" {
-				return handler.HandleNewError("RecAccount must not empty")
-			}
-			if paymentReceipt.ReceiveAccountName == "" {
-				return handler.HandleNewError("RecAccountName must not empty")
-			}
-			if paymentReceipt.PayAmount <= 0 {
-				return handler.HandleNewError("PayAmount must greater than 0")
-			}
-			if paymentReceipt.PublicPrivateFlag == "" {
-				return handler.HandleNewError("PubPriFlag must not empty")
-			}
-			//处理行内行外
-			insideOutsideBankType := "0"
-			if paymentReceipt.PayAccountBankName != paymentReceipt.ReceiveAccountBankName {
-				insideOutsideBankType = "1"
-			}
-			paymentReceipt.InsideOutsideBankType = insideOutsideBankType
-			//联行号清算行号
-			bankCode, err := s.bankCodeRepo.Get(ctx, &repo.BankCodeDBData{
-				BankName: paymentReceipt.ReceiveAccountBankName,
-			})
-			if err != nil {
-				return handler.HandleError(err)
-			}
-			paymentReceipt.UnionBankNo = bankCode.UnionBankNo
-			paymentReceipt.ClearBankNo = bankCode.ClearBankNo
-			//处理备注
-			payRemark := fmt.Sprintf("%s[%s]", paymentReceipt.Purpose, paymentReceipt.Code)
-			//处理账户空格
-			paymentReceipt.ReceiveAccount = strings.ReplaceAll(paymentReceipt.ReceiveAccount, " ", "")
-			paymentReceipt.PayAccount = strings.ReplaceAll(paymentReceipt.PayAccount, " ", "")
-
 			var orderStatus string
-			switch paymentReceipt.PayAccountType {
-			case "0":
-				orderStatus, err = s.guilinBankPayment(ctx, paymentReceipt, payRemark)
-			case "1":
-				// 转账前校验浦发银行接口是否已经存在这个流水数据, 存在则获取交易状态, 否则重新转账
-				organizationBankConfig, err := s.baseClient.GetOrganizationBankConfig(ctx, &baseApi.OrganizationBankConfigData{
-					OrganizationId: paymentReceipt.OrganizationId,
-					Type:           enum.SPDBankType,
+			if paymentReceipt.PayAmount > 0 {
+				if paymentReceipt.PayAccount == "" {
+					return handler.HandleNewError("PayAccount must not empty")
+				}
+				if paymentReceipt.PayAccountName == "" {
+					return handler.HandleNewError("PayAccountName must not empty")
+				}
+				if paymentReceipt.ReceiveAccount == "" {
+					return handler.HandleNewError("RecAccount must not empty")
+				}
+				if paymentReceipt.ReceiveAccountName == "" {
+					return handler.HandleNewError("RecAccountName must not empty")
+				}
+				if paymentReceipt.PayAmount <= 0 {
+					return handler.HandleNewError("PayAmount must greater than 0")
+				}
+				if paymentReceipt.PublicPrivateFlag == "" {
+					return handler.HandleNewError("PubPriFlag must not empty")
+				}
+				//处理行内行外
+				insideOutsideBankType := "0"
+				if paymentReceipt.PayAccountBankName != paymentReceipt.ReceiveAccountBankName {
+					insideOutsideBankType = "1"
+				}
+				paymentReceipt.InsideOutsideBankType = insideOutsideBankType
+				//联行号清算行号
+				bankCode, err := s.bankCodeRepo.Get(ctx, &repo.BankCodeDBData{
+					BankName: paymentReceipt.ReceiveAccountBankName,
 				})
 				if err != nil {
 					return handler.HandleError(err)
 				}
-				transferDate := stru.FormatDayTime(paymentReceipt.CreatedAt)
-				bankTransferResultResponseData, err := s.spdBankSDK.QueryTransferResult(ctx, paymentReceipt.PayAccount, paymentReceipt.ReceiveAccount, paymentReceipt.OrderFlowNo, paymentReceipt.Code, transferDate, transferDate, organizationBankConfig.Host, organizationBankConfig.SignHost, organizationBankConfig.BankCustomerId, organizationBankConfig.BankUserId)
-				zap.L().Info(fmt.Sprintf("PaymentReceiptRun spdBankSDK.QueryTransferResult查询转账结果:%v", bankTransferResultResponseData))
-				// 更新单据状态
-				if bankTransferResultResponseData != nil && len(bankTransferResultResponseData.Items) > 0 {
-					bankTransferResponse := bankTransferResultResponseData.Items[0]
-					orderStatus = enum.GetOrderState(bankTransferResponse.TransStatus, bankTransferResponse.TransStatus)
-					returnCode := bankTransferResponse.TransStatus
-					returnMsg := enum.GetOrderMsg(bankTransferResponse.TransStatus, "")
-					if err := s.paymentReceiptRepo.UpdateById(ctx, paymentReceipt.Id, &repo.PaymentReceiptDBData{
-						OrderStatus: orderStatus,
-						RetCode:     returnCode,
-						RetMessage:  returnMsg,
-						OrderFlowNo: bankTransferResponse.AcceptNo,
-					}); err != nil {
+				paymentReceipt.UnionBankNo = bankCode.UnionBankNo
+				paymentReceipt.ClearBankNo = bankCode.ClearBankNo
+				//处理备注
+				payRemark := fmt.Sprintf("%s[%s]", paymentReceipt.Purpose, paymentReceipt.Code)
+				//处理账户空格
+				paymentReceipt.ReceiveAccount = strings.ReplaceAll(paymentReceipt.ReceiveAccount, " ", "")
+				paymentReceipt.PayAccount = strings.ReplaceAll(paymentReceipt.PayAccount, " ", "")
+
+				switch paymentReceipt.PayAccountType {
+				case "0":
+					orderStatus, err = s.guilinBankPayment(ctx, paymentReceipt, payRemark)
+				case "1":
+					// 转账前校验浦发银行接口是否已经存在这个流水数据, 存在则获取交易状态, 否则重新转账
+					organizationBankConfig, err := s.baseClient.GetOrganizationBankConfig(ctx, &baseApi.OrganizationBankConfigData{
+						OrganizationId: paymentReceipt.OrganizationId,
+						Type:           enum.SPDBankType,
+					})
+					if err != nil {
 						return handler.HandleError(err)
 					}
-				} else {
-					orderStatus, err = s.spdBankPayment(ctx, paymentReceipt, payRemark)
+					transferDate := stru.FormatDayTime(paymentReceipt.CreatedAt)
+					bankTransferResultResponseData, err := s.spdBankSDK.QueryTransferResult(ctx, paymentReceipt.PayAccount, paymentReceipt.ReceiveAccount, paymentReceipt.OrderFlowNo, paymentReceipt.Code, transferDate, transferDate, organizationBankConfig.Host, organizationBankConfig.SignHost, organizationBankConfig.BankCustomerId, organizationBankConfig.BankUserId)
+					zap.L().Info(fmt.Sprintf("PaymentReceiptRun spdBankSDK.QueryTransferResult查询转账结果:%v", bankTransferResultResponseData))
+					// 更新单据状态
+					if bankTransferResultResponseData != nil && len(bankTransferResultResponseData.Items) > 0 {
+						bankTransferResponse := bankTransferResultResponseData.Items[0]
+						orderStatus = enum.GetOrderState(bankTransferResponse.TransStatus, bankTransferResponse.TransStatus)
+						returnCode := bankTransferResponse.TransStatus
+						returnMsg := enum.GetOrderMsg(bankTransferResponse.TransStatus, "")
+						if err := s.paymentReceiptRepo.UpdateById(ctx, paymentReceipt.Id, &repo.PaymentReceiptDBData{
+							OrderStatus: orderStatus,
+							RetCode:     returnCode,
+							RetMessage:  returnMsg,
+							OrderFlowNo: bankTransferResponse.AcceptNo,
+						}); err != nil {
+							return handler.HandleError(err)
+						}
+					} else {
+						orderStatus, err = s.spdBankPayment(ctx, paymentReceipt, payRemark)
+						if err != nil {
+							return handler.HandleError(err)
+						}
+					}
+				case "2":
+					orderStatus, err = s.pinganBankPayment(ctx, paymentReceipt, payRemark)
+					if err != nil {
+						return handler.HandleError(err)
+					}
 				}
-			case "2":
-				orderStatus, err = s.pinganBankPayment(ctx, paymentReceipt, payRemark)
-			}
-			if err != nil {
-				return handler.HandleError(err)
+			} else {
+				// 交易金额为0 直接变更为成功
+				orderStatus = enum.GuilinBankTransferSuccessResult
+				if err := s.paymentReceiptRepo.UpdateById(ctx, paymentReceipt.Id, &repo.PaymentReceiptDBData{
+					OrderStatus: orderStatus,
+					RetCode:     "000000",
+				}); err != nil {
+					return handler.HandleError(err)
+				}
 			}
 			if orderStatus != "" {
 				//同步付款申请的银行状态

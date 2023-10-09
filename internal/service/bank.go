@@ -29,6 +29,7 @@ import (
 	"gorm.io/gorm"
 	"io/ioutil"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -49,6 +50,7 @@ type BankService interface {
 	HandleTransferReceiptResult(ctx context.Context, id int64) error
 
 	ListBankTransactionDetail(context.Context, *api.ListBankTransactionDetailRequest) (*api.ListBankTransactionDetailResponse, error)
+	SimpleListBankTransactionDetail(ctx context.Context, req *api.ListBankTransactionDetailRequest) (*api.ListBankTransactionDetailResponse, error)
 	GetBankTransactionDetail(context.Context, *api.BankTransactionDetailData) (*api.BankTransactionDetailData, error)
 	SimpleGetBankTransactionDetail(context.Context, *api.BankTransactionDetailData) (*api.BankTransactionDetailData, error)
 	CreateTransactionDetailProcessInstance(ctx context.Context, id int64) error
@@ -137,12 +139,12 @@ func (s *bankService) GetBankTransferReceipt(ctx context.Context, req *api.BankT
 	if err != nil {
 		return nil, handler.HandleError(err)
 	}
-	if "" != dbData.DetailHostFlowNo {
+	if "" != dbData.DetailHostFlowNo && dbData.PayAccountType == enum.GuilinBankType {
 		detailData, err := s.bankTransactionDetailRepo.Get(ctx, &repo.BankTransactionDetailDBData{
 			HostFlowNo: dbData.DetailHostFlowNo,
 		})
 		if err == nil && nil != detailData {
-			dbData.DetailHostFlowNo = detailData.ElectronicReceiptFile
+			dbData.ElectronicReceiptFile = detailData.ElectronicReceiptFile
 		}
 	}
 	return stru.ConvertBankTransferReceiptData(*dbData), nil
@@ -757,11 +759,35 @@ func (s *bankService) ListBankTransactionDetail(ctx context.Context, req *api.Li
 			BsnType:             req.BusinessType,
 			PayAccountType:      req.PayAccountType,
 			ExtField3:           req.ExtField3,
+			MerchantAccountId:   req.MerchantAccountId,
 		},
 		PayAmountMin:      req.PayAmountMin,
 		PayAmountMax:      req.PayAmountMax,
 		RecAmountMin:      req.RecAmountMin,
 		RecAmountMax:      req.RecAmountMax,
+		TransferTimeArray: req.TransferTimeArray,
+	})
+	if err != nil || dbData == nil {
+		return nil, handler.HandleError(err)
+	}
+	data := make([]*api.BankTransactionDetailData, len(*dbData))
+	for i, v := range *dbData {
+		data[i] = stru.ConvertBankTransactionDetailData(v)
+	}
+	return &api.ListBankTransactionDetailResponse{
+		Data:  data,
+		Count: count,
+	}, nil
+}
+
+func (s *bankService) SimpleListBankTransactionDetail(ctx context.Context, req *api.ListBankTransactionDetailRequest) (*api.ListBankTransactionDetailResponse, error) {
+	dbData, count, err := s.bankTransactionDetailRepo.SimpleList(ctx, req.Sort, req.PageNum, req.PageSize, &repo.BankTransactionDetailDBDataParam{
+		BankTransactionDetailDBData: repo.BankTransactionDetailDBData{
+			BaseDBData: repository.BaseDBData{
+				OrganizationId: req.OrganizationId,
+			},
+			Type: req.Type,
+		},
 		TransferTimeArray: req.TransferTimeArray,
 	})
 	if err != nil || dbData == nil {
@@ -785,6 +811,7 @@ func (s *bankService) GetBankTransactionDetail(ctx context.Context, req *api.Ban
 			},
 		},
 	})
+
 	if err != nil {
 		return nil, handler.HandleError(err)
 	}
@@ -794,7 +821,20 @@ func (s *bankService) GetBankTransactionDetail(ctx context.Context, req *api.Ban
 	if err != nil {
 		return nil, handler.HandleError(err)
 	}
-	return stru.ConvertBankTransactionDetailDataAndMerchantAccount(*dbData, merchantAccountData.Account), nil
+	mAccountNo := merchantAccountData.Account
+	if dbData.MerchantAccountId == 0 && dbData.PayAccountType == "2" {
+		mAccountNo = config.GetString(bankEnum.PinganIntelligenceAccountNo, "")
+	}
+	if merchantAccountData == nil && dbData.PayAccountType == "2" && dbData.MerchantAccountId != 0 {
+		r, err := s.baseClient.SimpleGetOrganizationBankVirtualAccount(ctx, &baseApi.OrganizationBankVirtualAccountData{
+			Id: dbData.MerchantAccountId})
+		if err != nil {
+			return nil, handler.HandleError(err)
+		}
+		mAccountNo = r.VirtualAccountNo
+	}
+
+	return stru.ConvertBankTransactionDetailDataAndMerchantAccount(*dbData, mAccountNo), nil
 }
 
 func (s *bankService) SimpleGetBankTransactionDetail(ctx context.Context, req *api.BankTransactionDetailData) (*api.BankTransactionDetailData, error) {
@@ -815,7 +855,9 @@ func (s *bankService) SimpleGetBankTransactionDetail(ctx context.Context, req *a
 	if err != nil {
 		return nil, handler.HandleError(err)
 	}
-	return stru.ConvertBankTransactionDetailDataAndMerchantAccount(*dbData, merchantAccountData.Account), nil
+	bankTransactionDetailData := stru.ConvertBankTransactionDetailDataAndMerchantAccount(*dbData, merchantAccountData.Account)
+	bankTransactionDetailData.MerchantAccountOpenName = merchantAccountData.OpenBankName
+	return bankTransactionDetailData, nil
 }
 
 func (s *bankService) EditBankTransactionDetailExtField(ctx context.Context, req *api.BankTransactionDetailData) error {
@@ -939,8 +981,14 @@ func (s *bankService) HandleTransactionDetail(ctx context.Context, beginDate str
 		oneDayDuration, _ := time.ParseDuration("-24h")
 		yesterday := now.Add(oneDayDuration)
 		yesterdayString := util.FormatTimeyyyyMMdd(yesterday)
-		s.HandlePinganBankTransactionDetail(ctx, enum.PinganBankType, yesterdayString, yesterdayString, organizationId)
+		s.HandlePinganBankTransactionDetail(ctx, enum.PinganBankType, beginDate, yesterdayString, organizationId)
 	}
+	//若endDate==今天,那么要分成两部分来进行
+	s.HandlePinganBankVirtualTransactionDetail(ctx, enum.PinganBankType, beginDate, endDate, organizationId)
+	if endDate == util.FormatTimeyyyyMMdd(now) {
+		s.HandlePinganBankVirtualTransactionDetail(ctx, enum.PinganBankType, endDate, endDate, organizationId)
+	}
+
 	return nil
 }
 
@@ -1083,7 +1131,7 @@ func (s *bankService) HandleGuilinBankTransactionDetail(ctx context.Context, ban
 	return nil
 }
 
-//bankType 银行类型:0,桂林,1:浦发,2:平安
+// bankType 银行类型:0,桂林,1:浦发,2:平安
 func (s *bankService) updateRelevanceElectronicDocument(ctx context.Context, summary, hostFlowNo, electronicDocument, bankType string) error {
 	var paymentReceipt *repo.PaymentReceiptDBData
 	electronicDocumentPng := electronicDocument
@@ -1112,10 +1160,10 @@ func (s *bankService) updateRelevanceElectronicDocument(ctx context.Context, sum
 				return handler.HandleError(err)
 			}
 			// 上传png
-			electronicDocumentPng, err = s.pdfToImageService.UploadPdfToImageJsdk(ctx, electronicDocument)
-			if err != nil {
+			//electronicDocumentPng, err = s.pdfToImageService.UploadPdfToImageJsdk(ctx, electronicDocument)
+			/*if err != nil {
 				return handler.HandleError(err)
-			}
+			}*/
 		}
 	case enum.SPDBankType:
 		//浦发只用更新回单即可,
@@ -1128,10 +1176,10 @@ func (s *bankService) updateRelevanceElectronicDocument(ctx context.Context, sum
 				return handler.HandleError(err)
 			}
 			// 上传png
-			electronicDocumentPng, err = s.pdfToImageService.UploadPdfToImageJsdk(ctx, electronicDocument)
+			/*electronicDocumentPng, err = s.pdfToImageService.UploadPdfToImageJsdk(ctx, electronicDocument)
 			if err != nil {
 				return handler.HandleError(err)
-			}
+			}*/
 		}
 	case enum.PinganBankType:
 		paymentReceipt, err = s.paymentReceiptRepo.GetWithoutPermission(ctx, &repo.PaymentReceiptDBData{
@@ -1239,9 +1287,9 @@ func (s *bankService) HandleSPDBankTransactionDetail(ctx context.Context, bankTy
 					// 浦发借贷标记 0-借/收 1-贷/付
 					payAmount := 0.00
 					recAmount := 0.00
-					if data.DebitFlag == "0" {
+					if data.DebitFlag == "1" {
 						recAmount = data.TransAmount
-					} else if data.DebitFlag == "1" {
+					} else if data.DebitFlag == "0" {
 						payAmount = data.TransAmount
 					}
 
@@ -1375,12 +1423,24 @@ func (s *bankService) HandlePinganBankTransactionDetail(ctx context.Context, ban
 					if err != nil {
 						continue
 					}
+
+					//对方银行
+					oppAccountNo := ""
+					oppAccountName := ""
+					oppAccountBankName := ""
+
 					if data.DcFlag == "C" {
 						recAmount = tranAmount
 						TransactionType = enum.GuilinBankTransactionDetailRecType
+						oppAccountNo = data.OutAcctNo
+						oppAccountName = data.OutAcctName
+						oppAccountBankName = data.OutBankNo
 					} else if data.DcFlag == "D" {
 						payAmount = tranAmount
 						TransactionType = enum.GuilinBankTransactionDetailPayType
+						oppAccountNo = data.InAcctNo
+						oppAccountName = data.InAcctName
+						oppAccountBankName = data.InBankNo
 					}
 					acctBalance, err := strconv.ParseFloat(data.AcctBalance, 64)
 					if err != nil {
@@ -1409,9 +1469,9 @@ func (s *bankService) HandlePinganBankTransactionDetail(ctx context.Context, ban
 						VouchersNo:         "",
 						SummaryNo:          data.AbstractStr,
 						Summary:            data.AbstractStrDesc,
-						AcctNo:             data.InAcctNo,
-						AccountName:        data.InAcctName,
-						AccountOpenNode:    data.InBankName,
+						AcctNo:             oppAccountNo,
+						AccountName:        oppAccountName,
+						AccountOpenNode:    oppAccountBankName,
 						ProcessTotalStatus: enum.ProcessInstanceTotalStatusRunning,
 						PayAccountType:     enum.PinganBankType,
 						ExtField1:          data.TranFee,
@@ -1468,6 +1528,179 @@ func (s *bankService) HandlePinganBankTransactionDetail(ctx context.Context, ban
 						Id:       id,
 					})
 				}
+			}
+		}
+	}
+	return nil
+}
+func (s *bankService) HandlePinganBankVirtualTransactionDetail(ctx context.Context, bankType string, beginDate string, endDate string, organizationId int64) error {
+	virtualBankAccounts, err := s.baseClient.ListOrganizationBankVirtualAccountData(ctx, &baseApi.ListOrganizationBankVirtualAccountRequest{
+		//OrganizationId: organizationId,
+		Type: bankType,
+	})
+	//使用主账号去查所有的流水,然后根据摘要中写的去判断数属于哪个子账号
+	bankAccountNo := config.GetString(bankEnum.PinganIntelligenceAccountNo, "")
+	datas, err := s.pinganBankSDK.ListVirtualTransactionDetail(ctx, bankAccountNo, beginDate, endDate)
+	if err != nil {
+		zap.L().Error(fmt.Sprintf("s.pinganBankSDK.HandlePinganBankVirtualTransactionDetail%s", err.Error()))
+	}
+	//zap.L().Info(fmt.Sprintf("s.pinganBankSDK.HandlePinganBankVirtualTransactionDetail:%+v", datas))
+	if datas != nil {
+		var addDatas []repo.BankTransactionDetailDBData
+		feeMap := make(map[string]string)
+		for _, data := range datas {
+			//根据 "Purpose": "代30210294284702[鑫旷世碧园] 付款 （服务费CZ1692263918387",
+			//寻找子账号,然后根据填入正确的组织id和accountId
+			currentOrganizationId := int64(1)
+			bankAccountId := int64(0)
+			bankAccountName := config.GetString(bankEnum.PinganIntelligenceAccountName, "")
+			subBankAccountNo := bankAccountNo
+
+			re := regexp.MustCompile(`\d+`)
+			match := re.FindStringSubmatch(data.Purpose)
+			if len(match) > 0 {
+				subBankAccountNo = match[0]
+				for _, subAccount := range virtualBankAccounts {
+					if subAccount.VirtualAccountNo == subBankAccountNo {
+						//currentOrganizationId = subAccount.OrganizationId
+						bankAccountId = subAccount.Id
+						bankAccountName = subAccount.VirtualAccountName
+						break
+					}
+				}
+			}
+
+			count, err := s.bankTransactionDetailRepo.Count(ctx, &repo.BankTransactionDetailDBDataParam{
+				BankTransactionDetailDBData: repo.BankTransactionDetailDBData{
+					BaseDBData: repository.BaseDBData{
+						OrganizationId: currentOrganizationId,
+					},
+					MerchantAccountId: bankAccountId,
+					//OrderFlowNo:       data.BussSeqNo, // 业务流水号
+					HostFlowNo: data.HostTrace, //主机流水号
+				},
+			})
+			if err != nil {
+				continue
+			}
+			// 保存交易明细
+			if count == 0 {
+				//如果本条数据AbstractStr = "FEE"就说明这笔明细是手续费,将其放入map中,
+				//最后放入对应的HostTrace的数据中
+				if data.AbstractStr == "FEE" {
+					feeMap[data.HostTrace] = data.TranAmount
+					continue
+				}
+				//  D借，出账；C贷，入账
+				payAmount := 0.00
+				recAmount := 0.00
+				TransactionType := ""
+				tranAmount, err := strconv.ParseFloat(data.TranAmount, 64)
+				//对方银行
+				oppAccountNo := ""
+				oppAccountName := ""
+				oppAccountBankName := ""
+				if err != nil {
+					continue
+				}
+
+				if data.DcFlag == "C" { //收钱
+					recAmount = tranAmount
+					TransactionType = enum.GuilinBankTransactionDetailRecType
+					oppAccountNo = data.OutAcctNo
+					oppAccountName = data.OutAcctName
+					oppAccountBankName = data.OutBankNo
+				} else if data.DcFlag == "D" { //出钱
+					payAmount = tranAmount
+					TransactionType = enum.GuilinBankTransactionDetailPayType
+					oppAccountNo = data.InAcctNo
+					oppAccountName = data.InAcctName
+					oppAccountBankName = data.InBankName
+				}
+				acctBalance, err := strconv.ParseFloat(data.AcctBalance, 64)
+				if err != nil {
+					continue
+				}
+				transactionDetailDBData := repo.BankTransactionDetailDBData{
+					BaseDBData: repository.BaseDBData{
+						OrganizationId: currentOrganizationId,
+					},
+					Type:                TransactionType,
+					MerchantAccountId:   bankAccountId,
+					MerchantAccountName: bankAccountName,
+					CashFlag:            "0", // 写死0: 现钞
+					PayAmount:           payAmount,
+					RecAmount:           recAmount,
+					BsnType:             "TR", // 写死TR: 转账
+					TransferDate:        data.AcctDate,
+					TransferTime:        data.AcctDate + data.TxTime,
+					TranChannel:         "",
+					CurrencyType:        "CNY",
+					Balance:             acctBalance,
+					//OrderFlowNo:         data.BussSeqNo,
+					OrderFlowNo:        data.HostTrace,
+					HostFlowNo:         data.HostTrace,
+					VouchersType:       "",
+					VouchersNo:         "",
+					SummaryNo:          data.AbstractStr + data.AbstractStrDesc,
+					Summary:            data.Purpose,
+					AcctNo:             oppAccountNo,
+					AccountName:        oppAccountName,
+					AccountOpenNode:    oppAccountBankName,
+					ProcessTotalStatus: enum.ProcessInstanceTotalStatusRunning,
+					PayAccountType:     enum.PinganBankType,
+					ExtField1:          data.TranFee,
+				}
+
+				if data.DcFlag == "C" {
+					// 扩展字段3：用来标识-收款确认单同步状态（0-待同步 1-同步中 2-同步成功 3-同步失败）
+					transactionDetailDBData.ExtField3 = "0"
+				}
+
+				//封装请求body
+				serialNo, _ := util.SonyflakeID()
+
+				request := sdkStru.PinganSameDayHistoryReceiptDataQueryRequest{
+					MrchCode:         config.GetString(bankEnum.PinganIntelligenceMrchCode, ""),
+					CnsmrSeqNo:       serialNo,
+					OutAccNo:         bankAccountNo,
+					AccountBeginDate: data.HostDate,
+					AccountEndDate:   data.HostDate,
+					HostFlow:         data.HostTrace,
+				}
+				//查询回单并且转成png到oss
+				f, err := s.pinganBankSDK.UploadVirtualTransactionDetailElectronic(ctx, request)
+				if err != nil {
+					zap.L().Info(fmt.Sprintf("s.bankService.pinganBankSDK 下载pingan电子凭证失败: %v\n", err.Error()))
+				}
+				if f != "" {
+					transactionDetailDBData.ElectronicReceiptFile = f
+					if TransactionType == enum.GuilinBankTransactionDetailPayType {
+						//同步付款表里面的回单
+						s.bankTransferReceiptRepo.UpdateElectronicReceiptFile(ctx, data.HostTrace, enum.PinganBankType, f)
+					}
+				}
+				addDatas = append(addDatas, transactionDetailDBData)
+			}
+		}
+		if len(addDatas) > 0 {
+			var addDetails []repo.BankTransactionDetailDBData
+			for _, data := range addDatas {
+				if fee, ok := feeMap[data.HostFlowNo]; ok {
+					data.ExtField1 = fee
+				}
+				addDetails = append(addDetails, data)
+			}
+			ids, err := s.bankTransactionDetailRepo.BatchAdd(ctx, &addDetails)
+			if err != nil {
+				return handler.HandleError(err)
+			}
+			for _, id := range ids {
+				s.kafkaProducer.Send(kafka.BankTopic, kafka.TypeMessage{
+					Business: kafka.ProcessFinanceTransactionDetailProcessInstanceBusiness,
+					Type:     kafka.DingtalkType,
+					Id:       id,
+				})
 			}
 		}
 	}

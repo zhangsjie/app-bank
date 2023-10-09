@@ -5,6 +5,7 @@ import (
 	"gitlab.yoyiit.com/youyi/go-core/handler"
 	"gitlab.yoyiit.com/youyi/go-core/repository"
 	"gitlab.yoyiit.com/youyi/go-core/util"
+	"strings"
 )
 
 type PaymentReceiptDBData struct {
@@ -178,6 +179,7 @@ func (param *PaymentReceiptDBParam) listConditions() []*repository.Condition {
 type PaymentReceiptRepo interface {
 	repository.BaseCommonRepo
 	Get(context.Context, *PaymentReceiptDBData) (*PaymentReceiptDBData, error)
+	SimpleGet(context.Context, *PaymentReceiptDBData) (*PaymentReceiptDBData, error)
 	GetWithoutPermission(context.Context, *PaymentReceiptDBData) (*PaymentReceiptDBData, error)
 	Count(context.Context, *PaymentReceiptDBParam) (int64, error)
 	List(context.Context, string, int32, int32, *PaymentReceiptDBParam) (*[]PaymentReceiptDBData, *[]PaymentReceiptDBData, int64, error)
@@ -194,6 +196,23 @@ func (r *paymentReceiptRepo) Get(ctx context.Context, param *PaymentReceiptDBDat
 		return nil, handler.HandleError(err)
 	}
 	return data.(*PaymentReceiptDBData), handler.HandleError(err)
+}
+
+func (r *paymentReceiptRepo) SimpleGet(ctx context.Context, param *PaymentReceiptDBData) (*PaymentReceiptDBData, error) {
+	conditions := []string{"deleted = ?"}
+	params := []interface{}{0}
+	if param.Id > 0 {
+		conditions = append(conditions, "id = ?")
+		params = append(params, param.Id)
+	}
+	if param.ProcessInstanceId > 0 {
+		conditions = append(conditions, "process_instance_id = ?")
+		params = append(params, param.ProcessInstanceId)
+	}
+	var result PaymentReceiptDBData
+	db := r.Db.WithContext(ctx).Where(strings.Join(conditions, " and "), params...)
+	err := db.Find(&result).Error
+	return &result, handler.HandleError(err)
 }
 
 func (r *paymentReceiptRepo) GetWithoutPermission(ctx context.Context, param *PaymentReceiptDBData) (*PaymentReceiptDBData, error) {

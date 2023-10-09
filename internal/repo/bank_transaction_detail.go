@@ -140,6 +140,9 @@ func (param *BankTransactionDetailDBDataParam) listConditions() []*repository.Co
 	} else {
 		conditions = append(conditions, repository.NewAndCondition("acct_no != '' and acct_no is not null "))
 	}
+	if param.MerchantAccountId != 0 {
+		conditions = append(conditions, repository.NewAndCondition("merchant_account_id = ?", param.MerchantAccountId))
+	}
 	return conditions
 }
 
@@ -149,6 +152,7 @@ type BankTransactionDetailRepo interface {
 	SimpleGet(context.Context, *BankTransactionDetailDBData) (*BankTransactionDetailDBData, error)
 	Count(context.Context, *BankTransactionDetailDBDataParam) (int64, error)
 	List(context.Context, string, int32, int32, *BankTransactionDetailDBDataParam) (*[]BankTransactionDetailDBData, int64, error)
+	SimpleList(context.Context, string, int32, int32, *BankTransactionDetailDBDataParam) (*[]BankTransactionDetailDBData, int64, error)
 	CashFlowCount(*TransactionDetailTimeParam, int64) (*[]string, *[]float64, *[]float64, error)
 	BalanceFlowCountMap(*TransactionDetailTimeParam, int64) (map[string]float64, error)
 }
@@ -189,6 +193,49 @@ func (r *bankTransactionDetailRepo) List(ctx context.Context, order string, page
 		return nil, count, handler.HandleError(err)
 	}
 	return data.(*[]BankTransactionDetailDBData), count, handler.HandleError(err)
+}
+
+func (r *bankTransactionDetailRepo) SimpleList(ctx context.Context, order string, pageNum, pageSize int32, param *BankTransactionDetailDBDataParam) (*[]BankTransactionDetailDBData, int64, error) {
+	conditions := []string{"deleted = ?"}
+	params := []interface{}{0}
+	if param.OrganizationId > 0 {
+		conditions = append(conditions, "organization_id = ?")
+		params = append(params, param.OrganizationId)
+	}
+	if param.Type != "" {
+		conditions = append(conditions, "type = ?")
+		params = append(params, param.Type)
+	}
+	if len(param.TransferTimeArray) > 1 {
+		if param.TransferTimeArray[0] != "" {
+			conditions = append(conditions, "transfer_time >= DATE_FORMAT(?,'%Y%m%d%H:%i:%s')")
+			params = append(params, param.TransferTimeArray[0])
+		}
+		if param.TransferTimeArray[1] != "" {
+			conditions = append(conditions, "transfer_time < DATE_FORMAT(date_add(?, interval 1 day),'%Y%m%d%H:%i:%s')")
+			params = append(params, param.TransferTimeArray[1])
+		}
+	}
+
+	var count int64
+	err := r.Db.WithContext(ctx).Model(r.Model).Where(strings.Join(conditions, " and "), params...).Count(&count).Error
+	if err != nil {
+		return nil, 0, handler.HandleError(err)
+	}
+	if count == 0 {
+		return nil, 0, nil
+	}
+	var result []BankTransactionDetailDBData
+	db := r.Db.WithContext(ctx).Where(strings.Join(conditions, " and "), params...)
+	if order != "" {
+		db = db.Order(order)
+	}
+	if pageNum > 0 && pageSize > 0 {
+		db = db.Offset(int((pageNum - 1) * pageSize))
+		db = db.Limit(int(pageSize))
+	}
+	err = db.Find(&result).Error
+	return &result, count, handler.HandleError(err)
 }
 
 func (r *bankTransactionDetailRepo) Count(ctx context.Context, param *BankTransactionDetailDBDataParam) (int64, error) {

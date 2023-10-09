@@ -48,10 +48,11 @@ func initServer() (server.Server, error) {
 	pdfToImageService := service.NewPdfToImageService(ossConfig)
 	financeClient := rpc_finance.NewFinanceClient()
 	bankService := service.NewBankService(client, guilinBankSDK, spdBankSDK, pinganBankSDK, bankTransferReceiptRepo, kafkaProducer, dingtalkClient, bankTransactionDetailRepo, bankTransactionDetailProcessInstanceRepo, ossConfig, bankCodeRepo, bankBusinessPayrollRepo, bankBusinessPayrollDetailRepo, oaClient, paymentReceiptRepo, pdfToImageService, financeClient)
-	paymentReceiptSubProcess := sub_process.NewPaymentReceiptSubProcess(paymentReceiptRepo, oaClient, client)
+	paymentReceiptApplicationCustomFieldRepo := repo.NewPaymentReceiptApplicationCustomFieldRepo(db)
+	paymentReceiptSubProcess := sub_process.NewPaymentReceiptSubProcess(paymentReceiptRepo, oaClient, client, paymentReceiptApplicationCustomFieldRepo)
 	processAuthRepo := process.NewProcessAuthRepo(db)
 	somsClient := rpc_soms.NewSomsClient()
-	paymentReceiptService := service.NewPaymentReceiptService(paymentReceiptSubProcess, client, paymentReceiptRepo, bankCodeRepo, guilinBankSDK, spdBankSDK, pinganBankSDK, oaClient, dingtalkClient, processAuthRepo, somsClient)
+	paymentReceiptService := service.NewPaymentReceiptService(paymentReceiptSubProcess, client, paymentReceiptRepo, bankCodeRepo, guilinBankSDK, spdBankSDK, pinganBankSDK, oaClient, dingtalkClient, processAuthRepo, somsClient, paymentReceiptApplicationCustomFieldRepo)
 	bank := newBankImpl(bankService, paymentReceiptService)
 	serverServer := newServer(bank)
 	return serverServer, nil

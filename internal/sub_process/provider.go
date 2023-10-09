@@ -9,6 +9,8 @@ import (
 
 var ProviderSet = wire.NewSet(NewPaymentReceiptSubProcess)
 
-func NewPaymentReceiptSubProcess(paymentReceiptRepo repo.PaymentReceiptRepo, oaClient oa.Client, baseClient base.Client) *PaymentReceiptSubProcess {
-	return &PaymentReceiptSubProcess{paymentReceiptRepo, oaClient, baseClient}
+func NewPaymentReceiptSubProcess(paymentReceiptRepo repo.PaymentReceiptRepo, oaClient oa.Client, baseClient base.Client,
+	paymentReceiptApplicationCustomFieldRepo repo.PaymentReceiptApplicationCustomFieldRepo) *PaymentReceiptSubProcess {
+	return &PaymentReceiptSubProcess{paymentReceiptRepo, oaClient, baseClient,
+		paymentReceiptApplicationCustomFieldRepo}
 }
