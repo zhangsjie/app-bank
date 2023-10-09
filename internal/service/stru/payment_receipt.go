@@ -42,7 +42,9 @@ func ConvertPaymentReceiptDBData(data api.PaymentReceiptData) *repo.PaymentRecei
 		DepartmentName:         data.DepartmentName,
 		DepartmentId:           data.DepartmentId,
 		Attachments:            data.Attachments,
-		ElectronicDocument:     data.ElectronicReceiptFile,
+		ElectronicDocument:     data.ElectronicDocument,
+		ElectronicDocumentPng:  data.ElectronicDocumentPng,
+		PaymentReason:          data.PaymentReason,
 	}
 	return &result
 }
@@ -83,10 +85,12 @@ func ConvertPaymentReceiptData(dbData repo.PaymentReceiptDBData) *api.PaymentRec
 		DepartmentName:         dbData.DepartmentName,
 		DepartmentId:           dbData.DepartmentId,
 		Attachments:            dbData.Attachments,
-		ElectronicReceiptFile:  dbData.ElectronicDocument,
 		BusOrderNo:             dbData.BusOrderNo,
 		BusType:                dbData.BusType,
 		RefundSuccess:          dbData.RefundSuccess,
 		ReceiptOrderNo:         dbData.ReceiptOrderNo,
+		ElectronicDocument:     dbData.ElectronicDocument,
+		ElectronicDocumentPng:  dbData.ElectronicDocumentPng,
+		PaymentReason:          dbData.PaymentReason,
 	}
 }

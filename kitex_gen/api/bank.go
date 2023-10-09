@@ -22097,14 +22097,16 @@ type PaymentReceiptData struct {
 	DepartmentId           int64                `thrift:"departmentId,32" frugal:"32,default,i64" json:"departmentId"`
 	DepartmentName         string               `thrift:"departmentName,33" frugal:"33,default,string" json:"departmentName"`
 	Attachments            string               `thrift:"attachments,34" frugal:"34,default,string" json:"attachments"`
-	ElectronicReceiptFile  string               `thrift:"electronicReceiptFile,35" frugal:"35,default,string" json:"electronicReceiptFile"`
-	BusType                string               `thrift:"busType,36" frugal:"36,default,string" json:"busType"`
-	BusOrderNo             string               `thrift:"busOrderNo,37" frugal:"37,default,string" json:"busOrderNo"`
-	RefundSuccess          string               `thrift:"refundSuccess,38" frugal:"38,default,string" json:"refundSuccess"`
-	ReceiptOrderNo         string               `thrift:"receiptOrderNo,39" frugal:"39,default,string" json:"receiptOrderNo"`
-	Remark                 string               `thrift:"remark,40" frugal:"40,default,string" json:"remark"`
-	ProcessAddTagItemVO    *ProcessAddTagItemVO `thrift:"processAddTagItemVO,41" frugal:"41,default,ProcessAddTagItemVO" json:"processAddTagItemVO"`
-	CustomFields           []*CustomField       `thrift:"customFields,42" frugal:"42,default,list<CustomField>" json:"customFields"`
+	BusType                string               `thrift:"busType,35" frugal:"35,default,string" json:"busType"`
+	BusOrderNo             string               `thrift:"busOrderNo,36" frugal:"36,default,string" json:"busOrderNo"`
+	RefundSuccess          string               `thrift:"refundSuccess,37" frugal:"37,default,string" json:"refundSuccess"`
+	ReceiptOrderNo         string               `thrift:"receiptOrderNo,38" frugal:"38,default,string" json:"receiptOrderNo"`
+	Remark                 string               `thrift:"remark,39" frugal:"39,default,string" json:"remark"`
+	ProcessAddTagItemVO    *ProcessAddTagItemVO `thrift:"processAddTagItemVO,40" frugal:"40,default,ProcessAddTagItemVO" json:"processAddTagItemVO"`
+	CustomFields           []*CustomField       `thrift:"customFields,41" frugal:"41,default,list<CustomField>" json:"customFields"`
+	ElectronicDocument     string               `thrift:"electronicDocument,42" frugal:"42,default,string" json:"electronicDocument"`
+	ElectronicDocumentPng  string               `thrift:"electronicDocumentPng,43" frugal:"43,default,string" json:"electronicDocumentPng"`
+	PaymentReason          string               `thrift:"paymentReason,44" frugal:"44,default,string" json:"paymentReason"`
 }
 
 func NewPaymentReceiptData() *PaymentReceiptData {
@@ -22251,10 +22253,6 @@ func (p *PaymentReceiptData) GetAttachments() (v string) {
 	return p.Attachments
 }
 
-func (p *PaymentReceiptData) GetElectronicReceiptFile() (v string) {
-	return p.ElectronicReceiptFile
-}
-
 func (p *PaymentReceiptData) GetBusType() (v string) {
 	return p.BusType
 }
@@ -22286,6 +22284,18 @@ func (p *PaymentReceiptData) GetProcessAddTagItemVO() (v *ProcessAddTagItemVO) {
 
 func (p *PaymentReceiptData) GetCustomFields() (v []*CustomField) {
 	return p.CustomFields
+}
+
+func (p *PaymentReceiptData) GetElectronicDocument() (v string) {
+	return p.ElectronicDocument
+}
+
+func (p *PaymentReceiptData) GetElectronicDocumentPng() (v string) {
+	return p.ElectronicDocumentPng
+}
+
+func (p *PaymentReceiptData) GetPaymentReason() (v string) {
+	return p.PaymentReason
 }
 func (p *PaymentReceiptData) SetId(val int64) {
 	p.Id = val
@@ -22389,9 +22399,6 @@ func (p *PaymentReceiptData) SetDepartmentName(val string) {
 func (p *PaymentReceiptData) SetAttachments(val string) {
 	p.Attachments = val
 }
-func (p *PaymentReceiptData) SetElectronicReceiptFile(val string) {
-	p.ElectronicReceiptFile = val
-}
 func (p *PaymentReceiptData) SetBusType(val string) {
 	p.BusType = val
 }
@@ -22412,6 +22419,15 @@ func (p *PaymentReceiptData) SetProcessAddTagItemVO(val *ProcessAddTagItemVO) {
 }
 func (p *PaymentReceiptData) SetCustomFields(val []*CustomField) {
 	p.CustomFields = val
+}
+func (p *PaymentReceiptData) SetElectronicDocument(val string) {
+	p.ElectronicDocument = val
+}
+func (p *PaymentReceiptData) SetElectronicDocumentPng(val string) {
+	p.ElectronicDocumentPng = val
+}
+func (p *PaymentReceiptData) SetPaymentReason(val string) {
+	p.PaymentReason = val
 }
 
 var fieldIDToName_PaymentReceiptData = map[int16]string{
@@ -22449,14 +22465,16 @@ var fieldIDToName_PaymentReceiptData = map[int16]string{
 	32: "departmentId",
 	33: "departmentName",
 	34: "attachments",
-	35: "electronicReceiptFile",
-	36: "busType",
-	37: "busOrderNo",
-	38: "refundSuccess",
-	39: "receiptOrderNo",
-	40: "remark",
-	41: "processAddTagItemVO",
-	42: "customFields",
+	35: "busType",
+	36: "busOrderNo",
+	37: "refundSuccess",
+	38: "receiptOrderNo",
+	39: "remark",
+	40: "processAddTagItemVO",
+	41: "customFields",
+	42: "electronicDocument",
+	43: "electronicDocumentPng",
+	44: "paymentReason",
 }
 
 func (p *PaymentReceiptData) IsSetProcessAddTagItemVO() bool {
@@ -22873,7 +22891,7 @@ func (p *PaymentReceiptData) Read(iprot thrift.TProtocol) (err error) {
 				}
 			}
 		case 40:
-			if fieldTypeId == thrift.STRING {
+			if fieldTypeId == thrift.STRUCT {
 				if err = p.ReadField40(iprot); err != nil {
 					goto ReadFieldError
 				}
@@ -22883,7 +22901,7 @@ func (p *PaymentReceiptData) Read(iprot thrift.TProtocol) (err error) {
 				}
 			}
 		case 41:
-			if fieldTypeId == thrift.STRUCT {
+			if fieldTypeId == thrift.LIST {
 				if err = p.ReadField41(iprot); err != nil {
 					goto ReadFieldError
 				}
@@ -22893,8 +22911,28 @@ func (p *PaymentReceiptData) Read(iprot thrift.TProtocol) (err error) {
 				}
 			}
 		case 42:
-			if fieldTypeId == thrift.LIST {
+			if fieldTypeId == thrift.STRING {
 				if err = p.ReadField42(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				if err = iprot.Skip(fieldTypeId); err != nil {
+					goto SkipFieldError
+				}
+			}
+		case 43:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField43(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				if err = iprot.Skip(fieldTypeId); err != nil {
+					goto SkipFieldError
+				}
+			}
+		case 44:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField44(iprot); err != nil {
 					goto ReadFieldError
 				}
 			} else {
@@ -23242,7 +23280,7 @@ func (p *PaymentReceiptData) ReadField35(iprot thrift.TProtocol) error {
 	if v, err := iprot.ReadString(); err != nil {
 		return err
 	} else {
-		p.ElectronicReceiptFile = v
+		p.BusType = v
 	}
 	return nil
 }
@@ -23251,7 +23289,7 @@ func (p *PaymentReceiptData) ReadField36(iprot thrift.TProtocol) error {
 	if v, err := iprot.ReadString(); err != nil {
 		return err
 	} else {
-		p.BusType = v
+		p.BusOrderNo = v
 	}
 	return nil
 }
@@ -23260,7 +23298,7 @@ func (p *PaymentReceiptData) ReadField37(iprot thrift.TProtocol) error {
 	if v, err := iprot.ReadString(); err != nil {
 		return err
 	} else {
-		p.BusOrderNo = v
+		p.RefundSuccess = v
 	}
 	return nil
 }
@@ -23269,7 +23307,7 @@ func (p *PaymentReceiptData) ReadField38(iprot thrift.TProtocol) error {
 	if v, err := iprot.ReadString(); err != nil {
 		return err
 	} else {
-		p.RefundSuccess = v
+		p.ReceiptOrderNo = v
 	}
 	return nil
 }
@@ -23278,21 +23316,12 @@ func (p *PaymentReceiptData) ReadField39(iprot thrift.TProtocol) error {
 	if v, err := iprot.ReadString(); err != nil {
 		return err
 	} else {
-		p.ReceiptOrderNo = v
-	}
-	return nil
-}
-
-func (p *PaymentReceiptData) ReadField40(iprot thrift.TProtocol) error {
-	if v, err := iprot.ReadString(); err != nil {
-		return err
-	} else {
 		p.Remark = v
 	}
 	return nil
 }
 
-func (p *PaymentReceiptData) ReadField41(iprot thrift.TProtocol) error {
+func (p *PaymentReceiptData) ReadField40(iprot thrift.TProtocol) error {
 	p.ProcessAddTagItemVO = NewProcessAddTagItemVO()
 	if err := p.ProcessAddTagItemVO.Read(iprot); err != nil {
 		return err
@@ -23300,7 +23329,7 @@ func (p *PaymentReceiptData) ReadField41(iprot thrift.TProtocol) error {
 	return nil
 }
 
-func (p *PaymentReceiptData) ReadField42(iprot thrift.TProtocol) error {
+func (p *PaymentReceiptData) ReadField41(iprot thrift.TProtocol) error {
 	_, size, err := iprot.ReadListBegin()
 	if err != nil {
 		return err
@@ -23316,6 +23345,33 @@ func (p *PaymentReceiptData) ReadField42(iprot thrift.TProtocol) error {
 	}
 	if err := iprot.ReadListEnd(); err != nil {
 		return err
+	}
+	return nil
+}
+
+func (p *PaymentReceiptData) ReadField42(iprot thrift.TProtocol) error {
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		p.ElectronicDocument = v
+	}
+	return nil
+}
+
+func (p *PaymentReceiptData) ReadField43(iprot thrift.TProtocol) error {
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		p.ElectronicDocumentPng = v
+	}
+	return nil
+}
+
+func (p *PaymentReceiptData) ReadField44(iprot thrift.TProtocol) error {
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		p.PaymentReason = v
 	}
 	return nil
 }
@@ -23492,6 +23548,14 @@ func (p *PaymentReceiptData) Write(oprot thrift.TProtocol) (err error) {
 		}
 		if err = p.writeField42(oprot); err != nil {
 			fieldId = 42
+			goto WriteFieldError
+		}
+		if err = p.writeField43(oprot); err != nil {
+			fieldId = 43
+			goto WriteFieldError
+		}
+		if err = p.writeField44(oprot); err != nil {
+			fieldId = 44
 			goto WriteFieldError
 		}
 
@@ -24092,10 +24156,10 @@ WriteFieldEndError:
 }
 
 func (p *PaymentReceiptData) writeField35(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("electronicReceiptFile", thrift.STRING, 35); err != nil {
+	if err = oprot.WriteFieldBegin("busType", thrift.STRING, 35); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.ElectronicReceiptFile); err != nil {
+	if err := oprot.WriteString(p.BusType); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -24109,10 +24173,10 @@ WriteFieldEndError:
 }
 
 func (p *PaymentReceiptData) writeField36(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("busType", thrift.STRING, 36); err != nil {
+	if err = oprot.WriteFieldBegin("busOrderNo", thrift.STRING, 36); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.BusType); err != nil {
+	if err := oprot.WriteString(p.BusOrderNo); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -24126,10 +24190,10 @@ WriteFieldEndError:
 }
 
 func (p *PaymentReceiptData) writeField37(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("busOrderNo", thrift.STRING, 37); err != nil {
+	if err = oprot.WriteFieldBegin("refundSuccess", thrift.STRING, 37); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.BusOrderNo); err != nil {
+	if err := oprot.WriteString(p.RefundSuccess); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -24143,10 +24207,10 @@ WriteFieldEndError:
 }
 
 func (p *PaymentReceiptData) writeField38(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("refundSuccess", thrift.STRING, 38); err != nil {
+	if err = oprot.WriteFieldBegin("receiptOrderNo", thrift.STRING, 38); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.RefundSuccess); err != nil {
+	if err := oprot.WriteString(p.ReceiptOrderNo); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -24160,10 +24224,10 @@ WriteFieldEndError:
 }
 
 func (p *PaymentReceiptData) writeField39(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("receiptOrderNo", thrift.STRING, 39); err != nil {
+	if err = oprot.WriteFieldBegin("remark", thrift.STRING, 39); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.ReceiptOrderNo); err != nil {
+	if err := oprot.WriteString(p.Remark); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -24177,10 +24241,10 @@ WriteFieldEndError:
 }
 
 func (p *PaymentReceiptData) writeField40(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("remark", thrift.STRING, 40); err != nil {
+	if err = oprot.WriteFieldBegin("processAddTagItemVO", thrift.STRUCT, 40); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.Remark); err != nil {
+	if err := p.ProcessAddTagItemVO.Write(oprot); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -24194,24 +24258,7 @@ WriteFieldEndError:
 }
 
 func (p *PaymentReceiptData) writeField41(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("processAddTagItemVO", thrift.STRUCT, 41); err != nil {
-		goto WriteFieldBeginError
-	}
-	if err := p.ProcessAddTagItemVO.Write(oprot); err != nil {
-		return err
-	}
-	if err = oprot.WriteFieldEnd(); err != nil {
-		goto WriteFieldEndError
-	}
-	return nil
-WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 41 begin error: ", p), err)
-WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 41 end error: ", p), err)
-}
-
-func (p *PaymentReceiptData) writeField42(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("customFields", thrift.LIST, 42); err != nil {
+	if err = oprot.WriteFieldBegin("customFields", thrift.LIST, 41); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteListBegin(thrift.STRUCT, len(p.CustomFields)); err != nil {
@@ -24230,9 +24277,60 @@ func (p *PaymentReceiptData) writeField42(oprot thrift.TProtocol) (err error) {
 	}
 	return nil
 WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 41 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 41 end error: ", p), err)
+}
+
+func (p *PaymentReceiptData) writeField42(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("electronicDocument", thrift.STRING, 42); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteString(p.ElectronicDocument); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 42 begin error: ", p), err)
 WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 42 end error: ", p), err)
+}
+
+func (p *PaymentReceiptData) writeField43(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("electronicDocumentPng", thrift.STRING, 43); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteString(p.ElectronicDocumentPng); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 43 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 43 end error: ", p), err)
+}
+
+func (p *PaymentReceiptData) writeField44(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("paymentReason", thrift.STRING, 44); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteString(p.PaymentReason); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 44 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 44 end error: ", p), err)
 }
 
 func (p *PaymentReceiptData) String() string {
@@ -24350,28 +24448,34 @@ func (p *PaymentReceiptData) DeepEqual(ano *PaymentReceiptData) bool {
 	if !p.Field34DeepEqual(ano.Attachments) {
 		return false
 	}
-	if !p.Field35DeepEqual(ano.ElectronicReceiptFile) {
+	if !p.Field35DeepEqual(ano.BusType) {
 		return false
 	}
-	if !p.Field36DeepEqual(ano.BusType) {
+	if !p.Field36DeepEqual(ano.BusOrderNo) {
 		return false
 	}
-	if !p.Field37DeepEqual(ano.BusOrderNo) {
+	if !p.Field37DeepEqual(ano.RefundSuccess) {
 		return false
 	}
-	if !p.Field38DeepEqual(ano.RefundSuccess) {
+	if !p.Field38DeepEqual(ano.ReceiptOrderNo) {
 		return false
 	}
-	if !p.Field39DeepEqual(ano.ReceiptOrderNo) {
+	if !p.Field39DeepEqual(ano.Remark) {
 		return false
 	}
-	if !p.Field40DeepEqual(ano.Remark) {
+	if !p.Field40DeepEqual(ano.ProcessAddTagItemVO) {
 		return false
 	}
-	if !p.Field41DeepEqual(ano.ProcessAddTagItemVO) {
+	if !p.Field41DeepEqual(ano.CustomFields) {
 		return false
 	}
-	if !p.Field42DeepEqual(ano.CustomFields) {
+	if !p.Field42DeepEqual(ano.ElectronicDocument) {
+		return false
+	}
+	if !p.Field43DeepEqual(ano.ElectronicDocumentPng) {
+		return false
+	}
+	if !p.Field44DeepEqual(ano.PaymentReason) {
 		return false
 	}
 	return true
@@ -24617,54 +24721,47 @@ func (p *PaymentReceiptData) Field34DeepEqual(src string) bool {
 }
 func (p *PaymentReceiptData) Field35DeepEqual(src string) bool {
 
-	if strings.Compare(p.ElectronicReceiptFile, src) != 0 {
+	if strings.Compare(p.BusType, src) != 0 {
 		return false
 	}
 	return true
 }
 func (p *PaymentReceiptData) Field36DeepEqual(src string) bool {
 
-	if strings.Compare(p.BusType, src) != 0 {
+	if strings.Compare(p.BusOrderNo, src) != 0 {
 		return false
 	}
 	return true
 }
 func (p *PaymentReceiptData) Field37DeepEqual(src string) bool {
 
-	if strings.Compare(p.BusOrderNo, src) != 0 {
+	if strings.Compare(p.RefundSuccess, src) != 0 {
 		return false
 	}
 	return true
 }
 func (p *PaymentReceiptData) Field38DeepEqual(src string) bool {
 
-	if strings.Compare(p.RefundSuccess, src) != 0 {
+	if strings.Compare(p.ReceiptOrderNo, src) != 0 {
 		return false
 	}
 	return true
 }
 func (p *PaymentReceiptData) Field39DeepEqual(src string) bool {
 
-	if strings.Compare(p.ReceiptOrderNo, src) != 0 {
-		return false
-	}
-	return true
-}
-func (p *PaymentReceiptData) Field40DeepEqual(src string) bool {
-
 	if strings.Compare(p.Remark, src) != 0 {
 		return false
 	}
 	return true
 }
-func (p *PaymentReceiptData) Field41DeepEqual(src *ProcessAddTagItemVO) bool {
+func (p *PaymentReceiptData) Field40DeepEqual(src *ProcessAddTagItemVO) bool {
 
 	if !p.ProcessAddTagItemVO.DeepEqual(src) {
 		return false
 	}
 	return true
 }
-func (p *PaymentReceiptData) Field42DeepEqual(src []*CustomField) bool {
+func (p *PaymentReceiptData) Field41DeepEqual(src []*CustomField) bool {
 
 	if len(p.CustomFields) != len(src) {
 		return false
@@ -24674,6 +24771,27 @@ func (p *PaymentReceiptData) Field42DeepEqual(src []*CustomField) bool {
 		if !v.DeepEqual(_src) {
 			return false
 		}
+	}
+	return true
+}
+func (p *PaymentReceiptData) Field42DeepEqual(src string) bool {
+
+	if strings.Compare(p.ElectronicDocument, src) != 0 {
+		return false
+	}
+	return true
+}
+func (p *PaymentReceiptData) Field43DeepEqual(src string) bool {
+
+	if strings.Compare(p.ElectronicDocumentPng, src) != 0 {
+		return false
+	}
+	return true
+}
+func (p *PaymentReceiptData) Field44DeepEqual(src string) bool {
+
+	if strings.Compare(p.PaymentReason, src) != 0 {
+		return false
 	}
 	return true
 }

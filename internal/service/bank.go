@@ -1219,14 +1219,24 @@ func (s *bankService) updateRelevanceElectronicDocument(ctx context.Context, sum
 				return handler.HandleError(err)
 			}
 			if reimburseApplication != nil && reimburseApplication.Id != 0 {
-				return handler.HandleError(s.oaClient.EditReimburseApplicationWithoutPermission(ctx, &oaApi.ReimburseApplicationData{
+				err := handler.HandleError(s.oaClient.EditReimburseApplicationWithoutPermission(ctx, &oaApi.ReimburseApplicationData{
 					Id:                    reimburseApplication.Id,
 					ElectronicDocument:    electronicDocument,
 					ElectronicDocumentPng: electronicDocumentPng,
 				}))
+				if err != nil {
+					return handler.HandleError(err)
+				}
 			}
 		}
-
+		// 更新付款单据表回单
+		err := s.paymentReceiptRepo.UpdateByIdWithoutPermission(ctx, paymentReceipt.Id, &repo.PaymentReceiptDBData{
+			ElectronicDocument:    electronicDocument,
+			ElectronicDocumentPng: electronicDocumentPng,
+		})
+		if err != nil {
+			return handler.HandleError(err)
+		}
 	}
 	return nil
 }

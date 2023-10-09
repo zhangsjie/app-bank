@@ -18431,7 +18431,7 @@ func (p *PaymentReceiptData) FastRead(buf []byte) (int, error) {
 				}
 			}
 		case 40:
-			if fieldTypeId == thrift.STRING {
+			if fieldTypeId == thrift.STRUCT {
 				l, err = p.FastReadField40(buf[offset:])
 				offset += l
 				if err != nil {
@@ -18445,7 +18445,7 @@ func (p *PaymentReceiptData) FastRead(buf []byte) (int, error) {
 				}
 			}
 		case 41:
-			if fieldTypeId == thrift.STRUCT {
+			if fieldTypeId == thrift.LIST {
 				l, err = p.FastReadField41(buf[offset:])
 				offset += l
 				if err != nil {
@@ -18459,8 +18459,36 @@ func (p *PaymentReceiptData) FastRead(buf []byte) (int, error) {
 				}
 			}
 		case 42:
-			if fieldTypeId == thrift.LIST {
+			if fieldTypeId == thrift.STRING {
 				l, err = p.FastReadField42(buf[offset:])
+				offset += l
+				if err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
+				offset += l
+				if err != nil {
+					goto SkipFieldError
+				}
+			}
+		case 43:
+			if fieldTypeId == thrift.STRING {
+				l, err = p.FastReadField43(buf[offset:])
+				offset += l
+				if err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
+				offset += l
+				if err != nil {
+					goto SkipFieldError
+				}
+			}
+		case 44:
+			if fieldTypeId == thrift.STRING {
+				l, err = p.FastReadField44(buf[offset:])
 				offset += l
 				if err != nil {
 					goto ReadFieldError
@@ -18991,7 +19019,7 @@ func (p *PaymentReceiptData) FastReadField35(buf []byte) (int, error) {
 	} else {
 		offset += l
 
-		p.ElectronicReceiptFile = v
+		p.BusType = v
 
 	}
 	return offset, nil
@@ -19005,7 +19033,7 @@ func (p *PaymentReceiptData) FastReadField36(buf []byte) (int, error) {
 	} else {
 		offset += l
 
-		p.BusType = v
+		p.BusOrderNo = v
 
 	}
 	return offset, nil
@@ -19019,7 +19047,7 @@ func (p *PaymentReceiptData) FastReadField37(buf []byte) (int, error) {
 	} else {
 		offset += l
 
-		p.BusOrderNo = v
+		p.RefundSuccess = v
 
 	}
 	return offset, nil
@@ -19033,7 +19061,7 @@ func (p *PaymentReceiptData) FastReadField38(buf []byte) (int, error) {
 	} else {
 		offset += l
 
-		p.RefundSuccess = v
+		p.ReceiptOrderNo = v
 
 	}
 	return offset, nil
@@ -19047,27 +19075,13 @@ func (p *PaymentReceiptData) FastReadField39(buf []byte) (int, error) {
 	} else {
 		offset += l
 
-		p.ReceiptOrderNo = v
-
-	}
-	return offset, nil
-}
-
-func (p *PaymentReceiptData) FastReadField40(buf []byte) (int, error) {
-	offset := 0
-
-	if v, l, err := bthrift.Binary.ReadString(buf[offset:]); err != nil {
-		return offset, err
-	} else {
-		offset += l
-
 		p.Remark = v
 
 	}
 	return offset, nil
 }
 
-func (p *PaymentReceiptData) FastReadField41(buf []byte) (int, error) {
+func (p *PaymentReceiptData) FastReadField40(buf []byte) (int, error) {
 	offset := 0
 
 	tmp := NewProcessAddTagItemVO()
@@ -19080,7 +19094,7 @@ func (p *PaymentReceiptData) FastReadField41(buf []byte) (int, error) {
 	return offset, nil
 }
 
-func (p *PaymentReceiptData) FastReadField42(buf []byte) (int, error) {
+func (p *PaymentReceiptData) FastReadField41(buf []byte) (int, error) {
 	offset := 0
 
 	_, size, l, err := bthrift.Binary.ReadListBegin(buf[offset:])
@@ -19103,6 +19117,48 @@ func (p *PaymentReceiptData) FastReadField42(buf []byte) (int, error) {
 		return offset, err
 	} else {
 		offset += l
+	}
+	return offset, nil
+}
+
+func (p *PaymentReceiptData) FastReadField42(buf []byte) (int, error) {
+	offset := 0
+
+	if v, l, err := bthrift.Binary.ReadString(buf[offset:]); err != nil {
+		return offset, err
+	} else {
+		offset += l
+
+		p.ElectronicDocument = v
+
+	}
+	return offset, nil
+}
+
+func (p *PaymentReceiptData) FastReadField43(buf []byte) (int, error) {
+	offset := 0
+
+	if v, l, err := bthrift.Binary.ReadString(buf[offset:]); err != nil {
+		return offset, err
+	} else {
+		offset += l
+
+		p.ElectronicDocumentPng = v
+
+	}
+	return offset, nil
+}
+
+func (p *PaymentReceiptData) FastReadField44(buf []byte) (int, error) {
+	offset := 0
+
+	if v, l, err := bthrift.Binary.ReadString(buf[offset:]); err != nil {
+		return offset, err
+	} else {
+		offset += l
+
+		p.PaymentReason = v
+
 	}
 	return offset, nil
 }
@@ -19158,6 +19214,8 @@ func (p *PaymentReceiptData) FastWriteNocopy(buf []byte, binaryWriter bthrift.Bi
 		offset += p.fastWriteField40(buf[offset:], binaryWriter)
 		offset += p.fastWriteField41(buf[offset:], binaryWriter)
 		offset += p.fastWriteField42(buf[offset:], binaryWriter)
+		offset += p.fastWriteField43(buf[offset:], binaryWriter)
+		offset += p.fastWriteField44(buf[offset:], binaryWriter)
 	}
 	offset += bthrift.Binary.WriteFieldStop(buf[offset:])
 	offset += bthrift.Binary.WriteStructEnd(buf[offset:])
@@ -19210,6 +19268,8 @@ func (p *PaymentReceiptData) BLength() int {
 		l += p.field40Length()
 		l += p.field41Length()
 		l += p.field42Length()
+		l += p.field43Length()
+		l += p.field44Length()
 	}
 	l += bthrift.Binary.FieldStopLength()
 	l += bthrift.Binary.StructEndLength()
@@ -19524,8 +19584,8 @@ func (p *PaymentReceiptData) fastWriteField34(buf []byte, binaryWriter bthrift.B
 
 func (p *PaymentReceiptData) fastWriteField35(buf []byte, binaryWriter bthrift.BinaryWriter) int {
 	offset := 0
-	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "electronicReceiptFile", thrift.STRING, 35)
-	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.ElectronicReceiptFile)
+	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "busType", thrift.STRING, 35)
+	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.BusType)
 
 	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
 	return offset
@@ -19533,8 +19593,8 @@ func (p *PaymentReceiptData) fastWriteField35(buf []byte, binaryWriter bthrift.B
 
 func (p *PaymentReceiptData) fastWriteField36(buf []byte, binaryWriter bthrift.BinaryWriter) int {
 	offset := 0
-	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "busType", thrift.STRING, 36)
-	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.BusType)
+	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "busOrderNo", thrift.STRING, 36)
+	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.BusOrderNo)
 
 	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
 	return offset
@@ -19542,8 +19602,8 @@ func (p *PaymentReceiptData) fastWriteField36(buf []byte, binaryWriter bthrift.B
 
 func (p *PaymentReceiptData) fastWriteField37(buf []byte, binaryWriter bthrift.BinaryWriter) int {
 	offset := 0
-	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "busOrderNo", thrift.STRING, 37)
-	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.BusOrderNo)
+	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "refundSuccess", thrift.STRING, 37)
+	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.RefundSuccess)
 
 	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
 	return offset
@@ -19551,8 +19611,8 @@ func (p *PaymentReceiptData) fastWriteField37(buf []byte, binaryWriter bthrift.B
 
 func (p *PaymentReceiptData) fastWriteField38(buf []byte, binaryWriter bthrift.BinaryWriter) int {
 	offset := 0
-	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "refundSuccess", thrift.STRING, 38)
-	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.RefundSuccess)
+	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "receiptOrderNo", thrift.STRING, 38)
+	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.ReceiptOrderNo)
 
 	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
 	return offset
@@ -19560,8 +19620,8 @@ func (p *PaymentReceiptData) fastWriteField38(buf []byte, binaryWriter bthrift.B
 
 func (p *PaymentReceiptData) fastWriteField39(buf []byte, binaryWriter bthrift.BinaryWriter) int {
 	offset := 0
-	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "receiptOrderNo", thrift.STRING, 39)
-	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.ReceiptOrderNo)
+	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "remark", thrift.STRING, 39)
+	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.Remark)
 
 	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
 	return offset
@@ -19569,24 +19629,15 @@ func (p *PaymentReceiptData) fastWriteField39(buf []byte, binaryWriter bthrift.B
 
 func (p *PaymentReceiptData) fastWriteField40(buf []byte, binaryWriter bthrift.BinaryWriter) int {
 	offset := 0
-	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "remark", thrift.STRING, 40)
-	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.Remark)
-
+	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "processAddTagItemVO", thrift.STRUCT, 40)
+	offset += p.ProcessAddTagItemVO.FastWriteNocopy(buf[offset:], binaryWriter)
 	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
 	return offset
 }
 
 func (p *PaymentReceiptData) fastWriteField41(buf []byte, binaryWriter bthrift.BinaryWriter) int {
 	offset := 0
-	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "processAddTagItemVO", thrift.STRUCT, 41)
-	offset += p.ProcessAddTagItemVO.FastWriteNocopy(buf[offset:], binaryWriter)
-	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
-	return offset
-}
-
-func (p *PaymentReceiptData) fastWriteField42(buf []byte, binaryWriter bthrift.BinaryWriter) int {
-	offset := 0
-	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "customFields", thrift.LIST, 42)
+	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "customFields", thrift.LIST, 41)
 	listBeginOffset := offset
 	offset += bthrift.Binary.ListBeginLength(thrift.STRUCT, 0)
 	var length int
@@ -19596,6 +19647,33 @@ func (p *PaymentReceiptData) fastWriteField42(buf []byte, binaryWriter bthrift.B
 	}
 	bthrift.Binary.WriteListBegin(buf[listBeginOffset:], thrift.STRUCT, length)
 	offset += bthrift.Binary.WriteListEnd(buf[offset:])
+	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
+	return offset
+}
+
+func (p *PaymentReceiptData) fastWriteField42(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+	offset := 0
+	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "electronicDocument", thrift.STRING, 42)
+	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.ElectronicDocument)
+
+	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
+	return offset
+}
+
+func (p *PaymentReceiptData) fastWriteField43(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+	offset := 0
+	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "electronicDocumentPng", thrift.STRING, 43)
+	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.ElectronicDocumentPng)
+
+	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
+	return offset
+}
+
+func (p *PaymentReceiptData) fastWriteField44(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+	offset := 0
+	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "paymentReason", thrift.STRING, 44)
+	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.PaymentReason)
+
 	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
 	return offset
 }
@@ -19908,8 +19986,8 @@ func (p *PaymentReceiptData) field34Length() int {
 
 func (p *PaymentReceiptData) field35Length() int {
 	l := 0
-	l += bthrift.Binary.FieldBeginLength("electronicReceiptFile", thrift.STRING, 35)
-	l += bthrift.Binary.StringLengthNocopy(p.ElectronicReceiptFile)
+	l += bthrift.Binary.FieldBeginLength("busType", thrift.STRING, 35)
+	l += bthrift.Binary.StringLengthNocopy(p.BusType)
 
 	l += bthrift.Binary.FieldEndLength()
 	return l
@@ -19917,8 +19995,8 @@ func (p *PaymentReceiptData) field35Length() int {
 
 func (p *PaymentReceiptData) field36Length() int {
 	l := 0
-	l += bthrift.Binary.FieldBeginLength("busType", thrift.STRING, 36)
-	l += bthrift.Binary.StringLengthNocopy(p.BusType)
+	l += bthrift.Binary.FieldBeginLength("busOrderNo", thrift.STRING, 36)
+	l += bthrift.Binary.StringLengthNocopy(p.BusOrderNo)
 
 	l += bthrift.Binary.FieldEndLength()
 	return l
@@ -19926,8 +20004,8 @@ func (p *PaymentReceiptData) field36Length() int {
 
 func (p *PaymentReceiptData) field37Length() int {
 	l := 0
-	l += bthrift.Binary.FieldBeginLength("busOrderNo", thrift.STRING, 37)
-	l += bthrift.Binary.StringLengthNocopy(p.BusOrderNo)
+	l += bthrift.Binary.FieldBeginLength("refundSuccess", thrift.STRING, 37)
+	l += bthrift.Binary.StringLengthNocopy(p.RefundSuccess)
 
 	l += bthrift.Binary.FieldEndLength()
 	return l
@@ -19935,8 +20013,8 @@ func (p *PaymentReceiptData) field37Length() int {
 
 func (p *PaymentReceiptData) field38Length() int {
 	l := 0
-	l += bthrift.Binary.FieldBeginLength("refundSuccess", thrift.STRING, 38)
-	l += bthrift.Binary.StringLengthNocopy(p.RefundSuccess)
+	l += bthrift.Binary.FieldBeginLength("receiptOrderNo", thrift.STRING, 38)
+	l += bthrift.Binary.StringLengthNocopy(p.ReceiptOrderNo)
 
 	l += bthrift.Binary.FieldEndLength()
 	return l
@@ -19944,8 +20022,8 @@ func (p *PaymentReceiptData) field38Length() int {
 
 func (p *PaymentReceiptData) field39Length() int {
 	l := 0
-	l += bthrift.Binary.FieldBeginLength("receiptOrderNo", thrift.STRING, 39)
-	l += bthrift.Binary.StringLengthNocopy(p.ReceiptOrderNo)
+	l += bthrift.Binary.FieldBeginLength("remark", thrift.STRING, 39)
+	l += bthrift.Binary.StringLengthNocopy(p.Remark)
 
 	l += bthrift.Binary.FieldEndLength()
 	return l
@@ -19953,29 +20031,47 @@ func (p *PaymentReceiptData) field39Length() int {
 
 func (p *PaymentReceiptData) field40Length() int {
 	l := 0
-	l += bthrift.Binary.FieldBeginLength("remark", thrift.STRING, 40)
-	l += bthrift.Binary.StringLengthNocopy(p.Remark)
-
+	l += bthrift.Binary.FieldBeginLength("processAddTagItemVO", thrift.STRUCT, 40)
+	l += p.ProcessAddTagItemVO.BLength()
 	l += bthrift.Binary.FieldEndLength()
 	return l
 }
 
 func (p *PaymentReceiptData) field41Length() int {
 	l := 0
-	l += bthrift.Binary.FieldBeginLength("processAddTagItemVO", thrift.STRUCT, 41)
-	l += p.ProcessAddTagItemVO.BLength()
+	l += bthrift.Binary.FieldBeginLength("customFields", thrift.LIST, 41)
+	l += bthrift.Binary.ListBeginLength(thrift.STRUCT, len(p.CustomFields))
+	for _, v := range p.CustomFields {
+		l += v.BLength()
+	}
+	l += bthrift.Binary.ListEndLength()
 	l += bthrift.Binary.FieldEndLength()
 	return l
 }
 
 func (p *PaymentReceiptData) field42Length() int {
 	l := 0
-	l += bthrift.Binary.FieldBeginLength("customFields", thrift.LIST, 42)
-	l += bthrift.Binary.ListBeginLength(thrift.STRUCT, len(p.CustomFields))
-	for _, v := range p.CustomFields {
-		l += v.BLength()
-	}
-	l += bthrift.Binary.ListEndLength()
+	l += bthrift.Binary.FieldBeginLength("electronicDocument", thrift.STRING, 42)
+	l += bthrift.Binary.StringLengthNocopy(p.ElectronicDocument)
+
+	l += bthrift.Binary.FieldEndLength()
+	return l
+}
+
+func (p *PaymentReceiptData) field43Length() int {
+	l := 0
+	l += bthrift.Binary.FieldBeginLength("electronicDocumentPng", thrift.STRING, 43)
+	l += bthrift.Binary.StringLengthNocopy(p.ElectronicDocumentPng)
+
+	l += bthrift.Binary.FieldEndLength()
+	return l
+}
+
+func (p *PaymentReceiptData) field44Length() int {
+	l := 0
+	l += bthrift.Binary.FieldBeginLength("paymentReason", thrift.STRING, 44)
+	l += bthrift.Binary.StringLengthNocopy(p.PaymentReason)
+
 	l += bthrift.Binary.FieldEndLength()
 	return l
 }

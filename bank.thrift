@@ -446,14 +446,16 @@ struct PaymentReceiptData {
     32: i64 departmentId
     33: string departmentName
 	34: string attachments
-	35: string electronicReceiptFile
-    36: string busType
-    37: string busOrderNo
-    38: string refundSuccess
-    39: string receiptOrderNo
-    40: string remark
-    41: ProcessAddTagItemVO processAddTagItemVO
-    42: list<CustomField> customFields
+    35: string busType
+    36: string busOrderNo
+    37: string refundSuccess
+    38: string receiptOrderNo
+    39: string remark
+    40: ProcessAddTagItemVO processAddTagItemVO
+    41: list<CustomField> customFields
+    42: string electronicDocument
+    43: string electronicDocumentPng
+    44: string paymentReason
 }
 
 struct ListPaymentReceiptRequest {
