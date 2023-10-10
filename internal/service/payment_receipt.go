@@ -16,7 +16,6 @@ import (
 	"gitlab.yoyiit.com/youyi/app-dingtalk/kitex_gen/api/dingtalk"
 	oaApi "gitlab.yoyiit.com/youyi/app-oa/kitex_gen/api"
 	"gitlab.yoyiit.com/youyi/app-oa/kitex_gen/api/oa"
-	api2 "gitlab.yoyiit.com/youyi/app-soms/kitex_gen/api"
 	"gitlab.yoyiit.com/youyi/app-soms/kitex_gen/api/soms"
 	"gitlab.yoyiit.com/youyi/go-common/enum"
 	"gitlab.yoyiit.com/youyi/go-core/config"
@@ -317,14 +316,14 @@ func (s *paymentReceiptService) PaymentReceiptRun(ctx context.Context, id int64)
 			}
 			if orderStatus != "" {
 				//同步付款申请的银行状态
-				if err = s.updatePaymentApplicationOrderStatus(ctx, paymentReceipt.ProcessInstanceId, orderStatus); err != nil {
+				if err = s.updateApplicationOrderStatus(ctx, paymentReceipt, orderStatus); err != nil {
 					return handler.HandleError(err)
 				}
 				return handler.HandleError(s.handleProcessResult(ctx, orderStatus, paymentReceipt))
 			}
 		} else {
 			//同步付款申请的银行状态
-			if err = s.updatePaymentApplicationOrderStatus(ctx, paymentReceipt.ProcessInstanceId, paymentReceipt.OrderStatus); err != nil {
+			if err = s.updateApplicationOrderStatus(ctx, paymentReceipt, paymentReceipt.OrderStatus); err != nil {
 				return handler.HandleError(err)
 			}
 			return handler.HandleError(s.handleProcessResult(ctx, paymentReceipt.OrderStatus, paymentReceipt))
@@ -333,20 +332,35 @@ func (s *paymentReceiptService) PaymentReceiptRun(ctx context.Context, id int64)
 	return nil
 }
 
-func (s *paymentReceiptService) updatePaymentApplicationOrderStatus(ctx context.Context, processInstanceId int64, orderStatus string) error {
-	paymentApplication, err := s.oaClient.GetPaymentApplicationByProcessInstanceId(ctx, processInstanceId)
-	if err != nil {
-		return handler.HandleError(err)
-	}
-	if paymentApplication != nil && paymentApplication.Id != 0 && paymentApplication.OrderStatus != orderStatus {
-		if err = s.oaClient.EditPaymentApplicationWithoutPermission(ctx, &oaApi.PaymentApplicationData{
-			Id:          paymentApplication.Id,
-			OrderStatus: orderStatus,
-		}); err != nil {
+func (s *paymentReceiptService) updateApplicationOrderStatus(ctx context.Context, paymentReceipt *repo.PaymentReceiptDBData, orderStatus string) error {
+	if paymentReceipt.Type == "1" {
+		paymentApplication, err := s.oaClient.GetPaymentApplicationByProcessInstanceId(ctx, paymentReceipt.ProcessInstanceId)
+		if err != nil {
 			return handler.HandleError(err)
 		}
+		if paymentApplication != nil && paymentApplication.Id != 0 && paymentApplication.OrderStatus != orderStatus {
+			if err = s.oaClient.EditPaymentApplicationWithoutPermission(ctx, &oaApi.PaymentApplicationData{
+				Id:          paymentApplication.Id,
+				OrderStatus: orderStatus,
+			}); err != nil {
+				return handler.HandleError(err)
+			}
+		}
+	} else {
+		reimburseApplication, err := s.oaClient.GetReimburseApplicationByProcessInstanceId(ctx, paymentReceipt.ProcessInstanceId)
+		if err != nil {
+			return handler.HandleError(err)
+		}
+		if reimburseApplication != nil && reimburseApplication.Id != 0 && reimburseApplication.OrderStatus != orderStatus {
+			if err = s.oaClient.EditReimburseApplicationWithoutPermission(ctx, &oaApi.ReimburseApplicationData{
+				Id:          reimburseApplication.Id,
+				OrderStatus: orderStatus,
+			}); err != nil {
+				return handler.HandleError(err)
+			}
+		}
 	}
-	//调用进销存模块
+	/*//调用进销存模块
 	if orderStatus == enum.GuilinBankTransferSuccessResult && paymentApplication.BusType != "" && paymentApplication.BusType != "0" && paymentApplication.BusOrderNo != "" {
 		s.somsClient.EditSimsOrderAmount(ctx, &api2.SimsOrderAmountData{
 			ReturnFlag: "0",
@@ -355,7 +369,7 @@ func (s *paymentReceiptService) updatePaymentApplicationOrderStatus(ctx context.
 			BusType:    paymentApplication.BusType,
 			BillCode:   paymentApplication.BusOrderNo,
 		})
-	}
+	}*/
 	return nil
 }
 

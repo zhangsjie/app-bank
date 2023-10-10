@@ -9,18 +9,15 @@ require (
 	github.com/google/wire v0.5.0
 	github.com/pkg/errors v0.9.1
 	github.com/satori/go.uuid v1.2.0
+	gitlab.yoyiit.com/youyi/app-base v0.0.0-20230924052011-4f88426a8a20
+	gitlab.yoyiit.com/youyi/app-dingtalk v0.0.0-20230712070347-478fa7abbcbb
+	gitlab.yoyiit.com/youyi/app-finance v0.0.0-20230929070609-39763be52c1c
+	gitlab.yoyiit.com/youyi/app-oa v0.0.0-20231010071614-b73c68c41033
+	gitlab.yoyiit.com/youyi/app-soms v0.0.0-20230725111904-77cace21e85e
+	gitlab.yoyiit.com/youyi/go-common v0.0.0-20230825054447-70d619641f41
+	gitlab.yoyiit.com/youyi/go-core v0.0.0-20230908113333-9ed96cbeb328
 	go.uber.org/zap v1.24.0
 	gorm.io/gorm v1.24.5
-)
-
-require (
-	gitlab.yoyiit.com/youyi/app-base v0.0.0-20230816023116-d838515f6d41
-	gitlab.yoyiit.com/youyi/app-dingtalk v0.0.0-20230712070347-478fa7abbcbb
-	gitlab.yoyiit.com/youyi/app-finance v0.0.0-20230810052811-747dbca7070e
-	gitlab.yoyiit.com/youyi/app-oa v0.0.0-20230813095951-bed581b8da50
-	gitlab.yoyiit.com/youyi/app-soms v0.0.0-20230818120512-084aa47de367
-	gitlab.yoyiit.com/youyi/go-common v0.0.0-20230817061454-e2f2cf9e6c6f
-	gitlab.yoyiit.com/youyi/go-core v0.0.0-20230813091122-90671a66afe9
 )
 
 require (
