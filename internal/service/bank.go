@@ -1081,6 +1081,7 @@ func (s *bankService) HandleGuilinBankTransactionDetail(ctx context.Context, ban
 						}
 						if transactionDetailDBData.PayAmount < 0 {
 							transactionDetailDBData.RecAmount = -transactionDetailDBData.PayAmount
+							transactionDetailDBData.PayAmount = 0
 						}
 						if data.RecAmount > 0 {
 							//查询发起人
