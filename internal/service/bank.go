@@ -1079,6 +1079,9 @@ func (s *bankService) HandleGuilinBankTransactionDetail(ctx context.Context, ban
 							ProcessTotalStatus:    enum.ProcessInstanceTotalStatusRunning,
 							PayAccountType:        enum.GuilinBankType,
 						}
+						if transactionDetailDBData.PayAmount < 0 {
+							transactionDetailDBData.RecAmount = -transactionDetailDBData.PayAmount
+						}
 						if data.RecAmount > 0 {
 							//查询发起人
 							//userData, err := s.dingtalkClient.GetUserDataByUnionId(ctx, organizationUnionConfig.NotificationUnionId)
