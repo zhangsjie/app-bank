@@ -145,6 +145,13 @@ func (param *PaymentReceiptDBParam) listConditions() []*repository.Condition {
 		conditions = append(conditions, repository.NewAndCondition("payment_receipt.process_codes like ?", util.GetLikeString(param.ProcessCodes)))
 	}
 	if param.ProcessStatus != "" {
+		if param.ProcessStatus == "1" {
+			conditions = append(conditions, repository.NewAndCondition("payment_receipt.order_status = '90'"))
+		}
+		if param.ProcessStatus == "5" {
+			param.ProcessStatus = "1"
+			conditions = append(conditions, repository.NewAndCondition("payment_receipt.order_status != '90'"))
+		}
 		conditions = append(conditions, repository.NewAndCondition("payment_receipt.process_instance_id in (select id from base.process_instance where base.process_instance.status = ? )", param.ProcessStatus))
 	}
 	if param.RefundSuccess != "" {
