@@ -10,3 +10,7 @@ const PinganIntelligenceAccountName = "bankConfig.pingAn.intelligence.accountNam
 
 const PinganFlexPrefix = "LH-"     //平安子账户转账前缀
 const PinganFlexSubPrefix = "LH-S" //平安
+
+const IcbcAppId = "bankConfig.icbc.appId"
+
+const IcbcAccDetailURL = "bankConfig.icbc.accDetail.url" //工行单账户流水提取url
