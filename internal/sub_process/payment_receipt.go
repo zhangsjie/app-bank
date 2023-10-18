@@ -177,21 +177,22 @@ func (p *PaymentReceiptSubProcess) MiniprogramUrl(ctx context.Context, id int64)
 	if err != nil {
 		return ""
 	}
+	var aid int64 = 0
 	if paymentReceipt.Type == "1" {
 		paymentApplication, err := p.oaClient.GetPaymentApplicationByProcessInstanceId(ctx, id)
 		if err != nil {
 			return ""
 		}
-		return fmt.Sprintf("page/paymentDetail/index?id=%d", paymentApplication.Id)
+		aid = paymentApplication.Id
 	}
 	if paymentReceipt.Type == "2" {
 		reimburseApplication, err := p.oaClient.GetReimburseApplicationByProcessInstanceId(ctx, id)
 		if err != nil {
 			return ""
 		}
-		return fmt.Sprintf("reimburseApplication/detail/index?id=%d", reimburseApplication.Id)
+		aid = reimburseApplication.Id
 	}
-	return ""
+	return fmt.Sprintf("paymentReceipt/detail/index?id=%d", aid)
 }
 
 func (p *PaymentReceiptSubProcess) PcUrl(ctx context.Context, id int64) string {
