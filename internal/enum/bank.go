@@ -23,14 +23,3 @@ const IcbcAdspartnersynURL = "/mybank/account/accountdetailservice/adspartnersyn
 const IcbcAdspartnerqryURL = "/mybank/account/accountdetailservice/adspartnerqry/V1"         //代账公司信息查询
 const IcbcAdsapplyresultqryURL = "/mybank/account/accountdetailservice/adsapplyresultqry/V1" //批量申请结果查询
 const IcbcAdsagreementpushURL = "/mybank/account/accountdetailservice/adsagreementpush/V1"   //协议变化通知（推送接口）
-
-/**
-：
-：
-：
-：
-：
-：
-：
-：
-*/
