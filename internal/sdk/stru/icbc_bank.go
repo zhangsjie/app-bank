@@ -1,20 +1,5 @@
 package stru
 
-import (
-	"crypto"
-	"crypto/rand"
-	"crypto/rsa"
-	"crypto/sha1"
-	"crypto/x509"
-	"encoding/base64"
-	"encoding/pem"
-	"errors"
-	"fmt"
-	"net/url"
-	"sort"
-	"strings"
-)
-
 //通用接口
 type IcbcGlobalRequest struct {
 	AppID      string      `json:"app_id"`      // APP的编号,应用在API开放平台注册时生成
@@ -29,69 +14,6 @@ type IcbcGlobalRequest struct {
 type IcbcGlobalResponse struct {
 	Sign               string `json:"sign"`                 // 针对返回参数集合的签名
 	ResponseBizContent string `json:"response_biz_content"` // 响应参数集合，包含公共和业务参数
-}
-
-//将筛选的参数按照第一个字符的键值ASCII码递增排序（字母升序排序
-func constructUnsignedData(req IcbcGlobalRequest) string {
-	params := make(map[string]interface{})
-	params["app_id"] = req.AppID
-	params["msg_id"] = req.MsgID
-	params["sign_type"] = req.SignType
-	params["timestamp"] = req.Timestamp
-	params["biz_content"] = req.BizContent
-
-	// Sort the parameters by key
-	keys := make([]string, 0, len(params))
-	for k := range params {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-
-	// Construct the unsigned data string
-	var unsignedData strings.Builder
-	for _, k := range keys {
-		v := fmt.Sprintf("%v", params[k])
-		unsignedData.WriteString(k)
-		unsignedData.WriteString("=")
-		unsignedData.WriteString(url.QueryEscape(v))
-		unsignedData.WriteString("&")
-	}
-
-	return unsignedData.String()
-}
-
-// 生成签名
-func GenerateSignature(req IcbcGlobalRequest, privateKeyStr string) string {
-	unsignedData := constructUnsignedData(req)
-	privateKeyBytes := []byte(privateKeyStr)
-	privateKey, err := parsePrivateKey(privateKeyBytes)
-	if err != nil {
-		fmt.Println("Failed to parse private key:", err)
-		return ""
-	}
-
-	hashed := sha1.Sum([]byte(unsignedData))
-	signature, err := rsa.SignPKCS1v15(rand.Reader, privateKey, crypto.SHA1, hashed[:])
-	if err != nil {
-		fmt.Println("生成签名数据失败:", err)
-		return ""
-	}
-
-	return base64.StdEncoding.EncodeToString(signature)
-}
-
-// 私钥转换
-func parsePrivateKey(privateKeyBytes []byte) (*rsa.PrivateKey, error) {
-	block, _ := pem.Decode(privateKeyBytes)
-	if block == nil {
-		return nil, errors.New("failed to decode PEM block containing the private key")
-	}
-
-	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
-	if err != nil {
-		return nil, err
-	}
-	return privateKey, nil
 }
 
 //签约参数
