@@ -527,6 +527,7 @@ func (s *paymentReceiptService) sendMessage(ctx context.Context, paymentReceiptD
 			map[string]string{
 				"statusBg":             statusBg,
 				"resultStr":            resultStr,
+				"name":                 processInstance.Name,
 				"code":                 processInstance.Code,
 				"paymentReceiptCode":   paymentReceiptDBData.Code,
 				"payAccount":           paymentReceiptDBData.PayAccount,
@@ -550,6 +551,7 @@ func (s *paymentReceiptService) sendMessage(ctx context.Context, paymentReceiptD
 			map[string]string{
 				"statusBg":               statusBg,
 				"resultStr":              resultStr,
+				"name":                   processInstance.Name,
 				"code":                   processInstance.Code,
 				"paymentReceiptCode":     paymentReceiptDBData.Code,
 				"payAccount":             paymentReceiptDBData.PayAccount,
