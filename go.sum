@@ -611,6 +611,10 @@ gitlab.yoyiit.com/youyi/app-dingtalk v0.0.0-20230712070347-478fa7abbcbb h1:K+VdH
 gitlab.yoyiit.com/youyi/app-dingtalk v0.0.0-20230712070347-478fa7abbcbb/go.mod h1:NG1u63/uT6jJKKoP0LAEwL5GNzu424HRguX+a+j1EvM=
 gitlab.yoyiit.com/youyi/app-finance v0.0.0-20231012171224-91671d7ec23d h1:4GuMv48kPw2fcmLsIjjvkpc62c9C78j3WTjtdnkz5gU=
 gitlab.yoyiit.com/youyi/app-finance v0.0.0-20231012171224-91671d7ec23d/go.mod h1:h1nDb7SKWbrR6aUTFuj10MNEJYqKif6sgdxqPd4b6Rg=
+gitlab.yoyiit.com/youyi/app-invoice v0.0.0-20231020094117-2924f2366f36 h1:2Kl0unajSlQAocitxzxHTTojzNWZBdPPICsQX2rqpm4=
+gitlab.yoyiit.com/youyi/app-invoice v0.0.0-20231020094117-2924f2366f36/go.mod h1:BxFDXvtU9/0zbzjz3bE6MDJ/ZYdd793PcvHm76wQBO8=
+gitlab.yoyiit.com/youyi/app-oa v0.0.0-20231018105248-5cd57360ee63 h1:a0tWDXVs23EzEjt6wCbTF7sd66J7J5nK5ZQdE33DC/Q=
+gitlab.yoyiit.com/youyi/app-oa v0.0.0-20231018105248-5cd57360ee63/go.mod h1:QHRDy8CmBBeB3NQQiQAVXKYQ+zn7NtcVp6f6n9Hf5ug=
 gitlab.yoyiit.com/youyi/app-soms v0.0.0-20230725111904-77cace21e85e h1:2RdgqjKS2+HBnpu4rumHzw4QlT8Q5+fox88YhTIdTOs=
 gitlab.yoyiit.com/youyi/app-soms v0.0.0-20230725111904-77cace21e85e/go.mod h1:HrnIhdAyq2ZWXl+YEoft1E7tWe8gnNxioG+G/a0N284=
 gitlab.yoyiit.com/youyi/go-common v0.0.0-20230825054447-70d619641f41 h1:Ym3SSr0aUmVIMoW1MA3QhuxlqtxEDMxjvNlfJ55+qlM=

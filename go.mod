@@ -12,18 +12,14 @@ require (
 	gitlab.yoyiit.com/youyi/app-base v0.0.0-20231018063318-34d7ba920607
 	gitlab.yoyiit.com/youyi/app-dingtalk v0.0.0-20230712070347-478fa7abbcbb
 	gitlab.yoyiit.com/youyi/app-finance v0.0.0-20231012171224-91671d7ec23d
-	gitlab.yoyiit.com/youyi/app-invoice v0.0.0-20231019102305-5f0d2e057188
-	gitlab.yoyiit.com/youyi/app-oa v0.0.0-20231011103359-4b86e0b21dce
+	gitlab.yoyiit.com/youyi/app-invoice v0.0.0-20231020094117-2924f2366f36
+	gitlab.yoyiit.com/youyi/app-oa v0.0.0-20231018105248-5cd57360ee63
 	gitlab.yoyiit.com/youyi/app-soms v0.0.0-20230725111904-77cace21e85e
 	gitlab.yoyiit.com/youyi/go-common v0.0.0-20230825054447-70d619641f41
 	gitlab.yoyiit.com/youyi/go-core v0.0.0-20231017065201-157dac1f83f9
 	go.uber.org/zap v1.24.0
 	gorm.io/gorm v1.24.5
 )
-
-replace gitlab.yoyiit.com/youyi/app-oa => ../app-oa
-
-replace gitlab.yoyiit.com/youyi/app-invoice => ../app-invoice
 
 require (
 	github.com/Shopify/sarama v1.38.1 // indirect
