@@ -9,7 +9,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
-	"errors"
 	"fmt"
 	"net/url"
 	"sort"
@@ -19,124 +18,116 @@ import (
 
 func main() {
 	appID := "your_app_id"
-	privateKey := []byte("your_private_key")
-
-	// 构造请求参数
-	bizContent := AccDetailRequest{
-		Fseqno:    "your_fseqno",
-		Account:   "your_account",
-		Currtype:  1,
-		Startdate: "2023-01-01",
-		Enddate:   "2023-01-31",
-		Serialno:  "",
-		Corpno:    "your_corpno",
-		Acccompno: "your_acccompno",
-		Agreeno:   "your_agreeno",
-	}
+	privateKey := []byte("your_private_key") // Replace with your private key bytes
 
 	request := IcbcGlobalRequest{
-		AppID:      appID,
-		MsgID:      generateRandomString(16),
-		SignType:   "RSA2",
-		Timestamp:  time.Now().Format("2006-01-02 15:04:05"),
-		BizContent: bizContent,
+		AppID:     appID,
+		MsgID:     "urcnl24ciutr9",
+		SignType:  "RSA2",
+		Timestamp: time.Now().Format("2006-01-02 15:04:05"),
+		BizContent: AccDetailRequest{
+			Fseqno:    "your_fseqno",
+			Account:   "your_account",
+			Currtype:  0,
+			Startdate: "your_start_date",
+			Enddate:   "your_end_date",
+			Serialno:  "your_serial_no",
+			Corpno:    "your_corp_no",
+			Acccompno: "your_acccomp_no",
+			Agreeno:   "your_agree_no",
+		},
 	}
 
-	// 对请求参数进行签名
-	sign, err := signRequest(request, privateKey)
-	if err != nil {
-		fmt.Println("Failed to sign the request:", err)
-		return
-	}
-	request.Sign = sign
-
-	// 发送请求...
-}
-
-func generateRandomString(length int) string {
-	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	result := make([]byte, length)
-	randomBytes := make([]byte, length+(length/4))
-	if _, err := rand.Read(randomBytes); err != nil {
-		panic(err)
-	}
-	for i, c := range randomBytes {
-		result[i] = charset[int(c)%len(charset)]
-	}
-	return string(result)
-}
-
-func signRequest(request IcbcGlobalRequest, privateKey []byte) (string, error) {
-	// 将请求参数转换为URL编码的字符串
-	rawQuery, err := url.QueryUnescape(string(encodeJson(request.BizContent)))
-	if err != nil {
-		return "", err
-	}
-
-	// 按照参数名排序
+	// Step 1: 参数排序
 	params := make(map[string]string)
 	params["app_id"] = request.AppID
 	params["msg_id"] = request.MsgID
 	params["sign_type"] = request.SignType
 	params["timestamp"] = request.Timestamp
-	params["biz_content"] = rawQuery
 
+	bizContent, err := MarshalBizContent(request.BizContent)
+	if err != nil {
+		fmt.Println("Error marshaling biz_content:", err)
+		return
+	}
+	params["biz_content"] = bizContent
+
+	sortedParamKeys := sortParams(params)
+
+	// Step 2: 构造签名文本
+	signaturePlain := constructSignaturePlain(sortedParamKeys, params)
+
+	// Step 3: Sign the signature plain text with RSA private key
+	signature, err := signWithRSA(signaturePlain, privateKey)
+	if err != nil {
+		fmt.Println("Error signing with RSA:", err)
+		return
+	}
+
+	request.Sign = signature
+
+	fmt.Printf("%+v\n", request)
+}
+
+func sortParams(params map[string]string) []string {
 	keys := make([]string, 0, len(params))
 	for key := range params {
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)
+	return keys
+}
 
-	// 拼接参数名和参数值
-	var paramString strings.Builder
+func constructSignaturePlain(keys []string, params map[string]string) string {
+	var signatureStrings []string
 	for _, key := range keys {
 		value := params[key]
-		if paramString.Len() > 0 {
-			paramString.WriteByte('&')
-		}
-		paramString.WriteString(key)
-		paramString.WriteByte('=')
-		paramString.WriteString(value)
+		encodedValue := url.QueryEscape(value)
+		signatureStrings = append(signatureStrings, fmt.Sprintf("%s=%s", key, encodedValue))
 	}
+	return strings.Join(signatureStrings, "&")
+}
 
-	// 使用RSA2算法对参数进行签名
-	hash := sha256.New()
-	hash.Write([]byte(paramString.String()))
-	hashed := hash.Sum(nil)
+func signWithRSA(plainText string, privateKeyBytes []byte) (string, error) {
+	hashed := sha256.Sum256([]byte(plainText))
 
-	privateKeyParsed, err := parsePrivateKey(privateKey)
+	privateKey, err := parsePrivateKey(privateKeyBytes)
 	if err != nil {
 		return "", err
 	}
 
-	signature, err := rsa.SignPKCS1v15(rand.Reader, privateKeyParsed, crypto.SHA256, hashed)
+	signature, err := rsa.SignPKCS1v15(rand.Reader, privateKey, crypto.SHA256, hashed[:])
 	if err != nil {
 		return "", err
 	}
 
-	sign := base64.StdEncoding.EncodeToString(signature)
-	return sign, nil
+	encodedSignature := base64.StdEncoding.EncodeToString(signature)
+	return encodedSignature, nil
 }
 
-func encodeJson(data interface{}) []byte {
-	encoded, _ := json.Marshal(data)
-	return encoded
-}
-
-func parsePrivateKey(privateKey []byte) (*rsa.PrivateKey, error) {
-	block, _ := pem.Decode(privateKey)
+func parsePrivateKey(privateKeyBytes []byte) (*rsa.PrivateKey, error) {
+	block, _ := pem.Decode(privateKeyBytes)
 	if block == nil {
-		return nil, errors.New("failed to decode PEM block containing the private key")
+		return nil, fmt.Errorf("failed to parse PEM block containing the key")
 	}
-	parsedKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+
+	privateKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
 	if err != nil {
 		return nil, err
 	}
 
-	privateKeyParsed, ok := parsedKey.(*rsa.PrivateKey)
+	rsaPrivateKey, ok := privateKey.(*rsa.PrivateKey)
 	if !ok {
-		return nil, errors.New("Invalid private key")
+		return nil, fmt.Errorf("private key is not an RSA private key")
 	}
 
-	return privateKeyParsed, nil
+	return rsaPrivateKey, nil
+}
+
+func MarshalBizContent(bizContent interface{}) (string, error) {
+	jsonData, err := json.Marshal(bizContent)
+	if err != nil {
+		return "", err
+	}
+	return string(jsonData), nil
 }
