@@ -9,6 +9,8 @@ import (
 	api2 "gitlab.yoyiit.com/youyi/app-base/kitex_gen/api"
 	"gitlab.yoyiit.com/youyi/app-base/kitex_gen/api/base"
 	"gitlab.yoyiit.com/youyi/app-base/process"
+	invoiceApi "gitlab.yoyiit.com/youyi/app-invoice/kitex_gen/api"
+	"gitlab.yoyiit.com/youyi/app-invoice/kitex_gen/api/invoice"
 	"gitlab.yoyiit.com/youyi/app-oa/kitex_gen/api/oa"
 	"gitlab.yoyiit.com/youyi/go-core/config"
 	"gitlab.yoyiit.com/youyi/go-core/handler"
@@ -25,6 +27,7 @@ type PaymentReceiptSubProcess struct {
 	oaClient                                 oa.Client
 	baseClient                               base.Client
 	paymentReceiptApplicationCustomFieldRepo repo.PaymentReceiptApplicationCustomFieldRepo
+	invoiceClient                            invoice.Client
 }
 
 func (p *PaymentReceiptSubProcess) SubmitBefore(ctx context.Context, id int64, param interface{}) error {
@@ -33,8 +36,34 @@ func (p *PaymentReceiptSubProcess) SubmitBefore(ctx context.Context, id int64, p
 }
 
 func (p *PaymentReceiptSubProcess) Cancel(ctx context.Context, processInstanceId int64) error {
-	//TODO implement me
-	panic("implement me")
+	dbData, err := p.paymentReceiptRepo.GetWithoutPermission(ctx, &repo.PaymentReceiptDBData{
+		BaseProcessDBData: repository.BaseProcessDBData{
+			ProcessInstanceId: processInstanceId,
+		},
+	})
+	if err != nil {
+		return handler.HandleError(err)
+	}
+	if dbData == nil || dbData.Id == 0 {
+		return nil
+	}
+	if dbData.Type == "2" && dbData.PaymentId > 0 {
+		response, err := p.oaClient.ListReimburseInvoiceApplication(ctx, dbData.PaymentId)
+		if err != nil {
+			return handler.HandleError(err)
+		}
+		if response != nil && response.Count > 0 {
+			var invoiceIds []int64
+			for _, v := range response.Data {
+				invoiceIds = append(invoiceIds, v.InvoiceId)
+			}
+			p.invoiceClient.CancelReimburseInvoice(ctx, &invoiceApi.CancelReimburseInvoiceRequest{
+				InvoiceIds: invoiceIds,
+				ReceiptId:  dbData.PaymentId,
+			})
+		}
+	}
+	return nil
 }
 
 func (p *PaymentReceiptSubProcess) Transmit(ctx context.Context, param interface{}) error {
@@ -149,6 +178,37 @@ func (p *PaymentReceiptSubProcess) SystemApprove(ctx context.Context, id int64, 
 }
 
 func (p *PaymentReceiptSubProcess) Refuse(ctx context.Context, id int64, param interface{}) error {
+	dbData, err := p.paymentReceiptRepo.GetWithoutPermission(ctx, &repo.PaymentReceiptDBData{
+		BaseProcessDBData: repository.BaseProcessDBData{
+			BaseDBData: repository.BaseDBData{
+				BaseCommonDBData: repository.BaseCommonDBData{
+					Id: id,
+				},
+			},
+		},
+	})
+	if err != nil {
+		return handler.HandleError(err)
+	}
+	if dbData == nil || dbData.Id == 0 {
+		return nil
+	}
+	if dbData.Type == "2" && dbData.PaymentId > 0 {
+		response, err := p.oaClient.ListReimburseInvoiceApplication(ctx, dbData.PaymentId)
+		if err != nil {
+			return handler.HandleError(err)
+		}
+		if response != nil && response.Count > 0 {
+			var invoiceIds []int64
+			for _, v := range response.Data {
+				invoiceIds = append(invoiceIds, v.InvoiceId)
+			}
+			p.invoiceClient.CancelReimburseInvoice(ctx, &invoiceApi.CancelReimburseInvoiceRequest{
+				InvoiceIds: invoiceIds,
+				ReceiptId:  dbData.PaymentId,
+			})
+		}
+	}
 	return nil
 }
 
@@ -177,22 +237,7 @@ func (p *PaymentReceiptSubProcess) MiniprogramUrl(ctx context.Context, id int64)
 	if err != nil {
 		return ""
 	}
-	var aid int64 = 0
-	if paymentReceipt.Type == "1" {
-		paymentApplication, err := p.oaClient.GetPaymentApplicationByProcessInstanceId(ctx, id)
-		if err != nil {
-			return ""
-		}
-		aid = paymentApplication.Id
-	}
-	if paymentReceipt.Type == "2" {
-		reimburseApplication, err := p.oaClient.GetReimburseApplicationByProcessInstanceId(ctx, id)
-		if err != nil {
-			return ""
-		}
-		aid = reimburseApplication.Id
-	}
-	return fmt.Sprintf("paymentReceipt/detail/index?id=%d", aid)
+	return fmt.Sprintf("paymentReceipt/detail/index?id=%d", paymentReceipt.Id)
 }
 
 func (p *PaymentReceiptSubProcess) PcUrl(ctx context.Context, id int64) string {

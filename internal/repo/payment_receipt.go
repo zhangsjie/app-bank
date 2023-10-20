@@ -49,6 +49,7 @@ type PaymentReceiptDBData struct {
 	ElectronicDocument     string
 	ElectronicDocumentPng  string
 	PaymentReason          string
+	PaymentId              int64
 }
 
 type PaymentReceiptDBParam struct {

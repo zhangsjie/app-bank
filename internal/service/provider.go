@@ -12,6 +12,8 @@ import (
 	"gitlab.yoyiit.com/youyi/app-dingtalk/rpc_dingtalk"
 	"gitlab.yoyiit.com/youyi/app-finance/kitex_gen/api/finance"
 	"gitlab.yoyiit.com/youyi/app-finance/rpc_finance"
+	"gitlab.yoyiit.com/youyi/app-invoice/kitex_gen/api/invoice"
+	"gitlab.yoyiit.com/youyi/app-invoice/rpc_invoice"
 	"gitlab.yoyiit.com/youyi/app-oa/kitex_gen/api/oa"
 	"gitlab.yoyiit.com/youyi/app-oa/rpc_oa"
 	"gitlab.yoyiit.com/youyi/app-soms/kitex_gen/api/soms"
@@ -21,7 +23,7 @@ import (
 
 var ProviderSet = wire.NewSet(NewBankService, store.NewKafkaProducer, rpc_dingtalk.NewDingtalkClient, store.NewOSSConfig,
 	rpc_base.NewBaseClient, NewPaymentReceiptService, rpc_oa.NewOAClient, NewPdfToImageService, process.NewProcessAuthRepo,
-	rpc_soms.NewSomsClient, rpc_finance.NewFinanceClient)
+	rpc_soms.NewSomsClient, rpc_finance.NewFinanceClient, rpc_invoice.NewInvoiceClient)
 
 func NewBankService(baseClient base.Client, guilinBankSDK sdk.GuilinBankSDK, spdBankSDK sdk.SPDBankSDK, pinganBankSDK sdk.PinganBankSDK,
 	bankTransferReceiptRepo repo.BankTransferReceiptRepo, kafkaProducer *store.KafkaProducer, dingtalkClient dingtalk.Client,
@@ -38,7 +40,8 @@ func NewBankService(baseClient base.Client, guilinBankSDK sdk.GuilinBankSDK, spd
 func NewPaymentReceiptService(paymentReceiptSubProcess *sub_process.PaymentReceiptSubProcess, baseClient base.Client,
 	paymentReceiptRepo repo.PaymentReceiptRepo, bankCodeRepo repo.BankCodeRepo, guilinBankSDK sdk.GuilinBankSDK,
 	spdBankSDK sdk.SPDBankSDK, pinganBankSDK sdk.PinganBankSDK, oaClient oa.Client, dingtalkClient dingtalk.Client,
-	processAuthRepo process.ProcessAuthRepo, somsClient soms.Client, paymentReceiptApplicationCustomFieldRepo repo.PaymentReceiptApplicationCustomFieldRepo) PaymentReceiptService {
+	processAuthRepo process.ProcessAuthRepo, somsClient soms.Client, paymentReceiptApplicationCustomFieldRepo repo.PaymentReceiptApplicationCustomFieldRepo,
+	invoiceClient invoice.Client) PaymentReceiptService {
 	return &paymentReceiptService{
 		process.Process{
 			SubProcess:      paymentReceiptSubProcess,
@@ -47,7 +50,7 @@ func NewPaymentReceiptService(paymentReceiptSubProcess *sub_process.PaymentRecei
 		},
 		paymentReceiptRepo, baseClient, bankCodeRepo, guilinBankSDK,
 		spdBankSDK, pinganBankSDK, oaClient, dingtalkClient, somsClient,
-		paymentReceiptApplicationCustomFieldRepo,
+		paymentReceiptApplicationCustomFieldRepo, invoiceClient,
 	}
 }
 

@@ -9,16 +9,21 @@ require (
 	github.com/google/wire v0.5.0
 	github.com/pkg/errors v0.9.1
 	github.com/satori/go.uuid v1.2.0
-	gitlab.yoyiit.com/youyi/app-base v0.0.0-20230924052011-4f88426a8a20
+	gitlab.yoyiit.com/youyi/app-base v0.0.0-20231018063318-34d7ba920607
 	gitlab.yoyiit.com/youyi/app-dingtalk v0.0.0-20230712070347-478fa7abbcbb
-	gitlab.yoyiit.com/youyi/app-finance v0.0.0-20230929070609-39763be52c1c
-	gitlab.yoyiit.com/youyi/app-oa v0.0.0-20231010071614-b73c68c41033
+	gitlab.yoyiit.com/youyi/app-finance v0.0.0-20231012171224-91671d7ec23d
+	gitlab.yoyiit.com/youyi/app-invoice v0.0.0-20231019102305-5f0d2e057188
+	gitlab.yoyiit.com/youyi/app-oa v0.0.0-20231011103359-4b86e0b21dce
 	gitlab.yoyiit.com/youyi/app-soms v0.0.0-20230725111904-77cace21e85e
 	gitlab.yoyiit.com/youyi/go-common v0.0.0-20230825054447-70d619641f41
-	gitlab.yoyiit.com/youyi/go-core v0.0.0-20230908113333-9ed96cbeb328
+	gitlab.yoyiit.com/youyi/go-core v0.0.0-20231017065201-157dac1f83f9
 	go.uber.org/zap v1.24.0
 	gorm.io/gorm v1.24.5
 )
+
+replace gitlab.yoyiit.com/youyi/app-oa => ../app-oa
+
+replace gitlab.yoyiit.com/youyi/app-invoice => ../app-invoice
 
 require (
 	github.com/Shopify/sarama v1.38.1 // indirect
@@ -68,6 +73,7 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kitex-contrib/resolver-dns v0.0.0-20211026091019-d57feaffb777 // indirect
 	github.com/kitex-contrib/tracer-opentracing v0.0.3 // indirect
@@ -75,12 +81,14 @@ require (
 	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
+	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/montanaflynn/stats v0.7.0 // indirect
 	github.com/oleiade/lane v1.0.1 // indirect
+	github.com/olivere/elastic/v7 v7.0.32 // indirect
 	github.com/opentracing/opentracing-go v1.2.1-0.20220228012449-10b1cf09e00b // indirect
 	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
 	github.com/pierrec/lz4/v4 v4.1.17 // indirect
