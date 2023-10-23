@@ -10,34 +10,28 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"gitlab.yoyiit.com/youyi/app-bank/internal/enum"
+	"gitlab.yoyiit.com/youyi/go-core/config"
+	"gitlab.yoyiit.com/youyi/go-core/util"
+	"go.uber.org/zap"
 	"net/url"
 	"sort"
 	"strings"
 	"time"
 )
 
-func main() {
-	appID := "your_app_id"
-	privateKey := []byte("your_private_key") // Replace with your private key bytes
-
+func NewIcbcGlobalRequest() *IcbcGlobalRequest {
+	msgId, _ := util.SonyflakeID()
 	request := IcbcGlobalRequest{
-		AppID:     appID,
-		MsgID:     "urcnl24ciutr9",
+		AppID:     config.GetString(enum.IcbcAppId, ""),
+		MsgID:     msgId,
 		SignType:  "RSA2",
 		Timestamp: time.Now().Format("2006-01-02 15:04:05"),
-		BizContent: AccDetailRequest{
-			Fseqno:    "your_fseqno",
-			Account:   "your_account",
-			Currtype:  0,
-			Startdate: "your_start_date",
-			Enddate:   "your_end_date",
-			Serialno:  "your_serial_no",
-			Corpno:    "your_corp_no",
-			Acccompno: "your_acccomp_no",
-			Agreeno:   "your_agree_no",
-		},
 	}
+	return &request
+}
 
+func GenerateParams(request IcbcGlobalRequest) (*IcbcGlobalRequest, error) {
 	// Step 1: 参数排序
 	params := make(map[string]string)
 	params["app_id"] = request.AppID
@@ -48,25 +42,25 @@ func main() {
 	bizContent, err := MarshalBizContent(request.BizContent)
 	if err != nil {
 		fmt.Println("Error marshaling biz_content:", err)
-		return
+		return nil, err
 	}
 	params["biz_content"] = bizContent
 
 	sortedParamKeys := sortParams(params)
-
 	// Step 2: 构造签名文本
 	signaturePlain := constructSignaturePlain(sortedParamKeys, params)
 
 	// Step 3: Sign the signature plain text with RSA private key
+	privateKey := []byte("your_private_key")
 	signature, err := signWithRSA(signaturePlain, privateKey)
 	if err != nil {
 		fmt.Println("Error signing with RSA:", err)
-		return
+		return nil, err
 	}
 
 	request.Sign = signature
-
-	fmt.Printf("%+v\n", request)
+	zap.L().Info(fmt.Sprintf("ICBCGenerateParams==%+v\n", request))
+	return &request, nil
 }
 
 func sortParams(params map[string]string) []string {

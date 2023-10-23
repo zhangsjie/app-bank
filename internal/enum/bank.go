@@ -12,7 +12,6 @@ const PinganFlexPrefix = "LH-"     //平安子账户转账前缀
 const PinganFlexSubPrefix = "LH-S" //平安
 
 const IcbcAppId = "bankConfig.icbc.appId"
-
 const IcbcAccDetailURL = "/mybank/account/accountdetailservice/adsaccountdtlqry/V1"          //工行单账户流水提取url
 const IcbcBatchAccDetailURL = "/mybank/account/accountdetailservice/adsbatchaccdtlqry/V1"    //工行批量账户流水提取url
 const IcbcAdsagrconfirmsynURL = "/mybank/account/accountdetailservice/adsagrconfirmsyn/V1"   //协议待确认信息同步
