@@ -20,8 +20,7 @@ import (
 	"time"
 )
 
-func ICBCPostResult(host string, requestData IcbcGlobalRequest, result *interface{}) error {
-
+func ICBCPostHttpResult(host string, requestData IcbcGlobalRequest, result *interface{}) error {
 	//生成privateKey
 	privateKey, err := parsePrivateKey([]byte(config.GetString(enum.IcbcPrivateKey, "")))
 	if err != nil {
