@@ -14,12 +14,90 @@ import (
 	"gitlab.yoyiit.com/youyi/go-core/config"
 	"gitlab.yoyiit.com/youyi/go-core/util"
 	"go.uber.org/zap"
+	"net/http"
 	"net/url"
-	"sort"
 	"strings"
 	"time"
 )
 
+func ICBCPostResult(host string, requestData IcbcGlobalRequest, result *interface{}) error {
+
+	//生成privateKey
+	privateKey, err := parsePrivateKey([]byte(config.GetString(enum.IcbcPrivateKey, "")))
+	if err != nil {
+		// 处理错误
+	}
+
+	// 生成签名并设置到请求结构体的 "sign" 字段
+	sign, err := generateRSASign(requestData, privateKey)
+	if err != nil {
+		zap.L().Info(fmt.Sprintf("ICBCPostResult 生成签名出错requestData=%+v,privateKey=%+v", requestData, privateKey))
+		return nil
+	}
+	requestData.Sign = sign
+
+	// 将请求结构体转换为 URL 编码的字符串，并作为请求体发送
+	bodyData, err := encodeStructToURLValues(requestData)
+	if err != nil {
+		zap.L().Info(fmt.Sprintf("ICBCPostResult encodeStructToURLValues转换编码出错requestData=%+v", requestData))
+	}
+
+	req, err := http.NewRequest("POST", host, strings.NewReader(bodyData))
+	if err != nil {
+		zap.L().Info(fmt.Sprintf("ICBCPostResult httpRequest生成出错bodyData=%+v,host=%+v", bodyData, host))
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	// 发送请求并处理响应
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		zap.L().Info(fmt.Sprintf("ICBCPostResult httpRequest请求工行出错bodyData=%+v,resp=%+v,err=%+v", bodyData, resp, err))
+	}
+
+	zap.L().Info(fmt.Sprintf("ICBCPostResult httpRequest请求工行成功bodyData=%+v,resp=%+v,", bodyData, resp))
+	defer resp.Body.Close()
+
+	// 处理响应
+	responseData := IcbcGlobalResponse{
+		ResponseBizContent: result,
+	}
+	err = json.NewDecoder(resp.Body).Decode(&responseData)
+
+	if err != nil {
+		zap.L().Info(fmt.Sprintf("ICBCPostResult 解析响应出错：%v", err))
+		return err
+	}
+
+	zap.L().Info(fmt.Sprintf("ICBCPostResult 请求工行成功：bodyData=%+v, resp=%+v", bodyData, resp))
+	return nil
+}
+
+func encodeStructToURLValues(data interface{}) (string, error) {
+	values := url.Values{}
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return "", err
+	}
+	err = json.Unmarshal(jsonData, &values)
+	if err != nil {
+		return "", err
+	}
+	return values.Encode(), nil
+}
+
+func generateRSASign(data interface{}, privateKey *rsa.PrivateKey) (string, error) {
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return "", err
+	}
+	digest := sha256.Sum256(jsonData)
+	signature, err := rsa.SignPKCS1v15(rand.Reader, privateKey, crypto.SHA256, digest[:])
+	if err != nil {
+		return "", err
+	}
+	return base64.StdEncoding.EncodeToString(signature), nil
+}
 func NewIcbcGlobalRequest() *IcbcGlobalRequest {
 	msgId, _ := util.SonyflakeID()
 	request := IcbcGlobalRequest{
@@ -29,74 +107,6 @@ func NewIcbcGlobalRequest() *IcbcGlobalRequest {
 		Timestamp: time.Now().Format("2006-01-02 15:04:05"),
 	}
 	return &request
-}
-
-func GenerateParams(request IcbcGlobalRequest) (*IcbcGlobalRequest, error) {
-	// Step 1: 参数排序
-	params := make(map[string]string)
-	params["app_id"] = request.AppID
-	params["msg_id"] = request.MsgID
-	params["sign_type"] = request.SignType
-	params["timestamp"] = request.Timestamp
-
-	bizContent, err := MarshalBizContent(request.BizContent)
-	if err != nil {
-		fmt.Println("Error marshaling biz_content:", err)
-		return nil, err
-	}
-	params["biz_content"] = bizContent
-
-	sortedParamKeys := sortParams(params)
-	// Step 2: 构造签名文本
-	signaturePlain := constructSignaturePlain(sortedParamKeys, params)
-
-	// Step 3: Sign the signature plain text with RSA private key
-	privateKey := []byte("your_private_key")
-	signature, err := signWithRSA(signaturePlain, privateKey)
-	if err != nil {
-		fmt.Println("Error signing with RSA:", err)
-		return nil, err
-	}
-
-	request.Sign = signature
-	zap.L().Info(fmt.Sprintf("ICBCGenerateParams==%+v\n", request))
-	return &request, nil
-}
-
-func sortParams(params map[string]string) []string {
-	keys := make([]string, 0, len(params))
-	for key := range params {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-	return keys
-}
-
-func constructSignaturePlain(keys []string, params map[string]string) string {
-	var signatureStrings []string
-	for _, key := range keys {
-		value := params[key]
-		encodedValue := url.QueryEscape(value)
-		signatureStrings = append(signatureStrings, fmt.Sprintf("%s=%s", key, encodedValue))
-	}
-	return strings.Join(signatureStrings, "&")
-}
-
-func signWithRSA(plainText string, privateKeyBytes []byte) (string, error) {
-	hashed := sha256.Sum256([]byte(plainText))
-
-	privateKey, err := parsePrivateKey(privateKeyBytes)
-	if err != nil {
-		return "", err
-	}
-
-	signature, err := rsa.SignPKCS1v15(rand.Reader, privateKey, crypto.SHA256, hashed[:])
-	if err != nil {
-		return "", err
-	}
-
-	encodedSignature := base64.StdEncoding.EncodeToString(signature)
-	return encodedSignature, nil
 }
 
 func parsePrivateKey(privateKeyBytes []byte) (*rsa.PrivateKey, error) {
@@ -118,14 +128,6 @@ func parsePrivateKey(privateKeyBytes []byte) (*rsa.PrivateKey, error) {
 	return rsaPrivateKey, nil
 }
 
-func MarshalBizContent(bizContent interface{}) (string, error) {
-	jsonData, err := json.Marshal(bizContent)
-	if err != nil {
-		return "", err
-	}
-	return string(jsonData), nil
-}
-
 // IcbcGlobalRequest 通用接口
 type IcbcGlobalRequest struct {
 	AppID      string      `json:"app_id"`      // APP的编号,应用在API开放平台注册时生成
@@ -134,6 +136,12 @@ type IcbcGlobalRequest struct {
 	Sign       string      `json:"sign"`        // 报文签名
 	Timestamp  string      `json:"timestamp"`   // 交易发生时间戳，yyyy-MM-dd HH:mm:ss格式
 	BizContent interface{} `json:"biz_content"` // 请求参数的集合
+}
+
+// IcbcGlobalResponse 通用返回结构
+type IcbcGlobalResponse struct {
+	Sign               string      `json:"sign"`                 // APP的编号,应用在API开放平台注册时生成
+	ResponseBizContent interface{} `json:"response_biz_content"` // 消息通讯唯一编号，每次调用独立生成，APP级唯一
 }
 
 // IcbcSignRequest 签约参数
