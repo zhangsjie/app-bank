@@ -221,7 +221,7 @@ type IcbcAccDetailItem struct {
 	TermId    string `json:"termid"`    //终端号
 	RecipAcc  string `json:"recipacc"`  //对方账号
 	RecipNam  string `json:"recipnam"`  //对方户名
-	CrvouHtyp string `json:"crvouhtyp"` //对方凭证种类
+	CrvouhTyp string `json:"crvouhtyp"` //对方凭证种类
 	CrvouhNo  string `json:"crvouhno"`  //对方凭证号
 	VagenRef  string `json:"vagen_ref"` //业务编号
 	OreF      string `json:"oref"`      //相关业务编号
