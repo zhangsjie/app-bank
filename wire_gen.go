@@ -16,6 +16,7 @@ import (
 	"gitlab.yoyiit.com/youyi/app-base/rpc_base"
 	"gitlab.yoyiit.com/youyi/app-dingtalk/rpc_dingtalk"
 	"gitlab.yoyiit.com/youyi/app-finance/rpc_finance"
+	"gitlab.yoyiit.com/youyi/app-invoice/rpc_invoice"
 	"gitlab.yoyiit.com/youyi/app-oa/rpc_oa"
 	"gitlab.yoyiit.com/youyi/app-soms/rpc_soms"
 	"gitlab.yoyiit.com/youyi/go-core/store"
@@ -49,10 +50,11 @@ func initServer() (server.Server, error) {
 	financeClient := rpc_finance.NewFinanceClient()
 	bankService := service.NewBankService(client, guilinBankSDK, spdBankSDK, pinganBankSDK, bankTransferReceiptRepo, kafkaProducer, dingtalkClient, bankTransactionDetailRepo, bankTransactionDetailProcessInstanceRepo, ossConfig, bankCodeRepo, bankBusinessPayrollRepo, bankBusinessPayrollDetailRepo, oaClient, paymentReceiptRepo, pdfToImageService, financeClient)
 	paymentReceiptApplicationCustomFieldRepo := repo.NewPaymentReceiptApplicationCustomFieldRepo(db)
-	paymentReceiptSubProcess := sub_process.NewPaymentReceiptSubProcess(paymentReceiptRepo, oaClient, client, paymentReceiptApplicationCustomFieldRepo)
+	invoiceClient := rpc_invoice.NewInvoiceClient()
+	paymentReceiptSubProcess := sub_process.NewPaymentReceiptSubProcess(paymentReceiptRepo, oaClient, client, paymentReceiptApplicationCustomFieldRepo, invoiceClient)
 	processAuthRepo := process.NewProcessAuthRepo(db)
 	somsClient := rpc_soms.NewSomsClient()
-	paymentReceiptService := service.NewPaymentReceiptService(paymentReceiptSubProcess, client, paymentReceiptRepo, bankCodeRepo, guilinBankSDK, spdBankSDK, pinganBankSDK, oaClient, dingtalkClient, processAuthRepo, somsClient, paymentReceiptApplicationCustomFieldRepo)
+	paymentReceiptService := service.NewPaymentReceiptService(paymentReceiptSubProcess, client, paymentReceiptRepo, bankCodeRepo, guilinBankSDK, spdBankSDK, pinganBankSDK, oaClient, dingtalkClient, processAuthRepo, somsClient, paymentReceiptApplicationCustomFieldRepo, invoiceClient)
 	bank := newBankImpl(bankService, paymentReceiptService)
 	serverServer := newServer(bank)
 	return serverServer, nil

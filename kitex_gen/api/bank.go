@@ -22107,6 +22107,7 @@ type PaymentReceiptData struct {
 	ElectronicDocument     string               `thrift:"electronicDocument,42" frugal:"42,default,string" json:"electronicDocument"`
 	ElectronicDocumentPng  string               `thrift:"electronicDocumentPng,43" frugal:"43,default,string" json:"electronicDocumentPng"`
 	PaymentReason          string               `thrift:"paymentReason,44" frugal:"44,default,string" json:"paymentReason"`
+	PaymentId              int64                `thrift:"paymentId,45" frugal:"45,default,i64" json:"paymentId"`
 }
 
 func NewPaymentReceiptData() *PaymentReceiptData {
@@ -22297,6 +22298,10 @@ func (p *PaymentReceiptData) GetElectronicDocumentPng() (v string) {
 func (p *PaymentReceiptData) GetPaymentReason() (v string) {
 	return p.PaymentReason
 }
+
+func (p *PaymentReceiptData) GetPaymentId() (v int64) {
+	return p.PaymentId
+}
 func (p *PaymentReceiptData) SetId(val int64) {
 	p.Id = val
 }
@@ -22429,6 +22434,9 @@ func (p *PaymentReceiptData) SetElectronicDocumentPng(val string) {
 func (p *PaymentReceiptData) SetPaymentReason(val string) {
 	p.PaymentReason = val
 }
+func (p *PaymentReceiptData) SetPaymentId(val int64) {
+	p.PaymentId = val
+}
 
 var fieldIDToName_PaymentReceiptData = map[int16]string{
 	1:  "id",
@@ -22475,6 +22483,7 @@ var fieldIDToName_PaymentReceiptData = map[int16]string{
 	42: "electronicDocument",
 	43: "electronicDocumentPng",
 	44: "paymentReason",
+	45: "paymentId",
 }
 
 func (p *PaymentReceiptData) IsSetProcessAddTagItemVO() bool {
@@ -22940,6 +22949,16 @@ func (p *PaymentReceiptData) Read(iprot thrift.TProtocol) (err error) {
 					goto SkipFieldError
 				}
 			}
+		case 45:
+			if fieldTypeId == thrift.I64 {
+				if err = p.ReadField45(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				if err = iprot.Skip(fieldTypeId); err != nil {
+					goto SkipFieldError
+				}
+			}
 		default:
 			if err = iprot.Skip(fieldTypeId); err != nil {
 				goto SkipFieldError
@@ -23376,6 +23395,15 @@ func (p *PaymentReceiptData) ReadField44(iprot thrift.TProtocol) error {
 	return nil
 }
 
+func (p *PaymentReceiptData) ReadField45(iprot thrift.TProtocol) error {
+	if v, err := iprot.ReadI64(); err != nil {
+		return err
+	} else {
+		p.PaymentId = v
+	}
+	return nil
+}
+
 func (p *PaymentReceiptData) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
 	if err = oprot.WriteStructBegin("PaymentReceiptData"); err != nil {
@@ -23556,6 +23584,10 @@ func (p *PaymentReceiptData) Write(oprot thrift.TProtocol) (err error) {
 		}
 		if err = p.writeField44(oprot); err != nil {
 			fieldId = 44
+			goto WriteFieldError
+		}
+		if err = p.writeField45(oprot); err != nil {
+			fieldId = 45
 			goto WriteFieldError
 		}
 
@@ -24333,6 +24365,23 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 44 end error: ", p), err)
 }
 
+func (p *PaymentReceiptData) writeField45(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("paymentId", thrift.I64, 45); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteI64(p.PaymentId); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 45 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 45 end error: ", p), err)
+}
+
 func (p *PaymentReceiptData) String() string {
 	if p == nil {
 		return "<nil>"
@@ -24476,6 +24525,9 @@ func (p *PaymentReceiptData) DeepEqual(ano *PaymentReceiptData) bool {
 		return false
 	}
 	if !p.Field44DeepEqual(ano.PaymentReason) {
+		return false
+	}
+	if !p.Field45DeepEqual(ano.PaymentId) {
 		return false
 	}
 	return true
@@ -24791,6 +24843,13 @@ func (p *PaymentReceiptData) Field43DeepEqual(src string) bool {
 func (p *PaymentReceiptData) Field44DeepEqual(src string) bool {
 
 	if strings.Compare(p.PaymentReason, src) != 0 {
+		return false
+	}
+	return true
+}
+func (p *PaymentReceiptData) Field45DeepEqual(src int64) bool {
+
+	if p.PaymentId != src {
 		return false
 	}
 	return true

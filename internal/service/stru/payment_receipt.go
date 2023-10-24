@@ -45,6 +45,7 @@ func ConvertPaymentReceiptDBData(data api.PaymentReceiptData) *repo.PaymentRecei
 		ElectronicDocument:     data.ElectronicDocument,
 		ElectronicDocumentPng:  data.ElectronicDocumentPng,
 		PaymentReason:          data.PaymentReason,
+		PaymentId:              data.PaymentId,
 	}
 	return &result
 }

@@ -456,6 +456,7 @@ struct PaymentReceiptData {
     42: string electronicDocument
     43: string electronicDocumentPng
     44: string paymentReason
+    45: i64 paymentId
 }
 
 struct ListPaymentReceiptRequest {

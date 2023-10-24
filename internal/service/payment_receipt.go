@@ -14,6 +14,8 @@ import (
 	"gitlab.yoyiit.com/youyi/app-base/kitex_gen/api/base"
 	"gitlab.yoyiit.com/youyi/app-base/process"
 	"gitlab.yoyiit.com/youyi/app-dingtalk/kitex_gen/api/dingtalk"
+	invoiceApi "gitlab.yoyiit.com/youyi/app-invoice/kitex_gen/api"
+	"gitlab.yoyiit.com/youyi/app-invoice/kitex_gen/api/invoice"
 	oaApi "gitlab.yoyiit.com/youyi/app-oa/kitex_gen/api"
 	"gitlab.yoyiit.com/youyi/app-oa/kitex_gen/api/oa"
 	"gitlab.yoyiit.com/youyi/app-soms/kitex_gen/api/soms"
@@ -63,6 +65,7 @@ type paymentReceiptService struct {
 	dingtalkClient                           dingtalk.Client
 	somsClient                               soms.Client
 	paymentReceiptApplicationCustomFieldRepo repo.PaymentReceiptApplicationCustomFieldRepo
+	invoiceClient                            invoice.Client
 }
 
 func (s *paymentReceiptService) ListPaymentReceipt(ctx context.Context, req *api.ListPaymentReceiptRequest) (resp *api.ListPaymentReceiptResponse, err error) {
@@ -518,6 +521,7 @@ func (s *paymentReceiptService) sendMessage(ctx context.Context, paymentReceiptD
 		return handler.HandleError(err)
 	}
 
+	var paymentId int64 = 0
 	if paymentReceiptDBData.Type == "1" || paymentReceiptDBData.Type == "" {
 		paymentApplication, err := s.oaClient.GetPaymentApplicationByProcessInstanceId(ctx, paymentReceiptDBData.ProcessInstanceId)
 		if err != nil {
@@ -527,6 +531,7 @@ func (s *paymentReceiptService) sendMessage(ctx context.Context, paymentReceiptD
 			map[string]string{
 				"statusBg":             statusBg,
 				"resultStr":            resultStr,
+				"name":                 processInstance.Name,
 				"code":                 processInstance.Code,
 				"paymentReceiptCode":   paymentReceiptDBData.Code,
 				"payAccount":           paymentReceiptDBData.PayAccount,
@@ -537,10 +542,11 @@ func (s *paymentReceiptService) sendMessage(ctx context.Context, paymentReceiptD
 				"paymentApplicationId": strconv.FormatInt(paymentApplication.Id, 10),
 			}, organization.DingtalkCorpId, userOrganization.DingtalkUserId, config.GetString("dingtalk.paymentApplication.template", ""))
 		if err != nil {
-			errStr := fmt.Sprintf("付款申请单=发送消息给抄送人userId=%d,nickName=%s 失败,原因如下", userOrganization.UserId, userOrganization.Nickname)
+			errStr := fmt.Sprintf("付款申请单=发送消息给发起人userId=%d,nickName=%s 失败,原因如下", userOrganization.UserId, userOrganization.Nickname)
 			println(errStr)
 			println(err.Error())
 		}
+		paymentId = paymentApplication.Id
 	} else if paymentReceiptDBData.Type == "2" {
 		reimburseApplication, err := s.oaClient.GetReimburseApplicationByProcessInstanceId(ctx, paymentReceiptDBData.ProcessInstanceId)
 		if err != nil {
@@ -550,6 +556,7 @@ func (s *paymentReceiptService) sendMessage(ctx context.Context, paymentReceiptD
 			map[string]string{
 				"statusBg":               statusBg,
 				"resultStr":              resultStr,
+				"name":                   processInstance.Name,
 				"code":                   processInstance.Code,
 				"paymentReceiptCode":     paymentReceiptDBData.Code,
 				"payAccount":             paymentReceiptDBData.PayAccount,
@@ -563,10 +570,11 @@ func (s *paymentReceiptService) sendMessage(ctx context.Context, paymentReceiptD
 				"reimburseApplicationId": strconv.FormatInt(reimburseApplication.Id, 10),
 			}, organization.DingtalkCorpId, userOrganization.DingtalkUserId, config.GetString("dingtalk.reimburseApplication.template", ""))
 		if err != nil {
-			errStr := fmt.Sprintf("报销申请单=发送消息给抄送人userId=%d,nickName=%s 失败,原因如下", userOrganization.UserId, userOrganization.Nickname)
+			errStr := fmt.Sprintf("报销申请单=发送消息给发起人userId=%d,nickName=%s 失败,原因如下", userOrganization.UserId, userOrganization.Nickname)
 			println(errStr)
 			println(err.Error())
 		}
+		paymentId = reimburseApplication.Id
 	}
 
 	//发送给抄送人
@@ -579,12 +587,12 @@ func (s *paymentReceiptService) sendMessage(ctx context.Context, paymentReceiptD
 	}
 
 	for _, cc := range ccopyUsersOrganization {
-		err := s.send(ctx, processInstance, paymentReceiptDBData, cc, organization)
+		orderType := "付款申请"
+		if paymentReceiptDBData.Type == "2" {
+			orderType = "报销申请"
+		}
+		err := s.send(ctx, processInstance, paymentReceiptDBData, cc, organization, statusBg, resultStr, orderType, paymentId)
 		if err != nil {
-			orderType := "付款申请单"
-			if paymentReceiptDBData.Type == "2" {
-				orderType = "报销申请单"
-			}
 			errStr := fmt.Sprintf("%s=发送消息给抄送人userId=%d,nickName=%s 失败,原因如下", orderType, cc.UserId, cc.Nickname)
 			println(errStr)
 			println(err.Error())
@@ -594,13 +602,21 @@ func (s *paymentReceiptService) sendMessage(ctx context.Context, paymentReceiptD
 }
 
 func (s *paymentReceiptService) send(ctx context.Context, processInstance *baseApi.ProcessInstanceData, receiptConfirmOrderDBData *repo.PaymentReceiptDBData,
-	userOrganization *baseApi.UserOrganizationData, organization *baseApi.OrganizationData) error {
+	userOrganization *baseApi.UserOrganizationData, organization *baseApi.OrganizationData, statusBg, resultStr, resultType string,
+	paymentId int64) error {
 	if userOrganization.DingtalkUserId == "" {
 		return handler.HandleNewError("DingtalkUserId为空,不是钉钉用户")
 	}
+	url := fmt.Sprintf("page/paymentDetail/index?id=%d", paymentId)
+	if receiptConfirmOrderDBData.Type == "2" {
+		url = fmt.Sprintf("reimburseApplication/detail/index?id=%d", paymentId)
+	}
 	err := s.dingtalkClient.SendCorpOACorpConversation(ctx,
 		map[string]string{
-			"orderType":          processInstance.Name,
+			"statusBg":           statusBg,
+			"resultStr":          resultStr,
+			"resultType":         resultType,
+			"name":               processInstance.Name,
 			"code":               processInstance.Code,
 			"paymentReceiptCode": receiptConfirmOrderDBData.Code,
 			"payAccount":         receiptConfirmOrderDBData.PayAccount,
@@ -608,6 +624,7 @@ func (s *paymentReceiptService) send(ctx context.Context, processInstance *baseA
 			"receiveAccount":     receiptConfirmOrderDBData.ReceiveAccount,
 			"receiveAccountName": receiptConfirmOrderDBData.ReceiveAccountName,
 			"payAmount":          strconv.FormatFloat(receiptConfirmOrderDBData.PayAmount, 'f', 2, 64),
+			"url":                url,
 		}, organization.DingtalkCorpId, userOrganization.DingtalkUserId, config.GetString("dingtalk.Ccopy.template", ""))
 	if err != nil {
 		return handler.HandleError(err)
@@ -628,6 +645,24 @@ func (s *paymentReceiptService) handleProcessResult(ctx context.Context, orderSt
 		if err != nil {
 			return handler.HandleError(err)
 		}
+
+		// 完成发票
+		if paymentReceiptDBData.Type == "2" && paymentReceiptDBData.PaymentId > 0 {
+			response, err := s.oaClient.ListReimburseInvoiceApplication(ctx, paymentReceiptDBData.PaymentId)
+			if err != nil {
+				return handler.HandleError(err)
+			}
+			if response != nil && response.Count > 0 {
+				var invoiceIds []int64
+				for _, v := range response.Data {
+					invoiceIds = append(invoiceIds, v.InvoiceId)
+				}
+				s.invoiceClient.CompleteReimburseInvoice(ctx, &invoiceApi.CompleteReimburseInvoiceRequest{
+					InvoiceIds: invoiceIds,
+					ReceiptId:  paymentReceiptDBData.PaymentId,
+				})
+			}
+		}
 		return s.sendMessage(ctx, paymentReceiptDBData, result)
 	} else if result == 2 {
 		processResult, err := s.baseClient.RefuseProcessInstance(ctx, paymentReceiptDBData.ProcessInstanceId, s.SubProcess.ProcessNodeStep(), "")
@@ -639,6 +674,24 @@ func (s *paymentReceiptService) handleProcessResult(ctx context.Context, orderSt
 		}, []string{"ProcessStatus"})
 		if err != nil {
 			return handler.HandleError(err)
+		}
+
+		// 取消发票
+		if paymentReceiptDBData.Type == "2" && paymentReceiptDBData.PaymentId > 0 {
+			response, err := s.oaClient.ListReimburseInvoiceApplication(ctx, paymentReceiptDBData.PaymentId)
+			if err != nil {
+				return handler.HandleError(err)
+			}
+			if response != nil && response.Count > 0 {
+				var invoiceIds []int64
+				for _, v := range response.Data {
+					invoiceIds = append(invoiceIds, v.InvoiceId)
+				}
+				s.invoiceClient.CancelReimburseInvoice(ctx, &invoiceApi.CancelReimburseInvoiceRequest{
+					InvoiceIds: invoiceIds,
+					ReceiptId:  paymentReceiptDBData.PaymentId,
+				})
+			}
 		}
 		return s.sendMessage(ctx, paymentReceiptDBData, result)
 	}
