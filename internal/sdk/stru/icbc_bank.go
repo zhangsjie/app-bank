@@ -26,7 +26,6 @@ func ICBCPostHttpResult(host string, requestData IcbcGlobalRequest, result *inte
 	if err != nil {
 		// 处理错误
 	}
-
 	// 生成签名并设置到请求结构体的 "sign" 字段
 	sign, err := generateRSASign(requestData, privateKey)
 	if err != nil {
@@ -34,13 +33,11 @@ func ICBCPostHttpResult(host string, requestData IcbcGlobalRequest, result *inte
 		return nil
 	}
 	requestData.Sign = sign
-
 	// 将请求结构体转换为 URL 编码的字符串，并作为请求体发送
 	bodyData, err := encodeStructToURLValues(requestData)
 	if err != nil {
 		zap.L().Info(fmt.Sprintf("ICBCPostResult encodeStructToURLValues转换编码出错requestData=%+v", requestData))
 	}
-
 	req, err := http.NewRequest("POST", host, strings.NewReader(bodyData))
 	if err != nil {
 		zap.L().Info(fmt.Sprintf("ICBCPostResult httpRequest生成出错bodyData=%+v,host=%+v", bodyData, host))
