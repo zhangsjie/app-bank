@@ -9,7 +9,7 @@ require (
 	github.com/google/wire v0.5.0
 	github.com/pkg/errors v0.9.1
 	github.com/satori/go.uuid v1.2.0
-	gitlab.yoyiit.com/youyi/app-base v0.0.0-20231020094048-8d363ae0bc6b
+	gitlab.yoyiit.com/youyi/app-base v0.0.0-20231025083056-21f090c0a3b5
 	gitlab.yoyiit.com/youyi/app-dingtalk v0.0.0-20230712070347-478fa7abbcbb
 	gitlab.yoyiit.com/youyi/app-finance v0.0.0-20231012171224-91671d7ec23d
 	gitlab.yoyiit.com/youyi/app-invoice v0.0.0-20231020094117-2924f2366f36
