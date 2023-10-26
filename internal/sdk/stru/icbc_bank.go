@@ -26,23 +26,25 @@ func ICBCPostHttpResult(host string, requestData IcbcGlobalRequest, result *inte
 	privateKey, err := parsePrivateKey([]byte(config.GetString(enum.IcbcPrivateKey, "")))
 	if err != nil {
 		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult 生成密钥失败err=%+v", err))
-		return nil
+		return err
 	}
 	// 生成签名并设置到请求结构体的 "sign" 字段
 	sign, err := generateRSASign(requestData, privateKey)
 	if err != nil {
 		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult 生成签名出错requestData=%+v,privateKey=%+v", requestData, privateKey))
-		return nil
+		return err
 	}
 	requestData.Sign = sign
 	// 将请求结构体转换为 URL 编码的字符串，并作为请求体发送
 	bodyData, err := encodeStructToURLValues(requestData)
 	if err != nil {
 		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult encodeStructToURLValues转换编码出错requestData=%+v", requestData))
+		return err
 	}
 	req, err := http.NewRequest("POST", host, strings.NewReader(bodyData))
 	if err != nil {
 		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult httpRequest生成出错bodyData=%+v,host=%+v", bodyData, host))
+		return err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
@@ -58,6 +60,7 @@ func ICBCPostHttpResult(host string, requestData IcbcGlobalRequest, result *inte
 	resp, err := client.Do(req)
 	if err != nil {
 		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult t请求工行出错bodyData=%+v,resp=%+v,err=%+v", bodyData, resp, err))
+		return err
 	}
 	// 打印HTTP响应
 	responseDump, err := httputil.DumpResponse(resp, true)
@@ -78,7 +81,6 @@ func ICBCPostHttpResult(host string, requestData IcbcGlobalRequest, result *inte
 		zap.L().Info(fmt.Sprintf("ICBCPostResult 解析响应出错：%v", err))
 		return err
 	}
-
 	return nil
 }
 
