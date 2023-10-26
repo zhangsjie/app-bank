@@ -15,6 +15,7 @@ import (
 	"gitlab.yoyiit.com/youyi/go-core/util"
 	"go.uber.org/zap"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"strings"
 	"time"
@@ -45,14 +46,26 @@ func ICBCPostHttpResult(host string, requestData IcbcGlobalRequest, result *inte
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
+	// 打印HTTP请求
+	requestDump, err := httputil.DumpRequest(req, true)
+	if err != nil {
+		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult 打印请求失败：%v", err))
+	} else {
+		zap.L().Info(fmt.Sprintf("HTTP Request:\n%s", string(requestDump)))
+	}
 	// 发送请求并处理响应
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult t请求工行出错bodyData=%+v,resp=%+v,err=%+v", bodyData, resp, err))
 	}
-
-	zap.L().Info(fmt.Sprintf("ICBCPostHttpResult t请求工行成功bodyData=%+v,resp=%+v,", bodyData, resp))
+	// 打印HTTP响应
+	responseDump, err := httputil.DumpResponse(resp, true)
+	if err != nil {
+		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult 打印响应失败：%v", err))
+	} else {
+		zap.L().Info(fmt.Sprintf("HTTP Response:\n%s", string(responseDump)))
+	}
 	defer resp.Body.Close()
 
 	// 处理响应
@@ -66,7 +79,6 @@ func ICBCPostHttpResult(host string, requestData IcbcGlobalRequest, result *inte
 		return err
 	}
 
-	zap.L().Info(fmt.Sprintf("ICBCPostResult 请求工行成功：bodyData=%+v, resp=%+v", bodyData, resp))
 	return nil
 }
 
