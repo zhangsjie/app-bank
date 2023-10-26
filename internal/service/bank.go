@@ -1255,7 +1255,7 @@ func (s *bankService) updateRelevanceElectronicDocument(ctx context.Context, sum
 			if isProcessSuccess {
 				_, err := s.baseClient.SuccessProcessInstance(ctx, paymentReceipt.ProcessInstanceId)
 				if err != nil {
-					return err
+					return handler.HandleError(err)
 				}
 			}
 		}
