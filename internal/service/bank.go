@@ -1195,26 +1195,26 @@ func (s *bankService) updateRelevanceElectronicDocument(ctx context.Context, sum
 
 	if paymentReceipt != nil && paymentReceipt.Id != 0 {
 		// 付款申请单
+		isProcessSuccess := false
 		if paymentReceipt.Type == "1" || paymentReceipt.Type == "" {
 			paymentApplication, err := s.oaClient.GetPaymentApplicationByProcessInstanceId(ctx, paymentReceipt.ProcessInstanceId)
 			if err != nil {
 				return handler.HandleError(err)
 			}
-			if paymentApplication != nil && paymentApplication.Id != 0 {
+			if paymentApplication != nil && paymentApplication.Id != 0 && electronicDocument != "" {
+				if paymentApplication.OrderStatus == enum.GuilinBankTransferHandling {
+					paymentApplication.OrderStatus = enum.GuilinBankTransferSuccessResult
+					isProcessSuccess = true
+				}
 				err := s.oaClient.EditPaymentApplicationWithoutPermission(ctx, &oaApi.PaymentApplicationData{
 					Id:                    paymentApplication.Id,
 					ElectronicDocument:    electronicDocument,
 					ElectronicDocumentPng: electronicDocumentPng,
+					OrderStatus:           paymentApplication.OrderStatus,
 				})
 				if err != nil {
 					return handler.HandleError(err)
 				}
-				/*// 流水同步到财务
-				err = s.financeClient.SyncBankFlowByPayApplicationId(ctx, paymentApplication.Id)
-				if err != nil {
-					return handler.HandleError(err)
-				}*/
-				return nil
 			}
 		} else if paymentReceipt.Type == "2" {
 			// 报销申请单
@@ -1222,24 +1222,42 @@ func (s *bankService) updateRelevanceElectronicDocument(ctx context.Context, sum
 			if err != nil {
 				return handler.HandleError(err)
 			}
-			if reimburseApplication != nil && reimburseApplication.Id != 0 {
+			if reimburseApplication != nil && reimburseApplication.Id != 0 && electronicDocument != "" {
+				if reimburseApplication.OrderStatus == enum.GuilinBankTransferHandling {
+					reimburseApplication.OrderStatus = enum.GuilinBankTransferSuccessResult
+					isProcessSuccess = true
+				}
 				err := handler.HandleError(s.oaClient.EditReimburseApplicationWithoutPermission(ctx, &oaApi.ReimburseApplicationData{
 					Id:                    reimburseApplication.Id,
 					ElectronicDocument:    electronicDocument,
 					ElectronicDocumentPng: electronicDocumentPng,
+					OrderStatus:           reimburseApplication.OrderStatus,
 				}))
 				if err != nil {
 					return handler.HandleError(err)
 				}
 			}
 		}
-		// 更新付款单据表回单
-		err := s.paymentReceiptRepo.UpdateByIdWithoutPermission(ctx, paymentReceipt.Id, &repo.PaymentReceiptDBData{
-			ElectronicDocument:    electronicDocument,
-			ElectronicDocumentPng: electronicDocumentPng,
-		})
-		if err != nil {
-			return handler.HandleError(err)
+
+		// 更新付款单据表回单和状态
+		if electronicDocument != "" {
+			if paymentReceipt.OrderStatus == enum.GuilinBankTransferHandling {
+				paymentReceipt.OrderStatus = enum.GuilinBankTransferSuccessResult
+			}
+			err := s.paymentReceiptRepo.UpdateByIdWithoutPermission(ctx, paymentReceipt.Id, &repo.PaymentReceiptDBData{
+				ElectronicDocument:    electronicDocument,
+				ElectronicDocumentPng: electronicDocumentPng,
+				OrderStatus:           paymentReceipt.OrderStatus,
+			})
+			if err != nil {
+				return handler.HandleError(err)
+			}
+			if isProcessSuccess {
+				_, err := s.baseClient.SuccessProcessInstance(ctx, paymentReceipt.ProcessInstanceId)
+				if err != nil {
+					return err
+				}
+			}
 		}
 	}
 	return nil
