@@ -851,7 +851,7 @@ func (s *paymentReceiptService) handleGuilinBankSyncPaymentReceipt(ctx context.C
 			},
 			PayAccountType: bankType,
 		},
-		CreateTime: createTimeParam,
+		UpdateTime: createTimeParam,
 	})
 	if err != nil {
 		return handler.HandleError(err)
@@ -955,7 +955,7 @@ func (s *paymentReceiptService) handleSPDBankSyncPaymentReceipt(ctx context.Cont
 			},
 			PayAccountType: bankType,
 		},
-		CreateTime: createTimeParam,
+		UpdateTime: createTimeParam,
 	})
 	if err != nil {
 		return handler.HandleError(err)
@@ -1036,7 +1036,7 @@ func (s *paymentReceiptService) handlePinganBankSyncPaymentReceipt(ctx context.C
 			},
 			PayAccountType: bankType,
 		},
-		CreateTime: createTimeParam,
+		UpdateTime: createTimeParam,
 	})
 	if err != nil {
 		return handler.HandleError(err)
