@@ -57,6 +57,7 @@ type PaymentReceiptDBParam struct {
 	ExcludeOrderStates    []string
 	IsOrderFlowNoNotEmpty bool
 	CreateTime            []string
+	UpdateTime            []string
 	CreateTimeStart       string
 	CreateTimeEnd         string
 	BeginTime             string
@@ -98,6 +99,14 @@ func (param *PaymentReceiptDBParam) listConditions() []*repository.Condition {
 		}
 		if param.CreateTime[1] != "" {
 			conditions = append(conditions, repository.NewAndCondition("payment_receipt.created_at < date_add(?, interval 1 day)", param.CreateTime[1]))
+		}
+	}
+	if len(param.UpdateTime) > 1 {
+		if param.UpdateTime[0] != "" {
+			conditions = append(conditions, repository.NewAndCondition("payment_receipt.updated_at >= ?", param.UpdateTime[0]))
+		}
+		if param.UpdateTime[1] != "" {
+			conditions = append(conditions, repository.NewAndCondition("payment_receipt.updated_at < date_add(?, interval 1 day)", param.UpdateTime[1]))
 		}
 	}
 	if param.OrganizationId != 0 {

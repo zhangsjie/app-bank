@@ -30,6 +30,29 @@ type PaymentReceiptSubProcess struct {
 	invoiceClient                            invoice.Client
 }
 
+func (p *PaymentReceiptSubProcess) ApproveBefore(ctx context.Context, id int64, param interface{}) error {
+	req := param.(*api.PaymentReceiptData)
+	dbData, err := p.paymentReceiptRepo.GetWithoutPermission(ctx, &repo.PaymentReceiptDBData{
+		BaseProcessDBData: repository.BaseProcessDBData{
+			BaseDBData: repository.BaseDBData{
+				BaseCommonDBData: repository.BaseCommonDBData{
+					Id: id,
+				},
+			},
+		},
+	})
+	if err != nil {
+		return handler.HandleError(err)
+	}
+	if dbData == nil || dbData.Id == 0 {
+		return nil
+	}
+	if req.PayAmount > 0 && (req.PayAccount == "" || req.PayAccountName == "" || req.PayAccountBankName == "" || req.PaymentModeType == "") {
+		return handler.HandleNewError("账号信息不能为空")
+	}
+	return nil
+}
+
 func (p *PaymentReceiptSubProcess) SubmitBefore(ctx context.Context, id int64, param interface{}) error {
 	//TODO implement me
 	panic("implement me")
