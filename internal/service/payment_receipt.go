@@ -665,7 +665,7 @@ func (s *paymentReceiptService) handleProcessResult(ctx context.Context, orderSt
 		}
 		return s.sendMessage(ctx, paymentReceiptDBData, result)
 	} else if result == 2 {
-		processResult, err := s.baseClient.RefuseProcessInstance(ctx, paymentReceiptDBData.ProcessInstanceId, s.SubProcess.ProcessNodeStep(), "")
+		processResult, err := s.baseClient.SuccessProcessInstance(ctx, paymentReceiptDBData.ProcessInstanceId)
 		if err != nil {
 			return err
 		}
