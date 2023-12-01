@@ -602,5 +602,31 @@ service bank {
     pinganUserAcctSignatureApplyResponse pinganBankAccountSignatureQuery(1:pinganBankAccountSignatureApplyRequest req)
     void systemRefusePaymentReceipt(1: i64 id)
     void systemApprovePaymentReceipt(1: i64 id)
+    string icbcBankAccountSignatureApply(1:icbcBankAccountSignatureRequest req)
+}
 
+struct icbcAcctSignatureSignatureResponse {
+1:string accountNo
+2:string accountName
+3:string statementflag
+4:string receiptflag
+5:string actdate
+6:string status
+7:string createtime
+8:string lstmodft
+9:string notes
+}
+struct icbcAcctSignatureResponse {
+1:string retCode
+2:string retMsg
+3:string retSerialNo
+}
+struct icbcBankAccountSignatureRequest {
+1: i64 id
+2: i64 organizationId
+3: string type
+4: string account
+5: string accountName
+6: string phone
+7:string remark
 }

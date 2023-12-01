@@ -8,7 +8,6 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
-	"encoding/pem"
 	"fmt"
 	"gitlab.yoyiit.com/youyi/app-bank/internal/enum"
 	"gitlab.yoyiit.com/youyi/go-core/config"
@@ -16,14 +15,14 @@ import (
 	"go.uber.org/zap"
 	"net/http"
 	"net/http/httputil"
-	"net/url"
+	"sort"
 	"strings"
 	"time"
 )
 
-func ICBCPostHttpResult(host string, requestData IcbcGlobalRequest, result *interface{}) error {
+func ICBCPostHttpResult(host string, requestData IcbcGlobalRequest, result interface{}) error {
 	//生成privateKey
-	privateKey, err := parsePrivateKey([]byte(config.GetString(enum.IcbcPrivateKey, "")))
+	privateKey, err := parsePrivateKey(config.GetString(enum.IcbcPrivateKey, ""))
 	if err != nil {
 		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult 生成密钥失败err=%+v", err))
 		return err
@@ -38,7 +37,7 @@ func ICBCPostHttpResult(host string, requestData IcbcGlobalRequest, result *inte
 	// 将请求结构体转换为 URL 编码的字符串，并作为请求体发送
 	bodyData, err := encodeStructToURLValues(requestData)
 	if err != nil {
-		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult encodeStructToURLValues转换编码出错requestData=%+v", requestData))
+		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult encodeStructToURLValues转换编码出错requestData=%+v,,err=%+v", requestData, err))
 		return err
 	}
 	req, err := http.NewRequest("POST", host, strings.NewReader(bodyData))
@@ -83,18 +82,115 @@ func ICBCPostHttpResult(host string, requestData IcbcGlobalRequest, result *inte
 	}
 	return nil
 }
+func ICBCPostHttpUIResult(host string, requestData IcbcGlobalRequest) string {
+	//生成privateKey
+	privateKey, err := parsePrivateKey(config.GetString(enum.IcbcPrivateKey, ""))
+	if err != nil {
+		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult 生成密钥失败err=%+v", err))
+		return ""
+	}
+	// 生成签名并设置到请求结构体的 "sign" 字段
+	sign, err := generateRSASign(requestData, privateKey)
+	if err != nil {
+		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult 生成签名出错requestData=%+v,privateKey=%+v", requestData, privateKey))
+		return ""
+	}
+	requestData.Sign = sign
+	// 将请求结构体转换为 URL 编码的字符串，并作为请求体发送
+	bodyData, err := encodeStructToURLValues(requestData)
+	if err != nil {
+		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult encodeStructToURLValues转换编码出错requestData=%+v", requestData))
+		return ""
+	}
+	req, err := http.NewRequest("POST", host, strings.NewReader(bodyData))
+	if err != nil {
+		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult httpRequest生成出错bodyData=%+v,host=%+v", bodyData, host))
+		return ""
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-func encodeStructToURLValues(data interface{}) (string, error) {
-	values := url.Values{}
-	jsonData, err := json.Marshal(data)
+	// 打印HTTP请求
+	requestDump, err := httputil.DumpRequest(req, true)
+	if err != nil {
+		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult 打印请求失败：%v", err))
+	} else {
+		zap.L().Info(fmt.Sprintf("HTTP Request:\n%s", string(requestDump)))
+	}
+	// 发送请求并处理响应
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult t请求工行出错bodyData=%+v,resp=%+v,err=%+v", bodyData, resp, err))
+		return ""
+	}
+	// 打印HTTP响应
+	responseDump, err := httputil.DumpResponse(resp, true)
+	if err != nil {
+		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult 打印响应失败：%v", err))
+	} else {
+		zap.L().Info(fmt.Sprintf("HTTP Response:\n%s", string(responseDump)))
+	}
+	defer resp.Body.Close()
+	return string(responseDump)
+}
+
+func encodeStructToURLValues(data IcbcGlobalRequest) (string, error) {
+
+	// 将结构体转换为map
+	params := make(map[string]string)
+	err := convertStructToMap(data, params)
 	if err != nil {
 		return "", err
 	}
-	err = json.Unmarshal(jsonData, &values)
-	if err != nil {
-		return "", err
+
+	// 筛选和排序参数
+	sortedParams := filterAndSortParams(params)
+
+	// 拼接参数
+	signStr := joinParams(sortedParams)
+
+	return signStr, nil
+}
+
+// 筛选和排序参数
+func filterAndSortParams(params map[string]string) []string {
+	filteredParams := make([]string, 0)
+
+	for key, value := range params {
+		if key == "sign" {
+			continue // 排除 sign 字段
+		}
+		filteredParams = append(filteredParams, key+"="+value)
 	}
-	return values.Encode(), nil
+
+	// 按字符的键值ASCII码递增排序
+	sort.Slice(filteredParams, func(i, j int) bool {
+		return strings.Compare(filteredParams[i], filteredParams[j]) < 0
+	})
+	filteredParams = append(filteredParams, "sign="+params["sign"])
+	return filteredParams
+}
+
+// 拼接参数
+func joinParams(params []string) string {
+	return strings.Join(params, "&")
+}
+
+// 将结构体转换为map
+func convertStructToMap(data IcbcGlobalRequest, params map[string]string) error {
+	params["app_id"] = data.AppID
+	params["msg_id"] = data.MsgID
+	params["sign_type"] = data.SignType
+	params["timestamp"] = data.Timestamp
+	params["sign"] = data.Sign
+	// 将 BizContent 转换为 JSON 字符串
+	bizContent, err := json.Marshal(data.BizContent)
+	if err != nil {
+		return err
+	}
+	params["biz_content"] = string(bizContent)
+
+	return nil
 }
 
 func generateRSASign(data interface{}, privateKey *rsa.PrivateKey) (string, error) {
@@ -120,13 +216,18 @@ func NewIcbcGlobalRequest() *IcbcGlobalRequest {
 	return &request
 }
 
-func parsePrivateKey(privateKeyBytes []byte) (*rsa.PrivateKey, error) {
-	block, _ := pem.Decode(privateKeyBytes)
-	if block == nil {
-		return nil, fmt.Errorf("failed to parse PEM block containing the key")
+func parsePrivateKey(privateKeyString string) (*rsa.PrivateKey, error) {
+	privateKeyBytes, err := base64.StdEncoding.DecodeString(privateKeyString)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode Base64 encoded private key: %w", err)
 	}
 
-	privateKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+	//block, _ := pem.Decode(privateKeyBytes)
+	//if block == nil {
+	//	return nil, fmt.Errorf("failed to parse PEM block containing the key")
+	//}
+
+	privateKey, err := x509.ParsePKCS8PrivateKey(privateKeyBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -157,27 +258,27 @@ type IcbcGlobalResponse struct {
 
 // IcbcSignRequest 签约参数
 type IcbcSignRequest struct {
-	AppID      string        `json:"app_id"`               // APP的编号,应用在API开放平台注册时生成
-	ApiName    string        `json:"api_name"`             // api接口名称
-	ApiVersion string        `json:"api_version"`          // api接口版本
-	CorpNo     string        `json:"corpNo"`               // 一级合作方编号
-	CoMode     string        `json:"coMode"`               // 合作模式，1：代理记账；2：自主记账
-	AccCompNo  string        `json:"accCompNo,omitempty"`  // 二级合作方编号，合作模式为1时，必输 (可选字段)
-	Account    string        `json:"account"`              // 主账户
-	CurrType   string        `json:"currType"`             // 主账户币种，1：人民币
-	AccFlag    string        `json:"accFlag"`              // 本他行标志，1：本行；2：他行
-	CnTioFlag  string        `json:"cntioFlag"`            // 境内外标志，1：境内；2：境外
-	Phone      string        `json:"phone"`                // 手机号
-	EpType     string        `json:"epType"`               // 是否自动展期，0：否；1：是
-	EpTimes    string        `json:"epTimes,omitempty"`    // 展期期数，epType为1时，必输 (可选字段)
-	PayAccNo   string        `json:"payAccNo,omitempty"`   // 收费账号 (可选字段)
-	PayCurr    string        `json:"payCurr,omitempty"`    // 收费账号币种 (可选字段)
-	PayAccName string        `json:"payAccName,omitempty"` // 收费账号户名，默认为空 (可选字段)
-	PayLimit   string        `json:"payLimit,omitempty"`   // 收费周期，默认为空 (可选字段)
-	PayBegDate string        `json:"payBegDate,omitempty"` // 收费开始日期，默认为空 (可选字段)
-	PayEndDate string        `json:"payEndDate,omitempty"` // 收费结束日期，默认为空 (可选字段)
-	Remark     string        `json:"remark,omitempty"`     // 备注，默认为空 (可选字段)
-	AccList    []AccListItem `json:"accList"`              // 下挂账号列表
+	AppID      string         `json:"app_id"`               // APP的编号,应用在API开放平台注册时生成
+	ApiName    string         `json:"api_name"`             // api接口名称
+	ApiVersion string         `json:"api_version"`          // api接口版本
+	CorpNo     string         `json:"corpNo"`               // 一级合作方编号
+	CoMode     string         `json:"coMode"`               // 合作模式，1：代理记账；2：自主记账
+	AccCompNo  string         `json:"accCompNo,omitempty"`  // 二级合作方编号，合作模式为1时，必输 (可选字段)
+	Account    string         `json:"account"`              // 主账户
+	CurrType   string         `json:"currType"`             // 主账户币种，1：人民币
+	AccFlag    string         `json:"accFlag"`              // 本他行标志，1：本行；2：他行
+	CnTioFlag  string         `json:"cntioFlag"`            // 境内外标志，1：境内；2：境外
+	Phone      string         `json:"phone"`                // 手机号
+	EpType     string         `json:"epType"`               // 是否自动展期，0：否；1：是
+	EpTimes    string         `json:"epTimes,omitempty"`    // 展期期数，epType为1时，必输 (可选字段)
+	PayAccNo   string         `json:"payAccNo,omitempty"`   // 收费账号 (可选字段)
+	PayCurr    string         `json:"payCurr,omitempty"`    // 收费账号币种 (可选字段)
+	PayAccName string         `json:"payAccName,omitempty"` // 收费账号户名，默认为空 (可选字段)
+	PayLimit   string         `json:"payLimit,omitempty"`   // 收费周期，默认为空 (可选字段)
+	PayBegDate string         `json:"payBegDate,omitempty"` // 收费开始日期，默认为空 (可选字段)
+	PayEndDate string         `json:"payEndDate,omitempty"` // 收费结束日期，默认为空 (可选字段)
+	Remark     string         `json:"remark,omitempty"`     // 备注，默认为空 (可选字段)
+	AccList    []*AccListItem `json:"accList"`              // 下挂账号列表
 }
 
 type AccListItem struct {
@@ -188,6 +289,12 @@ type AccListItem struct {
 	IsMainAcc     string `json:"isMainAcc"`     // 主帐户标志，0：否；1：是
 	ReceiptFlag   string `json:"receiptFlag"`   // 开通电子单据标示，0：关；1：开
 	StatementFlag string `json:"statementFlag"` // 开通账务明细查询标示，0：关；1：开
+}
+
+type IcbcSignResponse struct {
+	RetCode string `json:"retcode"` // 返回状态码。9008100-处理成功 9008101-处理失败 9008200-参数错误
+	RetMsg  string `json:"retmsg"`  // 返回信息
+	Data    string `json:"data"`    // 返回数据
 }
 
 // AccDetailRequest 单账号交易明细查询参数
@@ -204,12 +311,12 @@ type AccDetailRequest struct {
 }
 
 type AccDetailResponse struct {
-	RetCode  string            `json:"retcode"`  //返回状态码 0（成功）,-2（失败）,9008100-处理成功-999/9008101-处理失败 9008200-参数错误
-	RetMsg   string            `json:"retmsg"`   //返回信息 9008100-处理成功 9008101-处理失败 9008200-参数错误
-	NextPage string            `json:"nextpage"` //0无下一页；1有下一页
-	SerialNo string            `json:"serialno"` //当前页最后一笔明细的流水号
-	AccNo    string            `json:"accno"`    //本方账号
-	DtlList  IcbcAccDetailItem `json:"dtllist"`  //流水明细表
+	RetCode  string              `json:"retcode"`  //返回状态码 0（成功）,-2（失败）,9008100-处理成功-999/9008101-处理失败 9008200-参数错误
+	RetMsg   string              `json:"retmsg"`   //返回信息 9008100-处理成功 9008101-处理失败 9008200-参数错误
+	NextPage string              `json:"nextpage"` //0无下一页；1有下一页
+	SerialNo string              `json:"serialno"` //当前页最后一笔明细的流水号
+	AccNo    string              `json:"accno"`    //本方账号
+	DtlList  []IcbcAccDetailItem `json:"dtllist"`  //流水明细表
 }
 
 type IcbcAccDetailItem struct {
@@ -257,4 +364,33 @@ type IcbcAccDetailItem struct {
 	PtrxSeq   string `json:"ptrxseq"`   //小交易序号
 	UpdTranf  string `json:"updtranf"`  //冲正标志
 	RevTranf  string `json:"revtranf"`  //正反交易标志
+}
+
+type IcbcSignatureQueryRequest struct {
+	StartIndex  string `json:"startindex"`  // 查询起始位置，从0开始
+	QrySize     string `json:"qrysize"`     // 查询条数，最多20
+	CorpNo      int64  `json:"corpno"`      // 一级合作方编号
+	AccCompNo   string `json:"acccompno"`   // 二级合作方编号，为空则查该合作企业下全量有效代账公司
+	AccCompName string `json:"acccompname"` // 二级合作方名称，模糊查询
+}
+type IcbcSignatureQueryResponse struct {
+	RetCode     string       `json:"retcode"`               // 返回状态码。9008100-处理成功 -999/9008101-处理失败 9008200-参数错误
+	RetMsg      string       `json:"retmsg"`                // 返回信息。9008100-处理成功 9008101-处理失败 9008200-参数错误
+	CorpNo      string       `json:"corpno"`                // 一级合作方编号
+	TotalNum    string       `json:"totalnum,omitempty"`    // 总条数。9008100时有值
+	StartIndex  string       `json:"startindex,omitempty"`  // 起始条数
+	TotalPage   string       `json:"totalpage,omitempty"`   // 总页数
+	AccCompList []AccCompany `json:"acccomplist,omitempty"` // 代账公司列表。最多20条
+	MsgID       string       `json:"msgid"`                 // 消息通讯唯一编号，每次调用独立生成，APP级唯一。urcnl24ciutr9
+}
+type AccCompany struct {
+	AccCompNo     string `json:"acccompno"`     // 二级合作方编号
+	AccCompName   string `json:"acccompname"`   // 二级合作方名称
+	StatementFlag string `json:"statementflag"` // 开通账务明细查询标示。0否1是
+	ReceiptFlag   string `json:"receiptflag"`   // 开通电子单据标示。0否1是
+	ActDate       string `json:"actdate"`       // 生效日期
+	Status        string `json:"status"`        // 状态。1生效 2作废
+	CreateTime    string `json:"createtime"`    // 创建时间
+	LstModft      string `json:"lstmodft"`      // 最后修改时间
+	Notes         string `json:"notes"`         // 收费信息备注
 }
