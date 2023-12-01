@@ -106,6 +106,8 @@ type BankService interface {
 	PinganBankAccountSignatureApply(ctx context.Context, req *api.PinganBankAccountSignatureApplyRequest) (*api.PinganUserAcctSignatureApplyResponse, error)
 	PinganBankAccountSignatureQuery(ctx context.Context, req *api.PinganBankAccountSignatureApplyRequest) (*api.PinganUserAcctSignatureApplyResponse, error)
 	PinganBankVirtualSubAcctBalanceAdjust(ctx context.Context, id int64, req *api.BankTransferReceiptData) (*api.BankVirtualAccountTranscationResponse, error)
+	IcbcBankAccountSignatureApply(ctx context.Context, req *api.IcbcBankAccountSignatureRequest) (string, error)
+	IcbcBankAccountSignatureQuery(ctx context.Context, req *api.IcbcBankAccountSignatureRequest) (*api.IcbcAcctSignatureSignatureResponse, error)
 }
 
 type bankService struct {
@@ -126,6 +128,30 @@ type bankService struct {
 	paymentReceiptRepo                       repo.PaymentReceiptRepo
 	pdfToImageService                        PdfToImageService
 	financeClient                            finance.Client
+	icbcBank                                 sdk.IcbcBankSDK
+}
+
+func (s *bankService) IcbcBankAccountSignatureApply(ctx context.Context, req *api.IcbcBankAccountSignatureRequest) (string, error) {
+	apply, err := s.icbcBank.IcbcUserAcctSignatureApply(ctx, req.Account, req.Phone, req.Remark)
+	return apply, err
+}
+
+func (s *bankService) IcbcBankAccountSignatureQuery(ctx context.Context, req *api.IcbcBankAccountSignatureRequest) (*api.IcbcAcctSignatureSignatureResponse, error) {
+	query, err := s.icbcBank.IcbcUserAcctSignatureQuery(ctx, req.Account, req.Phone, req.Remark)
+	if err != nil {
+		return nil, err
+	}
+	return &api.IcbcAcctSignatureSignatureResponse{
+		AccountNo:     query.CorpNo,
+		AccountName:   "",
+		Statementflag: "",
+		Receiptflag:   "",
+		Actdate:       "",
+		Status:        "",
+		Createtime:    "",
+		Lstmodft:      "",
+		Notes:         "",
+	}, nil
 }
 
 func (s *bankService) GetBankTransferReceipt(ctx context.Context, req *api.BankTransferReceiptData) (*api.BankTransferReceiptData, error) {

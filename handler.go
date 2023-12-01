@@ -233,16 +233,6 @@ func (s *BankImpl) GetPaymentReceipt(ctx context.Context, id int64) (resp *api.P
 	return s.paymentReceiptService.GetPaymentReceipt(ctx, id)
 }
 
-// PinganBankAccountSignatureApply implements the BankImpl interface.
-func (s *BankImpl) PinganBankAccountSignatureApply(ctx context.Context, req *api.PinganBankAccountSignatureApplyRequest) (resp *api.PinganUserAcctSignatureApplyResponse, err error) {
-	return s.bankService.PinganBankAccountSignatureApply(ctx, req)
-}
-
-// PinganBankAccountSignatureQuery implements the BankImpl interface.
-func (s *BankImpl) PinganBankAccountSignatureQuery(ctx context.Context, req *api.PinganBankAccountSignatureApplyRequest) (resp *api.PinganUserAcctSignatureApplyResponse, err error) {
-	return s.bankService.PinganBankAccountSignatureQuery(ctx, req)
-}
-
 // TransmitPaymentReceipt implements the BankImpl interface.
 func (s *BankImpl) TransmitPaymentReceipt(ctx context.Context, processInstanceId int64, transmitUserId int64) (err error) {
 	return s.paymentReceiptService.Transmit(ctx, processInstanceId, transmitUserId, nil)
@@ -311,6 +301,25 @@ func (s *BankImpl) SimpleGetPaymentReceiptByProcessInstanceId(ctx context.Contex
 
 // SimpleListBankTransactionDetail implements the BankImpl interface.
 func (s *BankImpl) SimpleListBankTransactionDetail(ctx context.Context, req *api.ListBankTransactionDetailRequest) (resp *api.ListBankTransactionDetailResponse, err error) {
-	// TODO: Your code here...
 	return s.bankService.SimpleListBankTransactionDetail(ctx, req)
+}
+
+// PinganBankAccountSignatureApply implements the BankImpl interface.
+func (s *BankImpl) PinganBankAccountSignatureApply(ctx context.Context, req *api.PinganBankAccountSignatureApplyRequest) (resp *api.PinganUserAcctSignatureApplyResponse, err error) {
+	return s.bankService.PinganBankAccountSignatureApply(ctx, req)
+}
+
+// PinganBankAccountSignatureQuery implements the BankImpl interface.
+func (s *BankImpl) PinganBankAccountSignatureQuery(ctx context.Context, req *api.PinganBankAccountSignatureApplyRequest) (resp *api.PinganUserAcctSignatureApplyResponse, err error) {
+	return s.bankService.PinganBankAccountSignatureQuery(ctx, req)
+}
+
+// IcbcBankAccountSignatureQuery implements the BankImpl interface.
+func (s *BankImpl) IcbcBankAccountSignatureQuery(ctx context.Context, req *api.IcbcBankAccountSignatureRequest) (resp *api.IcbcAcctSignatureSignatureResponse, err error) {
+	return s.bankService.IcbcBankAccountSignatureQuery(ctx, req)
+}
+
+// IcbcBankAccountSignatureApply implements the BankImpl interface.
+func (s *BankImpl) IcbcBankAccountSignatureApply(ctx context.Context, req *api.IcbcBankAccountSignatureRequest) (resp string, err error) {
+	return s.bankService.IcbcBankAccountSignatureApply(ctx, req)
 }
