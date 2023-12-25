@@ -13,8 +13,10 @@ import (
 	"gitlab.yoyiit.com/youyi/go-core/config"
 	"gitlab.yoyiit.com/youyi/go-core/util"
 	"go.uber.org/zap"
+	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
+	"net/url"
 	"sort"
 	"strings"
 	"time"
@@ -22,27 +24,27 @@ import (
 
 func ICBCPostHttpResult(host string, requestData IcbcGlobalRequest, result interface{}) error {
 	//生成privateKey
-	privateKey, err := parsePrivateKey(config.GetString(enum.IcbcPrivateKey, ""))
+	privateKey, _ := parsePrivateKey(config.GetString(enum.IcbcPrivateKey, ""))
+
+	//生成签名字符串
+	signString, err := jointTheSignatureData(requestData)
 	if err != nil {
-		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult 生成密钥失败err=%+v", err))
+		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult 生成签名字符串失败err=%+v", err))
 		return err
 	}
+
 	// 生成签名并设置到请求结构体的 "sign" 字段
-	sign, err := generateRSASign(requestData, privateKey)
+	sign, err := generateRSASign([]byte(signString), privateKey)
 	if err != nil {
 		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult 生成签名出错requestData=%+v,privateKey=%+v", requestData, privateKey))
 		return err
 	}
 	requestData.Sign = sign
 	// 将请求结构体转换为 URL 编码的字符串，并作为请求体发送
-	bodyData, err := encodeStructToURLValues(requestData)
+	signData := signString + "&sign=" + sign
+	req, err := http.NewRequest("POST", host, strings.NewReader(signData))
 	if err != nil {
-		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult encodeStructToURLValues转换编码出错requestData=%+v,,err=%+v", requestData, err))
-		return err
-	}
-	req, err := http.NewRequest("POST", host, strings.NewReader(bodyData))
-	if err != nil {
-		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult httpRequest生成出错bodyData=%+v,host=%+v", bodyData, host))
+		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult httpRequest生成出错bodyData=%+v,host=%+v", signData, host))
 		return err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -58,7 +60,7 @@ func ICBCPostHttpResult(host string, requestData IcbcGlobalRequest, result inter
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult t请求工行出错bodyData=%+v,resp=%+v,err=%+v", bodyData, resp, err))
+		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult t请求工行出错bodyData=%+v,resp=%+v,err=%+v", signData, resp, err))
 		return err
 	}
 	// 打印HTTP响应
@@ -82,29 +84,54 @@ func ICBCPostHttpResult(host string, requestData IcbcGlobalRequest, result inter
 	}
 	return nil
 }
-func ICBCPostHttpUIResult(host string, requestData IcbcGlobalRequest) string {
+func ICBCPostHttpUIResult(requestData IcbcGlobalRequest) string {
 	//生成privateKey
 	privateKey, err := parsePrivateKey(config.GetString(enum.IcbcPrivateKey, ""))
+	// 将 BizContent 转换为 JSON 字符串
+	bizContent, err := json.Marshal(requestData.BizContent)
 	if err != nil {
-		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult 生成密钥失败err=%+v", err))
 		return ""
 	}
-	// 生成签名并设置到请求结构体的 "sign" 字段
-	sign, err := generateRSASign(requestData, privateKey)
+	signString := enum.IcbcAdsAgrSigUiURL + "?app_id=" + requestData.AppID + "&biz_content=" + string(bizContent) + "&msg_id=" + requestData.MsgID + "&sign_type=" + requestData.SignType + "&timestamp=" + requestData.Timestamp
+
+	// 生成签名
+	sign, err := generateRSASign([]byte(signString), privateKey)
 	if err != nil {
 		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult 生成签名出错requestData=%+v,privateKey=%+v", requestData, privateKey))
 		return ""
 	}
-	requestData.Sign = sign
-	// 将请求结构体转换为 URL 编码的字符串，并作为请求体发送
-	bodyData, err := encodeStructToURLValues(requestData)
+	//组装请求参数
+
+	baseUrl, _ := url.Parse(config.GetString(enum.IcbcHost, ""))
+	baseUrl.Path = enum.IcbcAdsAgrSigUiURL
+	//signData := s + "&sign=" + sign
+	// 进行Base64编码
+	params := url.Values{}
+	params.Add("app_id", requestData.AppID)
+	params.Add("msg_id", requestData.MsgID)
+	params.Add("sign_type", requestData.SignType)
+	params.Add("timestamp", requestData.Timestamp)
+	params.Add("sign", sign)
+	params.Add("biz_content", string(bizContent))
+	baseUrl.RawQuery = params.Encode()
+	/*paramsContext := url.Values{}
+
+	paramsContext.Add("biz_content", string(bizContent))*/
+	resp, err := http.PostForm(baseUrl.String(), nil)
 	if err != nil {
-		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult encodeStructToURLValues转换编码出错requestData=%+v", requestData))
-		return ""
+		zap.L().Error(err.Error())
 	}
-	req, err := http.NewRequest("POST", host, strings.NewReader(bodyData))
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult httpRequest生成出错bodyData=%+v,host=%+v", bodyData, host))
+		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult t请求工行出错bodyData=%+v,resp=%+v,err=%+v", baseUrl.String(), resp, err))
+	}
+	zap.L().Info(fmt.Sprintf("ICBCPostHttp request==\n %+v", baseUrl.String()))
+	zap.L().Info(fmt.Sprintf("ICBCPostHttp respone==\n %+v", string(body)))
+	return string(body)
+	/*req, err := http.NewRequest("POST", baseUrl.String(), nil)
+	if err != nil {
+		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult httpRequest生成出错host=%+v,bodyData=%+v", baseUrl.String(), requestData.BizContent))
 		return ""
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -120,7 +147,7 @@ func ICBCPostHttpUIResult(host string, requestData IcbcGlobalRequest) string {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult t请求工行出错bodyData=%+v,resp=%+v,err=%+v", bodyData, resp, err))
+		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult t请求工行出错bodyData=%+v,resp=%+v,err=%+v", requestData.BizContent, resp, err))
 		return ""
 	}
 	// 打印HTTP响应
@@ -130,8 +157,20 @@ func ICBCPostHttpUIResult(host string, requestData IcbcGlobalRequest) string {
 	} else {
 		zap.L().Info(fmt.Sprintf("HTTP Response:\n%s", string(responseDump)))
 	}
-	defer resp.Body.Close()
-	return string(responseDump)
+	defer resp.Body.Close()*/
+	//return string(responseDump)
+}
+
+func jointTheSignatureData(data IcbcGlobalRequest) (string, error) {
+	//AppID=abc123&BizContent=&MsgID=xyz789&Sign=&SignType=MD5&Timestamp=1638594621
+	// 将结构体转换为map
+	// 将 BizContent 转换为 JSON 字符串
+	bizContent, err := json.Marshal(data.BizContent)
+	if err != nil {
+		return "", err
+	}
+	s := "app_id=" + data.AppID + "&biz_content=" + string(bizContent) + "&msg_id=" + data.MsgID + "&sign_type=" + data.SignType + "&timestamp=" + data.Timestamp
+	return s, nil
 }
 
 func encodeStructToURLValues(data IcbcGlobalRequest) (string, error) {
@@ -193,12 +232,9 @@ func convertStructToMap(data IcbcGlobalRequest, params map[string]string) error 
 	return nil
 }
 
-func generateRSASign(data interface{}, privateKey *rsa.PrivateKey) (string, error) {
-	jsonData, err := json.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	digest := sha256.Sum256(jsonData)
+func generateRSASign(data []byte, privateKey *rsa.PrivateKey) (string, error) {
+
+	digest := sha256.Sum256(data)
 	signature, err := rsa.SignPKCS1v15(rand.Reader, privateKey, crypto.SHA256, digest[:])
 	if err != nil {
 		return "", err

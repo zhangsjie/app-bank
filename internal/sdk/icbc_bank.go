@@ -40,7 +40,7 @@ func (i *icbcBankSDK) IcbcUserAcctSignatureQuery(ctx context.Context, accountNo 
 }
 
 func (i *icbcBankSDK) IcbcUserAcctSignatureApply(ctx context.Context, accountNo string, phone string, remark string) (string, error) {
-	signUrl := config.GetString(enum.IcbcHost, "") + config.GetString(enum.IcbcAdsAgrSigUiURL, "")
+
 	request := stru.NewIcbcGlobalRequest()
 	acclist := make([]*stru.AccListItem, 0)
 	acclist = append(acclist, &stru.AccListItem{
@@ -69,8 +69,7 @@ func (i *icbcBankSDK) IcbcUserAcctSignatureApply(ctx context.Context, accountNo 
 		Remark:     remark,
 		AccList:    acclist,
 	}
-	resu := stru.ICBCPostHttpUIResult(signUrl, *request)
-
+	resu := stru.ICBCPostHttpUIResult(*request)
 	return resu, nil
 }
 
