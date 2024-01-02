@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"github.com/pkg/errors"
 	"gitlab.yoyiit.com/youyi/app-bank/internal/enum"
 	"gitlab.yoyiit.com/youyi/app-bank/internal/sdk/stru"
 	"gitlab.yoyiit.com/youyi/go-core/config"
@@ -11,35 +12,69 @@ import (
 )
 
 type IcbcBankSDK interface {
-	ListTransactionDetail(ctx context.Context, account string, beginDate string, endDate string) ([]stru.IcbcAccDetailItem, error)
-	IcbcUserAcctSignatureApply(ctx context.Context, accountNo string, phone string, remark string) (string, error)
-	IcbcUserAcctSignatureQuery(ctx context.Context, accountNo string, phone string, remark string) (*stru.IcbcSignatureQueryResponse, error)
+	QueryAgreeNo(ctx context.Context, zuId, account string) (string, error)
+	ListTransactionDetail(ctx context.Context, account string, beginDate string, endDate string, accCompNo string) ([]stru.IcbcAccDetailItem, error)
+	IcbcUserAcctSignatureApply(ctx context.Context, accountNo string, phone string, remark string, accCompNo string) (string, error)
+	IcbcUserAcctSignatureQuery(ctx context.Context, accountNo string, accCompNo string) (*stru.IcbcSignatureQueryResponse, error)
 }
 
 type icbcBankSDK struct {
 }
 
-func (i *icbcBankSDK) IcbcUserAcctSignatureQuery(ctx context.Context, accountNo string, phone string, remark string) (*stru.IcbcSignatureQueryResponse, error) {
-	queryUrl := config.GetString(enum.IcbcHost, "") + enum.IcbcAdsPartNerGryURL
+func (i *icbcBankSDK) QueryAgreeNo(ctx context.Context, zuId, account string) (string, error) {
+	//IcbcAdsAgreementGryURL
 	request := stru.NewIcbcGlobalRequest()
-	corpNo := config.GetString(enum.IcbcCorpNo, "")
-	num, _ := strconv.ParseInt(corpNo, 10, 64)
+	inqwork := stru.Inqwork{
+		BegNum: 0,
+		FetNum: 10,
+	}
+	cond := stru.Cond{
+		QryType:   1,
+		AccCompNo: zuId,
+		Account:   account,
+		CurrType:  "",
+		AgrList:   nil,
+	}
+	request.BizContent = &stru.QueryAgreeNoRequest{
+		Inqwork: inqwork,
+		Corpno:  config.GetString(enum.IcbcCorpNo, ""),
+		Cond:    cond,
+	}
+	var result stru.QueryAgreeNoResponse
+	err := stru.ICBCPostHttpResult(enum.IcbcAdsAgreementGryURL, *request, &result)
+	if err != nil {
+		return "", err
+	}
+	if result.RetCode != "9008100" {
+		return "", errors.New(result.RetMsg)
+	}
+	agreeNo := result.AgrList[0].AgreeNo
+	return agreeNo, nil
+}
+
+func (i *icbcBankSDK) IcbcUserAcctSignatureQuery(ctx context.Context, accountNo string, accCompNo string) (*stru.IcbcSignatureQueryResponse, error) {
+	url := enum.IcbcAdsPartNerGryURL
+	request := stru.NewIcbcGlobalRequest()
+	corpNo, _ := strconv.ParseInt(config.GetString(enum.IcbcCorpNo, ""), 10, 64)
 	request.BizContent = &stru.IcbcSignatureQueryRequest{
 		StartIndex:  "0",
 		QrySize:     "10",
-		CorpNo:      num,
-		AccCompNo:   "",
+		CorpNo:      corpNo,
+		AccCompNo:   accCompNo,
 		AccCompName: "",
 	}
 	var result stru.IcbcSignatureQueryResponse
-	err := stru.ICBCPostHttpResult(queryUrl, *request, &result)
+	err := stru.ICBCPostHttpResult(url, *request, &result)
 	if err != nil {
 		return nil, err
+	}
+	if result.RetCode != "9008100" {
+		return nil, errors.New(result.RetMsg)
 	}
 	return &result, nil
 }
 
-func (i *icbcBankSDK) IcbcUserAcctSignatureApply(ctx context.Context, accountNo string, phone string, remark string) (string, error) {
+func (i *icbcBankSDK) IcbcUserAcctSignatureApply(ctx context.Context, accountNo string, phone string, remark string, accCompNo string) (string, error) {
 
 	request := stru.NewIcbcGlobalRequest()
 	acclist := make([]*stru.AccListItem, 0)
@@ -48,7 +83,7 @@ func (i *icbcBankSDK) IcbcUserAcctSignatureApply(ctx context.Context, accountNo 
 		CurrType:      "1",
 		AccFlag:       "1",
 		CnTioFlag:     "1",
-		IsMainAcc:     "0",
+		IsMainAcc:     "1",
 		ReceiptFlag:   "1",
 		StatementFlag: "1",
 	})
@@ -57,9 +92,9 @@ func (i *icbcBankSDK) IcbcUserAcctSignatureApply(ctx context.Context, accountNo 
 		ApiName:    "ADSSIGN",
 		ApiVersion: "001.001.001.001",
 		CorpNo:     config.GetString(enum.IcbcCorpNo, ""),
-		CoMode:     "2",
-		AccCompNo:  "",
-		Account:    config.GetString(enum.IcbcAccountNo, ""),
+		CoMode:     "1",
+		AccCompNo:  accCompNo,
+		Account:    accountNo,
 		CurrType:   "1",
 		AccFlag:    "1",
 		CnTioFlag:  "1",
@@ -68,13 +103,18 @@ func (i *icbcBankSDK) IcbcUserAcctSignatureApply(ctx context.Context, accountNo 
 		EpTimes:    "12",
 		Remark:     remark,
 		AccList:    acclist,
+		PayAccName: "",
+		PayAccNo:   "",
+		PayBegDate: "",
+		PayCurr:    "",
+		PayLimit:   "",
 	}
 	resu := stru.ICBCPostHttpUIResult(*request)
 	return resu, nil
 }
 
-func (i *icbcBankSDK) ListTransactionDetail(ctx context.Context, account string, beginDate string, endDate string) ([]stru.IcbcAccDetailItem, error) {
-	accDetailUrl := config.GetString(enum.IcbcHost, "") + config.GetString(enum.IcbcAccDetailURL, "")
+func (i *icbcBankSDK) ListTransactionDetail(ctx context.Context, account string, beginDate string, endDate string, accCompNo string) ([]stru.IcbcAccDetailItem, error) {
+	accDetailUrlPath := config.GetString(enum.IcbcAccDetailURL, "")
 	request := stru.NewIcbcGlobalRequest()
 	seq, _ := util.SonyflakeID()
 
@@ -98,7 +138,7 @@ func (i *icbcBankSDK) ListTransactionDetail(ctx context.Context, account string,
 	}
 	request.BizContent = accDetailRequest
 	var result stru.AccDetailResponse
-	err := stru.ICBCPostHttpResult(accDetailUrl, *request, &result)
+	err := stru.ICBCPostHttpResult(accDetailUrlPath, *request, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +151,7 @@ func (i *icbcBankSDK) ListTransactionDetail(ctx context.Context, account string,
 	}
 	for hasNext {
 		accDetailRequest.SerialNo = serialNo
-		err := stru.ICBCPostHttpResult(accDetailUrl, *request, &result)
+		err := stru.ICBCPostHttpResult(accDetailUrlPath, *request, &result)
 		if err != nil {
 			return nil, err
 		}

@@ -605,8 +605,9 @@ github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9dec
 github.com/yuin/goldmark v1.3.5/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
 github.com/yuin/goldmark v1.4.1/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
-gitlab.yoyiit.com/youyi/app-base v0.0.0-20231025083056-21f090c0a3b5 h1:OPNmVu0dqoQzBG4r23rkussDHEkSL5+v0+NyJNF8EU4=
 gitlab.yoyiit.com/youyi/app-base v0.0.0-20231025083056-21f090c0a3b5/go.mod h1:8poJ4qn1fY2onv/BWkj1rTDDtpyoxZEsujsOM+L+BX0=
+gitlab.yoyiit.com/youyi/app-base v0.0.0-20240102080305-485cf7c61b78 h1:Q5EKvA0PgdXpLWWolDA9oX46N+qN1upTNQR9jI+H4O8=
+gitlab.yoyiit.com/youyi/app-base v0.0.0-20240102080305-485cf7c61b78/go.mod h1:scL80567slnOEa0i5hixpIEyGnOwe/KVXzadhzGv6qI=
 gitlab.yoyiit.com/youyi/app-dingtalk v0.0.0-20230712070347-478fa7abbcbb h1:K+VdHSSgoxXI+EMwfIJQjJ0w9qCcNi7W5qi/5zqS44Q=
 gitlab.yoyiit.com/youyi/app-dingtalk v0.0.0-20230712070347-478fa7abbcbb/go.mod h1:NG1u63/uT6jJKKoP0LAEwL5GNzu424HRguX+a+j1EvM=
 gitlab.yoyiit.com/youyi/app-finance v0.0.0-20231012171224-91671d7ec23d h1:4GuMv48kPw2fcmLsIjjvkpc62c9C78j3WTjtdnkz5gU=
@@ -617,10 +618,10 @@ gitlab.yoyiit.com/youyi/app-oa v0.0.0-20231020094418-3544182f3345 h1:4aUllb2AEl/
 gitlab.yoyiit.com/youyi/app-oa v0.0.0-20231020094418-3544182f3345/go.mod h1:5DQK0q0zrsbW5n/sxTHkNQ0vXQ4sxrD4ahTTFx8bLh0=
 gitlab.yoyiit.com/youyi/app-soms v0.0.0-20230725111904-77cace21e85e h1:2RdgqjKS2+HBnpu4rumHzw4QlT8Q5+fox88YhTIdTOs=
 gitlab.yoyiit.com/youyi/app-soms v0.0.0-20230725111904-77cace21e85e/go.mod h1:HrnIhdAyq2ZWXl+YEoft1E7tWe8gnNxioG+G/a0N284=
-gitlab.yoyiit.com/youyi/go-common v0.0.0-20230825054447-70d619641f41 h1:Ym3SSr0aUmVIMoW1MA3QhuxlqtxEDMxjvNlfJ55+qlM=
-gitlab.yoyiit.com/youyi/go-common v0.0.0-20230825054447-70d619641f41/go.mod h1:zyEgqlhTnfPXc13MhWOt8G7UC3Tzaf2gggvkuOUpQDs=
-gitlab.yoyiit.com/youyi/go-core v0.0.0-20231017065201-157dac1f83f9 h1:61C66pbjgBX3/Z13zNGU7vKOVAu9MlEMKn9mUtlnfxo=
-gitlab.yoyiit.com/youyi/go-core v0.0.0-20231017065201-157dac1f83f9/go.mod h1:3oqWl/9aA4uWeS0tRON3b3j6CUYcb5SZwChcc76yJGo=
+gitlab.yoyiit.com/youyi/go-common v0.0.0-20231225031254-a629261a93a8 h1:IEX+r2xhwn+9UbbzTrOWl2vMpB9s8T6/MPYhF2H3v3I=
+gitlab.yoyiit.com/youyi/go-common v0.0.0-20231225031254-a629261a93a8/go.mod h1:zyEgqlhTnfPXc13MhWOt8G7UC3Tzaf2gggvkuOUpQDs=
+gitlab.yoyiit.com/youyi/go-core v0.0.0-20231230050947-c167b964cb86 h1:naAOSN9brduHnlD9+AzHNVBxp8RLwc7gqTGiYy8N8v8=
+gitlab.yoyiit.com/youyi/go-core v0.0.0-20231230050947-c167b964cb86/go.mod h1:dLQShHBwT4VK/tbRbG3JUdIpfmnLvDjkfDrW0vBzKKg=
 go.etcd.io/bbolt v1.3.2/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
 go.mongodb.org/mongo-driver v1.11.3 h1:Ql6K6qYHEzB6xvu4+AU0BoRoqf9vFPcc4o7MUIdPW8Y=
 go.mongodb.org/mongo-driver v1.11.3/go.mod h1:PTSz5yu21bkT/wXpkS7WR5f0ddqw5quethTUn9WM+2g=

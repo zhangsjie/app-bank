@@ -132,15 +132,51 @@ type bankService struct {
 }
 
 func (s *bankService) IcbcBankAccountSignatureApply(ctx context.Context, req *api.IcbcBankAccountSignatureRequest) (string, error) {
-	apply, err := s.icbcBank.IcbcUserAcctSignatureApply(ctx, req.Account, req.Phone, req.Remark)
+	r, _ := s.baseClient.GetOrganizationBankAccount(ctx, &baseApi.OrganizationBankAccountData{Id: req.Id})
+	//生成二级合作方编号
+	msgId, _ := util.SonyflakeID()
+	accCompNo := "ICBC-" + msgId
+	apply, err := s.icbcBank.IcbcUserAcctSignatureApply(ctx, r.Account, req.Phone, req.Remark, accCompNo)
+	s.baseClient.EditOrganizationBankAccount(ctx, &baseApi.OrganizationBankAccountData{
+		Id:                   req.Id,
+		SignatureApplyStatus: "",
+		ZuId:                 accCompNo,
+		Remark:               req.Remark,
+		PaymentMode:          "1",
+	})
 	return apply, err
 }
 
 func (s *bankService) IcbcBankAccountSignatureQuery(ctx context.Context, req *api.IcbcBankAccountSignatureRequest) (*api.IcbcAcctSignatureSignatureResponse, error) {
-	query, err := s.icbcBank.IcbcUserAcctSignatureQuery(ctx, req.Account, req.Phone, req.Remark)
+	bankAccount, _ := s.baseClient.GetOrganizationBankAccount(ctx, &baseApi.OrganizationBankAccountData{Id: req.Id})
+	query, err := s.icbcBank.IcbcUserAcctSignatureQuery(ctx, req.Account, bankAccount.ZuId)
 	if err != nil {
 		return nil, err
 	}
+	status := "1"
+	if query.AccCompList != nil && len(query.AccCompList) != 0 {
+		for _, v := range query.AccCompList {
+			if v.AccCompNo == bankAccount.ZuId {
+				if v.Status == "1" {
+					status = "0" //1生效  2作废
+				} else {
+					status = "2"
+				}
+			}
+		}
+	}
+	aggreNo := ""
+	if status == "0" {
+		aggreNo, err = s.icbcBank.QueryAgreeNo(ctx, bankAccount.ZuId, bankAccount.Account)
+		if err != nil {
+			return nil, err
+		}
+	}
+	s.baseClient.EditOrganizationBankAccount(ctx, &baseApi.OrganizationBankAccountData{
+		Id:                   req.Id,
+		SignatureApplyStatus: status,
+		AgreeNo:              aggreNo,
+	})
 	return &api.IcbcAcctSignatureSignatureResponse{
 		AccountNo:     query.CorpNo,
 		AccountName:   "",
