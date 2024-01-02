@@ -9,14 +9,13 @@ require (
 	github.com/google/wire v0.5.0
 	github.com/pkg/errors v0.9.1
 	github.com/satori/go.uuid v1.2.0
-	gitlab.yoyiit.com/youyi/app-base v0.0.0-20231025083056-21f090c0a3b5
 	gitlab.yoyiit.com/youyi/app-dingtalk v0.0.0-20230712070347-478fa7abbcbb
 	gitlab.yoyiit.com/youyi/app-finance v0.0.0-20231012171224-91671d7ec23d
 	gitlab.yoyiit.com/youyi/app-invoice v0.0.0-20231020094117-2924f2366f36
 	gitlab.yoyiit.com/youyi/app-oa v0.0.0-20231020094418-3544182f3345
 	gitlab.yoyiit.com/youyi/app-soms v0.0.0-20230725111904-77cace21e85e
-	gitlab.yoyiit.com/youyi/go-common v0.0.0-20230825054447-70d619641f41
-	gitlab.yoyiit.com/youyi/go-core v0.0.0-20231017065201-157dac1f83f9
+	gitlab.yoyiit.com/youyi/go-common v0.0.0-20231225031254-a629261a93a8
+	gitlab.yoyiit.com/youyi/go-core v0.0.0-20231230050947-c167b964cb86
 	go.uber.org/zap v1.24.0
 	gorm.io/gorm v1.24.5
 )
@@ -110,6 +109,7 @@ require (
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
+	gitlab.yoyiit.com/youyi/app-base v0.0.0-20240102080305-485cf7c61b78 // indirect
 	go.mongodb.org/mongo-driver v1.11.3 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
