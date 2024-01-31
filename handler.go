@@ -272,7 +272,7 @@ func (s *BankImpl) WithDrawPaymentReceipt(ctx context.Context, id int64, req *ap
 // CommentPaymentReceipt implements the BankImpl interface.
 func (s *BankImpl) CommentPaymentReceipt(ctx context.Context, req *api.PaymentReceiptData) (err error) {
 	// TODO: Your code here...
-	return s.paymentReceiptService.Comment(ctx, req.ProcessInstanceId, req.Remark)
+	return s.paymentReceiptService.Comment(ctx, req)
 }
 
 // AddTagPaymentReceipt implements the BankImpl interface.
