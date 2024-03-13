@@ -23207,7 +23207,7 @@ func (p *CustomField) field7Length() int {
 	return l
 }
 
-func (p *IcbcAcctSignatureSignatureResponse) FastRead(buf []byte) (int, error) {
+func (p *IcbcBankAccountSignatureQueryResponse) FastRead(buf []byte) (int, error) {
 	var err error
 	var offset int
 	var l int
@@ -23285,76 +23285,6 @@ func (p *IcbcAcctSignatureSignatureResponse) FastRead(buf []byte) (int, error) {
 					goto SkipFieldError
 				}
 			}
-		case 5:
-			if fieldTypeId == thrift.STRING {
-				l, err = p.FastReadField5(buf[offset:])
-				offset += l
-				if err != nil {
-					goto ReadFieldError
-				}
-			} else {
-				l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
-				offset += l
-				if err != nil {
-					goto SkipFieldError
-				}
-			}
-		case 6:
-			if fieldTypeId == thrift.STRING {
-				l, err = p.FastReadField6(buf[offset:])
-				offset += l
-				if err != nil {
-					goto ReadFieldError
-				}
-			} else {
-				l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
-				offset += l
-				if err != nil {
-					goto SkipFieldError
-				}
-			}
-		case 7:
-			if fieldTypeId == thrift.STRING {
-				l, err = p.FastReadField7(buf[offset:])
-				offset += l
-				if err != nil {
-					goto ReadFieldError
-				}
-			} else {
-				l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
-				offset += l
-				if err != nil {
-					goto SkipFieldError
-				}
-			}
-		case 8:
-			if fieldTypeId == thrift.STRING {
-				l, err = p.FastReadField8(buf[offset:])
-				offset += l
-				if err != nil {
-					goto ReadFieldError
-				}
-			} else {
-				l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
-				offset += l
-				if err != nil {
-					goto SkipFieldError
-				}
-			}
-		case 9:
-			if fieldTypeId == thrift.STRING {
-				l, err = p.FastReadField9(buf[offset:])
-				offset += l
-				if err != nil {
-					goto ReadFieldError
-				}
-			} else {
-				l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
-				offset += l
-				if err != nil {
-					goto SkipFieldError
-				}
-			}
 		default:
 			l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
 			offset += l
@@ -23381,7 +23311,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return offset, thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return offset, thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_IcbcAcctSignatureSignatureResponse[fieldId]), err)
+	return offset, thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_IcbcBankAccountSignatureQueryResponse[fieldId]), err)
 SkipFieldError:
 	return offset, thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 ReadFieldEndError:
@@ -23390,7 +23320,7 @@ ReadStructEndError:
 	return offset, thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *IcbcAcctSignatureSignatureResponse) FastReadField1(buf []byte) (int, error) {
+func (p *IcbcBankAccountSignatureQueryResponse) FastReadField1(buf []byte) (int, error) {
 	offset := 0
 
 	if v, l, err := bthrift.Binary.ReadString(buf[offset:]); err != nil {
@@ -23398,13 +23328,13 @@ func (p *IcbcAcctSignatureSignatureResponse) FastReadField1(buf []byte) (int, er
 	} else {
 		offset += l
 
-		p.AccountNo = v
+		p.Signatureapplystatus = v
 
 	}
 	return offset, nil
 }
 
-func (p *IcbcAcctSignatureSignatureResponse) FastReadField2(buf []byte) (int, error) {
+func (p *IcbcBankAccountSignatureQueryResponse) FastReadField2(buf []byte) (int, error) {
 	offset := 0
 
 	if v, l, err := bthrift.Binary.ReadString(buf[offset:]); err != nil {
@@ -23412,13 +23342,13 @@ func (p *IcbcAcctSignatureSignatureResponse) FastReadField2(buf []byte) (int, er
 	} else {
 		offset += l
 
-		p.AccountName = v
+		p.ZuId = v
 
 	}
 	return offset, nil
 }
 
-func (p *IcbcAcctSignatureSignatureResponse) FastReadField3(buf []byte) (int, error) {
+func (p *IcbcBankAccountSignatureQueryResponse) FastReadField3(buf []byte) (int, error) {
 	offset := 0
 
 	if v, l, err := bthrift.Binary.ReadString(buf[offset:]); err != nil {
@@ -23426,13 +23356,13 @@ func (p *IcbcAcctSignatureSignatureResponse) FastReadField3(buf []byte) (int, er
 	} else {
 		offset += l
 
-		p.Statementflag = v
+		p.Remark = v
 
 	}
 	return offset, nil
 }
 
-func (p *IcbcAcctSignatureSignatureResponse) FastReadField4(buf []byte) (int, error) {
+func (p *IcbcBankAccountSignatureQueryResponse) FastReadField4(buf []byte) (int, error) {
 	offset := 0
 
 	if v, l, err := bthrift.Binary.ReadString(buf[offset:]); err != nil {
@@ -23440,282 +23370,112 @@ func (p *IcbcAcctSignatureSignatureResponse) FastReadField4(buf []byte) (int, er
 	} else {
 		offset += l
 
-		p.Receiptflag = v
-
-	}
-	return offset, nil
-}
-
-func (p *IcbcAcctSignatureSignatureResponse) FastReadField5(buf []byte) (int, error) {
-	offset := 0
-
-	if v, l, err := bthrift.Binary.ReadString(buf[offset:]); err != nil {
-		return offset, err
-	} else {
-		offset += l
-
-		p.Actdate = v
-
-	}
-	return offset, nil
-}
-
-func (p *IcbcAcctSignatureSignatureResponse) FastReadField6(buf []byte) (int, error) {
-	offset := 0
-
-	if v, l, err := bthrift.Binary.ReadString(buf[offset:]); err != nil {
-		return offset, err
-	} else {
-		offset += l
-
-		p.Status = v
-
-	}
-	return offset, nil
-}
-
-func (p *IcbcAcctSignatureSignatureResponse) FastReadField7(buf []byte) (int, error) {
-	offset := 0
-
-	if v, l, err := bthrift.Binary.ReadString(buf[offset:]); err != nil {
-		return offset, err
-	} else {
-		offset += l
-
-		p.Createtime = v
-
-	}
-	return offset, nil
-}
-
-func (p *IcbcAcctSignatureSignatureResponse) FastReadField8(buf []byte) (int, error) {
-	offset := 0
-
-	if v, l, err := bthrift.Binary.ReadString(buf[offset:]); err != nil {
-		return offset, err
-	} else {
-		offset += l
-
-		p.Lstmodft = v
-
-	}
-	return offset, nil
-}
-
-func (p *IcbcAcctSignatureSignatureResponse) FastReadField9(buf []byte) (int, error) {
-	offset := 0
-
-	if v, l, err := bthrift.Binary.ReadString(buf[offset:]); err != nil {
-		return offset, err
-	} else {
-		offset += l
-
-		p.Notes = v
+		p.AgreeNo = v
 
 	}
 	return offset, nil
 }
 
 // for compatibility
-func (p *IcbcAcctSignatureSignatureResponse) FastWrite(buf []byte) int {
+func (p *IcbcBankAccountSignatureQueryResponse) FastWrite(buf []byte) int {
 	return 0
 }
 
-func (p *IcbcAcctSignatureSignatureResponse) FastWriteNocopy(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+func (p *IcbcBankAccountSignatureQueryResponse) FastWriteNocopy(buf []byte, binaryWriter bthrift.BinaryWriter) int {
 	offset := 0
-	offset += bthrift.Binary.WriteStructBegin(buf[offset:], "icbcAcctSignatureSignatureResponse")
+	offset += bthrift.Binary.WriteStructBegin(buf[offset:], "IcbcBankAccountSignatureQueryResponse")
 	if p != nil {
 		offset += p.fastWriteField1(buf[offset:], binaryWriter)
 		offset += p.fastWriteField2(buf[offset:], binaryWriter)
 		offset += p.fastWriteField3(buf[offset:], binaryWriter)
 		offset += p.fastWriteField4(buf[offset:], binaryWriter)
-		offset += p.fastWriteField5(buf[offset:], binaryWriter)
-		offset += p.fastWriteField6(buf[offset:], binaryWriter)
-		offset += p.fastWriteField7(buf[offset:], binaryWriter)
-		offset += p.fastWriteField8(buf[offset:], binaryWriter)
-		offset += p.fastWriteField9(buf[offset:], binaryWriter)
 	}
 	offset += bthrift.Binary.WriteFieldStop(buf[offset:])
 	offset += bthrift.Binary.WriteStructEnd(buf[offset:])
 	return offset
 }
 
-func (p *IcbcAcctSignatureSignatureResponse) BLength() int {
+func (p *IcbcBankAccountSignatureQueryResponse) BLength() int {
 	l := 0
-	l += bthrift.Binary.StructBeginLength("icbcAcctSignatureSignatureResponse")
+	l += bthrift.Binary.StructBeginLength("IcbcBankAccountSignatureQueryResponse")
 	if p != nil {
 		l += p.field1Length()
 		l += p.field2Length()
 		l += p.field3Length()
 		l += p.field4Length()
-		l += p.field5Length()
-		l += p.field6Length()
-		l += p.field7Length()
-		l += p.field8Length()
-		l += p.field9Length()
 	}
 	l += bthrift.Binary.FieldStopLength()
 	l += bthrift.Binary.StructEndLength()
 	return l
 }
 
-func (p *IcbcAcctSignatureSignatureResponse) fastWriteField1(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+func (p *IcbcBankAccountSignatureQueryResponse) fastWriteField1(buf []byte, binaryWriter bthrift.BinaryWriter) int {
 	offset := 0
-	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "accountNo", thrift.STRING, 1)
-	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.AccountNo)
+	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "signatureapplystatus", thrift.STRING, 1)
+	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.Signatureapplystatus)
 
 	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
 	return offset
 }
 
-func (p *IcbcAcctSignatureSignatureResponse) fastWriteField2(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+func (p *IcbcBankAccountSignatureQueryResponse) fastWriteField2(buf []byte, binaryWriter bthrift.BinaryWriter) int {
 	offset := 0
-	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "accountName", thrift.STRING, 2)
-	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.AccountName)
+	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "zuId", thrift.STRING, 2)
+	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.ZuId)
 
 	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
 	return offset
 }
 
-func (p *IcbcAcctSignatureSignatureResponse) fastWriteField3(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+func (p *IcbcBankAccountSignatureQueryResponse) fastWriteField3(buf []byte, binaryWriter bthrift.BinaryWriter) int {
 	offset := 0
-	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "statementflag", thrift.STRING, 3)
-	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.Statementflag)
+	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "remark", thrift.STRING, 3)
+	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.Remark)
 
 	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
 	return offset
 }
 
-func (p *IcbcAcctSignatureSignatureResponse) fastWriteField4(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+func (p *IcbcBankAccountSignatureQueryResponse) fastWriteField4(buf []byte, binaryWriter bthrift.BinaryWriter) int {
 	offset := 0
-	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "receiptflag", thrift.STRING, 4)
-	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.Receiptflag)
+	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "agreeNo", thrift.STRING, 4)
+	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.AgreeNo)
 
 	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
 	return offset
 }
 
-func (p *IcbcAcctSignatureSignatureResponse) fastWriteField5(buf []byte, binaryWriter bthrift.BinaryWriter) int {
-	offset := 0
-	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "actdate", thrift.STRING, 5)
-	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.Actdate)
-
-	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
-	return offset
-}
-
-func (p *IcbcAcctSignatureSignatureResponse) fastWriteField6(buf []byte, binaryWriter bthrift.BinaryWriter) int {
-	offset := 0
-	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "status", thrift.STRING, 6)
-	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.Status)
-
-	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
-	return offset
-}
-
-func (p *IcbcAcctSignatureSignatureResponse) fastWriteField7(buf []byte, binaryWriter bthrift.BinaryWriter) int {
-	offset := 0
-	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "createtime", thrift.STRING, 7)
-	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.Createtime)
-
-	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
-	return offset
-}
-
-func (p *IcbcAcctSignatureSignatureResponse) fastWriteField8(buf []byte, binaryWriter bthrift.BinaryWriter) int {
-	offset := 0
-	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "lstmodft", thrift.STRING, 8)
-	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.Lstmodft)
-
-	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
-	return offset
-}
-
-func (p *IcbcAcctSignatureSignatureResponse) fastWriteField9(buf []byte, binaryWriter bthrift.BinaryWriter) int {
-	offset := 0
-	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "notes", thrift.STRING, 9)
-	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.Notes)
-
-	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
-	return offset
-}
-
-func (p *IcbcAcctSignatureSignatureResponse) field1Length() int {
+func (p *IcbcBankAccountSignatureQueryResponse) field1Length() int {
 	l := 0
-	l += bthrift.Binary.FieldBeginLength("accountNo", thrift.STRING, 1)
-	l += bthrift.Binary.StringLengthNocopy(p.AccountNo)
+	l += bthrift.Binary.FieldBeginLength("signatureapplystatus", thrift.STRING, 1)
+	l += bthrift.Binary.StringLengthNocopy(p.Signatureapplystatus)
 
 	l += bthrift.Binary.FieldEndLength()
 	return l
 }
 
-func (p *IcbcAcctSignatureSignatureResponse) field2Length() int {
+func (p *IcbcBankAccountSignatureQueryResponse) field2Length() int {
 	l := 0
-	l += bthrift.Binary.FieldBeginLength("accountName", thrift.STRING, 2)
-	l += bthrift.Binary.StringLengthNocopy(p.AccountName)
+	l += bthrift.Binary.FieldBeginLength("zuId", thrift.STRING, 2)
+	l += bthrift.Binary.StringLengthNocopy(p.ZuId)
 
 	l += bthrift.Binary.FieldEndLength()
 	return l
 }
 
-func (p *IcbcAcctSignatureSignatureResponse) field3Length() int {
+func (p *IcbcBankAccountSignatureQueryResponse) field3Length() int {
 	l := 0
-	l += bthrift.Binary.FieldBeginLength("statementflag", thrift.STRING, 3)
-	l += bthrift.Binary.StringLengthNocopy(p.Statementflag)
+	l += bthrift.Binary.FieldBeginLength("remark", thrift.STRING, 3)
+	l += bthrift.Binary.StringLengthNocopy(p.Remark)
 
 	l += bthrift.Binary.FieldEndLength()
 	return l
 }
 
-func (p *IcbcAcctSignatureSignatureResponse) field4Length() int {
+func (p *IcbcBankAccountSignatureQueryResponse) field4Length() int {
 	l := 0
-	l += bthrift.Binary.FieldBeginLength("receiptflag", thrift.STRING, 4)
-	l += bthrift.Binary.StringLengthNocopy(p.Receiptflag)
-
-	l += bthrift.Binary.FieldEndLength()
-	return l
-}
-
-func (p *IcbcAcctSignatureSignatureResponse) field5Length() int {
-	l := 0
-	l += bthrift.Binary.FieldBeginLength("actdate", thrift.STRING, 5)
-	l += bthrift.Binary.StringLengthNocopy(p.Actdate)
-
-	l += bthrift.Binary.FieldEndLength()
-	return l
-}
-
-func (p *IcbcAcctSignatureSignatureResponse) field6Length() int {
-	l := 0
-	l += bthrift.Binary.FieldBeginLength("status", thrift.STRING, 6)
-	l += bthrift.Binary.StringLengthNocopy(p.Status)
-
-	l += bthrift.Binary.FieldEndLength()
-	return l
-}
-
-func (p *IcbcAcctSignatureSignatureResponse) field7Length() int {
-	l := 0
-	l += bthrift.Binary.FieldBeginLength("createtime", thrift.STRING, 7)
-	l += bthrift.Binary.StringLengthNocopy(p.Createtime)
-
-	l += bthrift.Binary.FieldEndLength()
-	return l
-}
-
-func (p *IcbcAcctSignatureSignatureResponse) field8Length() int {
-	l := 0
-	l += bthrift.Binary.FieldBeginLength("lstmodft", thrift.STRING, 8)
-	l += bthrift.Binary.StringLengthNocopy(p.Lstmodft)
-
-	l += bthrift.Binary.FieldEndLength()
-	return l
-}
-
-func (p *IcbcAcctSignatureSignatureResponse) field9Length() int {
-	l := 0
-	l += bthrift.Binary.FieldBeginLength("notes", thrift.STRING, 9)
-	l += bthrift.Binary.StringLengthNocopy(p.Notes)
+	l += bthrift.Binary.FieldBeginLength("agreeNo", thrift.STRING, 4)
+	l += bthrift.Binary.StringLengthNocopy(p.AgreeNo)
 
 	l += bthrift.Binary.FieldEndLength()
 	return l
@@ -39680,7 +39440,7 @@ ReadStructEndError:
 func (p *BankIcbcBankAccountSignatureQueryResult) FastReadField0(buf []byte) (int, error) {
 	offset := 0
 
-	tmp := NewIcbcAcctSignatureSignatureResponse()
+	tmp := NewIcbcBankAccountSignatureQueryResponse()
 	if l, err := tmp.FastRead(buf[offset:]); err != nil {
 		return offset, err
 	} else {

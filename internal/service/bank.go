@@ -107,7 +107,7 @@ type BankService interface {
 	PinganBankAccountSignatureQuery(ctx context.Context, req *api.PinganBankAccountSignatureApplyRequest) (*api.PinganUserAcctSignatureApplyResponse, error)
 	PinganBankVirtualSubAcctBalanceAdjust(ctx context.Context, id int64, req *api.BankTransferReceiptData) (*api.BankVirtualAccountTranscationResponse, error)
 	IcbcBankAccountSignatureApply(ctx context.Context, req *api.IcbcBankAccountSignatureRequest) (string, error)
-	IcbcBankAccountSignatureQuery(ctx context.Context, req *api.IcbcBankAccountSignatureRequest) (*api.IcbcAcctSignatureSignatureResponse, error)
+	IcbcBankAccountSignatureQuery(ctx context.Context, req *api.IcbcBankAccountSignatureRequest) (*api.IcbcBankAccountSignatureQueryResponse, error)
 }
 
 type bankService struct {
@@ -136,18 +136,27 @@ func (s *bankService) IcbcBankAccountSignatureApply(ctx context.Context, req *ap
 	//生成二级合作方编号
 	msgId, _ := util.SonyflakeID()
 	accCompNo := "ICBC-" + msgId
-	apply, err := s.icbcBank.IcbcUserAcctSignatureApply(ctx, r.Account, req.Phone, req.Remark, accCompNo)
+	result, err := s.icbcBank.IcbcUserAcctSignatureApply(ctx, r.Account, req.Phone, req.Remark, accCompNo)
+	if err != nil {
+		return "", handler.HandleError(err)
+	}
 	s.baseClient.EditOrganizationBankAccount(ctx, &baseApi.OrganizationBankAccountData{
 		Id:                   req.Id,
 		SignatureApplyStatus: "",
 		ZuId:                 accCompNo,
-		Remark:               req.Remark,
+		Remark:               result.RetCode + result.RetMsg,
 		PaymentMode:          "1",
 	})
-	return apply, err
+	if result.RetCode == "9008100" {
+		//协议信息已同步至工行,请联系工行工作人员开通相关协议,二级协议编码为accCompNo
+		return accCompNo, nil
+	} else {
+		return "", handler.HandleNewError(result.RetMsg)
+	}
+
 }
 
-func (s *bankService) IcbcBankAccountSignatureQuery(ctx context.Context, req *api.IcbcBankAccountSignatureRequest) (*api.IcbcAcctSignatureSignatureResponse, error) {
+func (s *bankService) IcbcBankAccountSignatureQuery(ctx context.Context, req *api.IcbcBankAccountSignatureRequest) (*api.IcbcBankAccountSignatureQueryResponse, error) {
 	bankAccount, _ := s.baseClient.GetOrganizationBankAccount(ctx, &baseApi.OrganizationBankAccountData{Id: req.Id})
 	query, err := s.icbcBank.IcbcUserAcctSignatureQuery(ctx, req.Account, bankAccount.ZuId)
 	if err != nil {
@@ -177,16 +186,11 @@ func (s *bankService) IcbcBankAccountSignatureQuery(ctx context.Context, req *ap
 		SignatureApplyStatus: status,
 		AgreeNo:              aggreNo,
 	})
-	return &api.IcbcAcctSignatureSignatureResponse{
-		AccountNo:     query.CorpNo,
-		AccountName:   "",
-		Statementflag: "",
-		Receiptflag:   "",
-		Actdate:       "",
-		Status:        "",
-		Createtime:    "",
-		Lstmodft:      "",
-		Notes:         "",
+	return &api.IcbcBankAccountSignatureQueryResponse{
+		Signatureapplystatus: status,
+		ZuId:                 bankAccount.ZuId,
+		Remark:               bankAccount.Remark,
+		AgreeNo:              aggreNo,
 	}, nil
 }
 

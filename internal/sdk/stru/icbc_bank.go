@@ -223,7 +223,7 @@ type AccListItem struct {
 	StatementFlag string `json:"statementFlag"` // 开通账务明细查询标示，0：关；1：开
 }
 
-type IcbcSignResponse struct {
+type IcbcSignConfirmResponse struct {
 	RetCode string `json:"retcode"` // 返回状态码。9008100-处理成功 9008101-处理失败 9008200-参数错误
 	RetMsg  string `json:"retmsg"`  // 返回信息
 	Data    string `json:"data"`    // 返回数据
@@ -365,4 +365,20 @@ type Agreement struct {
 	Remark          string        `json:"remark"`          // 备注
 	LstModft        string        `json:"lstmodft"`        // 最后修改时间
 	AccountInfoList []interface{} `json:"accountinfolist"` // 账户信息列表
+}
+
+//https://gw.open.icbc.com.cn/api/mybank/account/accountdetailservice/adsagrconfirmsyn/V1
+
+type IcbcSignConfirmRequest struct {
+	AppID       string             `json:"APPID"`  // APP的编号,应用在API开放平台注册时生成
+	CorpNo      string             `json:"CORPNO"` // 一级合作方编号
+	CoMode      string             `json:"COMODE"` // 合作模式，1：代理记账；2：自主记账
+	ConfirmList []*ConfirmListItem `json:"LIST"`   // 下挂账号列表
+}
+
+type ConfirmListItem struct {
+	AccCompNo string `json:"ACCCOMPNO"` // 二级合作方编号
+	AcCount   string `json:"ACCOUNT"`   // 主申请账户
+	CurrType  string `json:"CURRTYPE"`  // 主申请账户币种
+	CHANNEL   string `json:"CHANNEL"`   // 申请渠道 2:api
 }

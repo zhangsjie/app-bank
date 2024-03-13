@@ -2,11 +2,13 @@ package sdk
 
 import (
 	"context"
+	"fmt"
 	"github.com/pkg/errors"
 	"gitlab.yoyiit.com/youyi/app-bank/internal/enum"
 	"gitlab.yoyiit.com/youyi/app-bank/internal/sdk/stru"
 	"gitlab.yoyiit.com/youyi/go-core/config"
 	"gitlab.yoyiit.com/youyi/go-core/util"
+	"go.uber.org/zap"
 	"strconv"
 	"time"
 )
@@ -14,7 +16,7 @@ import (
 type IcbcBankSDK interface {
 	QueryAgreeNo(ctx context.Context, zuId, account string) (string, error)
 	ListTransactionDetail(ctx context.Context, account string, beginDate string, endDate string, accCompNo string) ([]stru.IcbcAccDetailItem, error)
-	IcbcUserAcctSignatureApply(ctx context.Context, accountNo string, phone string, remark string, accCompNo string) (string, error)
+	IcbcUserAcctSignatureApply(ctx context.Context, accountNo string, phone string, remark string, accCompNo string) (*stru.IcbcSignConfirmResponse, error)
 	IcbcUserAcctSignatureQuery(ctx context.Context, accountNo string, accCompNo string) (*stru.IcbcSignatureQueryResponse, error)
 }
 
@@ -74,8 +76,10 @@ func (i *icbcBankSDK) IcbcUserAcctSignatureQuery(ctx context.Context, accountNo 
 	return &result, nil
 }
 
-func (i *icbcBankSDK) IcbcUserAcctSignatureApply(ctx context.Context, accountNo string, phone string, remark string, accCompNo string) (string, error) {
-
+func (i *icbcBankSDK) IcbcUserAcctSignatureApply(ctx context.Context, accountNo string, phone string, remark string, accCompNo string) (*stru.IcbcSignConfirmResponse, error) {
+	appId := config.GetString(enum.IcbcAppId, "")
+	corpNo := config.GetString(enum.IcbcCorpNo, "")
+	coMode := "1"
 	request := stru.NewIcbcGlobalRequest()
 	acclist := make([]*stru.AccListItem, 0)
 	acclist = append(acclist, &stru.AccListItem{
@@ -88,11 +92,11 @@ func (i *icbcBankSDK) IcbcUserAcctSignatureApply(ctx context.Context, accountNo 
 		StatementFlag: "1",
 	})
 	request.BizContent = &stru.IcbcSignRequest{
-		AppID:      config.GetString(enum.IcbcAppId, ""),
+		AppID:      appId,
 		ApiName:    "ADSSIGN",
 		ApiVersion: "001.001.001.001",
-		CorpNo:     config.GetString(enum.IcbcCorpNo, ""),
-		CoMode:     "1",
+		CorpNo:     corpNo,
+		CoMode:     coMode,
 		AccCompNo:  accCompNo,
 		Account:    accountNo,
 		CurrType:   "1",
@@ -110,7 +114,29 @@ func (i *icbcBankSDK) IcbcUserAcctSignatureApply(ctx context.Context, accountNo 
 		PayLimit:   "",
 	}
 	resu := stru.ICBCPostHttpUIResult(*request)
-	return resu, nil
+	zap.L().Info(fmt.Sprintf("==ICBCPostHttpUIResult%v", resu))
+	//申请签约之后把待确认信息同步到工行,
+	confirmRequest := stru.NewIcbcGlobalRequest()
+	confirmList := make([]*stru.ConfirmListItem, 0)
+	confirmList = append(confirmList, &stru.ConfirmListItem{
+		AccCompNo: accCompNo,
+		AcCount:   accountNo,
+		CurrType:  "1",
+		CHANNEL:   "2",
+	})
+	confirmRequest.BizContent = &stru.IcbcSignConfirmRequest{
+		AppID:       appId,
+		CorpNo:      corpNo,
+		CoMode:      coMode,
+		ConfirmList: confirmList,
+	}
+	confirmResu := stru.IcbcSignConfirmResponse{}
+	err := stru.ICBCPostHttpResult(enum.IcbcAdsAgrConfirmSynURL, *confirmRequest, &confirmResu)
+	if err != nil {
+		return nil, err
+	}
+
+	return &confirmResu, nil
 }
 
 func (i *icbcBankSDK) ListTransactionDetail(ctx context.Context, account string, beginDate string, endDate string, accCompNo string) ([]stru.IcbcAccDetailItem, error) {

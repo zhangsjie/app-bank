@@ -603,19 +603,15 @@ service bank {
     void systemRefusePaymentReceipt(1: i64 id)
     void systemApprovePaymentReceipt(1: i64 id)
     string icbcBankAccountSignatureApply(1:icbcBankAccountSignatureRequest req)
+    IcbcBankAccountSignatureQueryResponse icbcBankAccountSignatureQuery(1:icbcBankAccountSignatureRequest req)
+}
+struct IcbcBankAccountSignatureQueryResponse {
+1:string signatureapplystatus
+2:string zuId
+3:string remark
+4:string agreeNo
 }
 
-struct icbcAcctSignatureSignatureResponse {
-1:string accountNo
-2:string accountName
-3:string statementflag
-4:string receiptflag
-5:string actdate
-6:string status
-7:string createtime
-8:string lstmodft
-9:string notes
-}
 struct icbcAcctSignatureResponse {
 1:string retCode
 2:string retMsg

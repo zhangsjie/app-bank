@@ -1827,7 +1827,7 @@ func (p *kClient) IcbcBankAccountSignatureApply(ctx context.Context, req *api.Ic
 	return _result.GetSuccess(), nil
 }
 
-func (p *kClient) IcbcBankAccountSignatureQuery(ctx context.Context, req *api.IcbcBankAccountSignatureRequest) (r *api.IcbcAcctSignatureSignatureResponse, err error) {
+func (p *kClient) IcbcBankAccountSignatureQuery(ctx context.Context, req *api.IcbcBankAccountSignatureRequest) (r *api.IcbcBankAccountSignatureQueryResponse, err error) {
 	var _args api.BankIcbcBankAccountSignatureQueryArgs
 	_args.Req = req
 	var _result api.BankIcbcBankAccountSignatureQueryResult
