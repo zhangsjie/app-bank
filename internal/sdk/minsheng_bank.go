@@ -11,18 +11,18 @@ import (
 
 // 民生银行接口对接
 type MinShengSDK interface {
-	BankTransfer(ctx context.Context, req stru.MinShengTransferRequest) (*stru.MinShengBankTransferResponse, error)
-	QueryTransferResult(ctx context.Context, acctNo, orgReqSeq string) (*stru.MinShengSingleTransferQueryResponse, error)
-	ListTransactionDetail(ctx context.Context, accountNo, beginDate, endDate string, startIndex, endIndex int64) (stru.MinShengSingleTransferDetailResponse, error)
-	GetTransactionDetailElectronicReceipt(ctx context.Context, orderFlowNo string) ([]byte, error)
-	AuthRequest(ctx context.Context, entCifno, acctNo string) (*stru.MinShengAuthResponse, error)
-	QueryAuthStatus(ctx context.Context, srcReqSeq string) (*stru.MinShengAuthStatusResponse, error)
+	BankTransfer(ctx context.Context, req stru.MinShengTransferRequest) (map[string]interface{}, error)
+	QueryTransferResult(ctx context.Context, acctNo, orgReqSeq string) (map[string]interface{}, error)
+	ListTransactionDetail(ctx context.Context, accountNo, beginDate, endDate string, startIndex, endIndex int64) (map[string]interface{}, error)
+	GetTransactionDetailElectronicReceipt(ctx context.Context, acctNo, transSeqNo, enterAcctDate string) (map[string]interface{}, error)
+	AuthRequest(ctx context.Context, entCifno, acctNo, reqSeq string) (map[string]interface{}, error)
+	QueryAuthStatus(ctx context.Context, srcReqSeq, reqSeq string) (map[string]interface{}, error)
 	//ReNewAuthRequest(ctx context.Context, openId, authCode string)
 }
 
 type minShengSDK struct{}
 
-func (s *minShengSDK) BankTransfer(ctx context.Context, req stru.MinShengTransferRequest) (*stru.MinShengBankTransferResponse, error) {
+func (s *minShengSDK) BankTransfer(ctx context.Context, req stru.MinShengTransferRequest) (map[string]interface{}, error) {
 	id, sfErr := util.SonyflakeID()
 	if sfErr != nil {
 		return nil, handler.HandleError(sfErr)
@@ -46,14 +46,10 @@ func (s *minShengSDK) BankTransfer(ctx context.Context, req stru.MinShengTransfe
 	if err != nil {
 		return nil, err
 	}
-	minShengResponse, _ := response.(stru.MinShengResponse)
-	result, _ := minShengResponse.ResponseBusi.(stru.MinShengBankTransferResponse)
-	result.ReturnCode = minShengResponse.ReturnCode
-	result.ReturnMsg = minShengResponse.ReturnMsg
-	return &result, nil
+	return response, nil
 }
 
-func (s *minShengSDK) QueryTransferResult(ctx context.Context, acctNo, orgReqSeq string) (*stru.MinShengSingleTransferQueryResponse, error) {
+func (s *minShengSDK) QueryTransferResult(ctx context.Context, acctNo, orgReqSeq string) (map[string]interface{}, error) {
 	id, sfErr := util.SonyflakeID()
 	if sfErr != nil {
 		return nil, handler.HandleError(sfErr)
@@ -71,14 +67,10 @@ func (s *minShengSDK) QueryTransferResult(ctx context.Context, acctNo, orgReqSeq
 	if err != nil {
 		return nil, err
 	}
-	minShengResponse, _ := response.(stru.MinShengResponse)
-	result, _ := minShengResponse.ResponseBusi.(stru.MinShengSingleTransferQueryResponse)
-	result.ReturnCode = minShengResponse.ReturnCode
-	result.ReturnMsg = minShengResponse.ReturnMsg
-	return &result, nil
+	return response, nil
 }
 
-func (s *minShengSDK) ListTransactionDetail(ctx context.Context, accountNo, beginDate, endDate string, startIndex, endIndex int64) (*stru.MinShengSingleTransferDetailResponse, error) {
+func (s *minShengSDK) ListTransactionDetail(ctx context.Context, accountNo, beginDate, endDate string, startIndex, endIndex int64) (map[string]interface{}, error) {
 	id, sfErr := util.SonyflakeID()
 	if sfErr != nil {
 		return nil, handler.HandleError(sfErr)
@@ -100,14 +92,10 @@ func (s *minShengSDK) ListTransactionDetail(ctx context.Context, accountNo, begi
 	if err != nil {
 		return nil, err
 	}
-	minShengResponse, _ := response.(stru.MinShengResponse)
-	result, _ := minShengResponse.ResponseBusi.(stru.MinShengSingleTransferDetailResponse)
-	result.ReturnCode = minShengResponse.ReturnCode
-	result.ReturnMsg = minShengResponse.ReturnMsg
-	return &result, nil
+	return response, nil
 }
 
-func (s *minShengSDK) GetTransactionDetailElectronicReceipt(ctx context.Context, acctNo, transSeqNo, enterAcctDate string) (*stru.MinShengElectronicReceiptResponse, error) {
+func (s *minShengSDK) GetTransactionDetailElectronicReceipt(ctx context.Context, acctNo, transSeqNo, enterAcctDate string) (map[string]interface{}, error) {
 	id, sfErr := util.SonyflakeID()
 	if sfErr != nil {
 		return nil, handler.HandleError(sfErr)
@@ -128,21 +116,13 @@ func (s *minShengSDK) GetTransactionDetailElectronicReceipt(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
-	minShengResponse, _ := response.(stru.MinShengResponse)
-	result, _ := minShengResponse.ResponseBusi.(stru.MinShengElectronicReceiptResponse)
-	result.ReturnCode = minShengResponse.ReturnCode
-	result.ReturnMsg = minShengResponse.ReturnMsg
-	return &result, nil
+	return response, nil
 }
 
-func (s *minShengSDK) AuthRequest(ctx context.Context, entCifno, acctNo string) (*stru.MinShengAuthResponse, error) {
-	id, sfErr := util.SonyflakeID()
-	if sfErr != nil {
-		return nil, handler.HandleError(sfErr)
-	}
+func (s *minShengSDK) AuthRequest(ctx context.Context, entCifno, acctNo, reqSeq string) (map[string]interface{}, error) {
 	// 业务参数
 	busiParamMap := make(map[string]interface{})
-	busiParamMap["req_seq"] = id
+	busiParamMap["req_seq"] = reqSeq
 	busiParamMap["auth_type"] = "1"      // 1-企业自主授权
 	busiParamMap["acct_no"] = acctNo     // 授权账号
 	busiParamMap["ent_cifno"] = entCifno // 企业识别码
@@ -155,21 +135,13 @@ func (s *minShengSDK) AuthRequest(ctx context.Context, entCifno, acctNo string) 
 	if err != nil {
 		return nil, err
 	}
-	minShengResponse, _ := response.(stru.MinShengResponse)
-	result, _ := minShengResponse.ResponseBusi.(stru.MinShengAuthResponse)
-	result.ReturnCode = minShengResponse.ReturnCode
-	result.ReturnMsg = minShengResponse.ReturnMsg
-	return &result, nil
+	return response, nil
 }
 
-func (s *minShengSDK) QueryAuthStatus(ctx context.Context, srcReqSeq string) (*stru.MinShengAuthStatusResponse, error) {
-	id, sfErr := util.SonyflakeID()
-	if sfErr != nil {
-		return nil, handler.HandleError(sfErr)
-	}
+func (s *minShengSDK) QueryAuthStatus(ctx context.Context, srcReqSeq, reqSeq string) (map[string]interface{}, error) {
 	// 业务参数
 	busiParamMap := make(map[string]interface{})
-	busiParamMap["req_seq"] = id
+	busiParamMap["req_seq"] = reqSeq
 	busiParamMap["src_req_seq"] = srcReqSeq // 原请求流水号
 	//busiParamMap["file_type"] = "PDF" // 默认就是PDF
 	// 请求民生接口方法名
@@ -180,16 +152,12 @@ func (s *minShengSDK) QueryAuthStatus(ctx context.Context, srcReqSeq string) (*s
 	if err != nil {
 		return nil, err
 	}
-	minShengResponse, _ := response.(stru.MinShengResponse)
-	result, _ := minShengResponse.ResponseBusi.(stru.MinShengAuthStatusResponse)
-	result.ReturnCode = minShengResponse.ReturnCode
-	result.ReturnMsg = minShengResponse.ReturnMsg
-	return &result, nil
+	return response, nil
 }
 
-func (s *minShengSDK) invokeMinSheng(ctx context.Context, method, version string, busiParamMap map[string]interface{}) (interface{}, error) {
-	var result interface{}
-	host := "http://localhpst:8888/bank-web/cmbc/request"
+func (s *minShengSDK) invokeMinSheng(ctx context.Context, method, version string, busiParamMap map[string]interface{}) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	host := "http://localhost:8888/bank-web/cmbc/request"
 	zap.L().Info(fmt.Sprintf("调用民生接口请求，方法名：%s,版本：%s,参数：%+v", method, version, busiParamMap))
 	requestParamMap := make(map[string]interface{})
 	// 民生接口名称

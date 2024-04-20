@@ -108,6 +108,8 @@ type BankService interface {
 	PinganBankVirtualSubAcctBalanceAdjust(ctx context.Context, id int64, req *api.BankTransferReceiptData) (*api.BankVirtualAccountTranscationResponse, error)
 	IcbcBankAccountSignatureApply(ctx context.Context, req *api.IcbcBankAccountSignatureRequest) (string, error)
 	IcbcBankAccountSignatureQuery(ctx context.Context, req *api.IcbcBankAccountSignatureRequest) (*api.IcbcBankAccountSignatureQueryResponse, error)
+	MinShengBankAccountSignatureApply(ctx context.Context, req *api.MinShengBankAccountSignatureRequest) (string, error)
+	MinShengBankAccountSignatureQuery(ctx context.Context, req *api.MinShengBankAccountSignatureRequest) (*api.MinShengBankAccountSignatureQueryResponse, error)
 }
 
 type bankService struct {
@@ -129,6 +131,7 @@ type bankService struct {
 	pdfToImageService                        PdfToImageService
 	financeClient                            finance.Client
 	icbcBank                                 sdk.IcbcBankSDK
+	minShengBank                             sdk.MinShengSDK
 }
 
 func (s *bankService) IcbcBankAccountSignatureApply(ctx context.Context, req *api.IcbcBankAccountSignatureRequest) (string, error) {
@@ -3803,4 +3806,96 @@ func (s *bankService) PinganBankVirtualSubAcctBalanceAdjust(ctx context.Context,
 		Status:            orderState,
 		Msg:               "",
 	}, nil
+}
+
+func (s *bankService) MinShengBankAccountSignatureApply(ctx context.Context, req *api.MinShengBankAccountSignatureRequest) (string, error) {
+	if req.Id == 0 {
+		return "", handler.HandleNewError("id不能为空")
+	}
+	account, err := s.baseClient.GetOrganizationBankAccount(ctx, &baseApi.OrganizationBankAccountData{Id: req.Id})
+	if err != nil {
+		return "", handler.HandleError(err)
+	}
+	if account == nil || account.Id == 0 {
+		return "", handler.HandleNewError("账号不存在")
+	}
+	// 查询组织账号基础配置
+	config, err := s.baseClient.GetOrganizationBankConfig(ctx, &baseApi.OrganizationBankConfigData{
+		OrganizationId: req.OrganizationId,
+		Type:           "3", // 民生银行配置
+	})
+	if err != nil {
+		return "", handler.HandleError(err)
+	}
+	if config == nil || config.Id == 0 || config.EnterpriseIdentificationCode == "" {
+		return "", handler.HandleNewError("银行配置不存在，获取不到对应的企业识别码")
+	}
+	//生成请求流水号
+	msgId, _ := util.SonyflakeID()
+	result, err := s.minShengBank.AuthRequest(ctx, config.EnterpriseIdentificationCode, account.Account, msgId)
+	if err != nil {
+		return "", handler.HandleError(err)
+	}
+	if result["return_code"] == "0000" {
+		err = s.baseClient.EditOrganizationBankAccount(ctx, &baseApi.OrganizationBankAccountData{
+			Id:                   req.Id,
+			SignatureApplyStatus: "1", // 受理成功
+			ZuId:                 msgId,
+			Remark:               result["return_code"].(string) + result["return_msg"].(string),
+			//PaymentMode:          "1",
+		})
+		if err != nil {
+			return "", handler.HandleError(err)
+		}
+	} else {
+		return "", handler.HandleNewError("授权失败：" + result["return_msg"].(string))
+	}
+	return "", nil
+}
+
+func (s *bankService) MinShengBankAccountSignatureQuery(ctx context.Context, req *api.MinShengBankAccountSignatureRequest) (*api.MinShengBankAccountSignatureQueryResponse, error) {
+	bankAccount, _ := s.baseClient.GetOrganizationBankAccount(ctx, &baseApi.OrganizationBankAccountData{Id: req.Id})
+	if bankAccount == nil || bankAccount.Id == 0 {
+		return nil, handler.HandleNewError("账户不存在")
+	}
+	if bankAccount.SignatureApplyStatus == "0" { // 授权成功
+		return &api.MinShengBankAccountSignatureQueryResponse{
+			Signatureapplystatus: bankAccount.SignatureApplyStatus,
+			StartTime:            bankAccount.StartTime,
+			EndTime:              bankAccount.EndTime,
+		}, nil
+	}
+	//生成请求流水号
+	msgId, _ := util.SonyflakeID()
+	response, err := s.minShengBank.QueryAuthStatus(ctx, bankAccount.ZuId, msgId)
+	if err != nil {
+		return nil, handler.HandleError(err)
+	}
+	if response["return_code"].(string) == "0000" { // 请求成功
+		responseBusi := response["response_busi"].(string)
+		var busiMap map[string]string
+		err = json.Unmarshal([]byte(responseBusi), &busiMap)
+		if err != nil {
+			return nil, handler.HandleError(err)
+		}
+		if busiMap["status"] == "1" { // 授权成功
+			err = s.baseClient.EditOrganizationBankAccount(ctx, &baseApi.OrganizationBankAccountData{
+				Id:                   req.Id,
+				SignatureApplyStatus: "0", //授权成功
+				OpenId:               busiMap["open_id"],
+				StartTime:            busiMap["start_time"],
+				EndTime:              busiMap["end_time"],
+			})
+			if err != nil {
+				return nil, handler.HandleError(err)
+			}
+		}
+		return &api.MinShengBankAccountSignatureQueryResponse{
+			Signatureapplystatus: busiMap["status"],
+			StartTime:            busiMap["start_time"],
+			EndTime:              busiMap["end_time"],
+		}, nil
+	} else {
+		return nil, handler.HandleNewError("请求失败：" + response["return_msg"].(string))
+	}
 }

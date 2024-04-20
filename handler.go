@@ -323,3 +323,15 @@ func (s *BankImpl) IcbcBankAccountSignatureQuery(ctx context.Context, req *api.I
 func (s *BankImpl) IcbcBankAccountSignatureApply(ctx context.Context, req *api.IcbcBankAccountSignatureRequest) (resp string, err error) {
 	return s.bankService.IcbcBankAccountSignatureApply(ctx, req)
 }
+
+// MinShengBankAccountSignatureApply implements the BankImpl interface.
+func (s *BankImpl) MinShengBankAccountSignatureApply(ctx context.Context, req *api.MinShengBankAccountSignatureRequest) (resp string, err error) {
+	// TODO: Your code here...
+	return s.bankService.MinShengBankAccountSignatureApply(ctx, req)
+}
+
+// MinShengBankAccountSignatureQuery implements the BankImpl interface.
+func (s *BankImpl) MinShengBankAccountSignatureQuery(ctx context.Context, req *api.MinShengBankAccountSignatureRequest) (resp *api.MinShengBankAccountSignatureQueryResponse, err error) {
+	// TODO: Your code here...
+	return s.bankService.MinShengBankAccountSignatureQuery(ctx, req)
+}

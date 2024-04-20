@@ -604,6 +604,8 @@ service bank {
     void systemApprovePaymentReceipt(1: i64 id)
     string icbcBankAccountSignatureApply(1:icbcBankAccountSignatureRequest req)
     IcbcBankAccountSignatureQueryResponse icbcBankAccountSignatureQuery(1:icbcBankAccountSignatureRequest req)
+    string MinShengBankAccountSignatureApply(1: minShengBankAccountSignatureRequest req)
+    MinShengBankAccountSignatureQueryResponse MinShengBankAccountSignatureQuery(1:minShengBankAccountSignatureRequest req)
 }
 struct IcbcBankAccountSignatureQueryResponse {
 1:string signatureapplystatus
@@ -625,4 +627,19 @@ struct icbcBankAccountSignatureRequest {
 5: string accountName
 6: string phone
 7:string remark
+}
+
+struct minShengBankAccountSignatureRequest {
+1: i64 id
+2: i64 organizationId
+3: string type
+4: string account
+5: string accountName
+}
+
+struct MinShengBankAccountSignatureQueryResponse {
+1:string signatureapplystatus
+2:string zuId
+3:string startTime
+4:string endTime
 }
