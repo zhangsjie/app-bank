@@ -5,15 +5,17 @@ type MinShengBaseResponse struct {
 	ReturnMsg  string `json:"return_msg"`
 }
 type MinShengTransferRequest struct {
-	ReqSeq    string `json:"reqSeq"`    // 请求流水号
-	AcctNo    string `json:"acctNo"`    // 账号
-	PayType   string `json:"payType"`   // 支付方式 1直接支付，2 附条件支付 暂时支持1
-	IsCross   string `json:"isCross"`   // 0-他行 1-本行
-	Currency  string `json:"currency"`  // 仅仅支持人民币 CNY
-	TransAmt  string `json:"transAmt"`  // 转账金额
-	BankRoute string `json:"bankRoute"` // 汇路
-	BankCode  string `json:"BankCode"`  //开户行号
-	BankName  string `json:"BankName"`  // 开户行名
+	ReqSeq    string  `json:"reqSeq"`    // 请求流水号
+	AcctNo    string  `json:"acctNo"`    // 账号
+	PayType   string  `json:"payType"`   // 支付方式 1直接支付，2 附条件支付 暂时支持1
+	IsCross   string  `json:"isCross"`   // 0-他行 1-本行
+	Currency  string  `json:"currency"`  // 仅仅支持人民币 CNY
+	TransAmt  float64 `json:"transAmt"`  // 转账金额
+	BankRoute string  `json:"bankRoute"` // 汇路
+	BankCode  string  `json:"BankCode"`  //开户行号
+	BankName  string  `json:"BankName"`  // 开户行名
+	OpenId    string  `json:"openId"`    // 授权码
+	Usage     string  `json:"usage"`     // 用途
 }
 
 type MinShengBankTransferResponse struct {

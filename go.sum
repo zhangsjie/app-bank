@@ -667,8 +667,6 @@ gitlab.yoyiit.com/youyi/app-oa v0.0.0-20240131092823-402146d9c44a h1:1btflzVteD7
 gitlab.yoyiit.com/youyi/app-oa v0.0.0-20240131092823-402146d9c44a/go.mod h1:83qSENXoZMhIB+4FFxfUO7UX+CEWeLMSwV3dcPdQIKg=
 gitlab.yoyiit.com/youyi/app-soms v0.0.0-20230725111904-77cace21e85e h1:2RdgqjKS2+HBnpu4rumHzw4QlT8Q5+fox88YhTIdTOs=
 gitlab.yoyiit.com/youyi/app-soms v0.0.0-20230725111904-77cace21e85e/go.mod h1:HrnIhdAyq2ZWXl+YEoft1E7tWe8gnNxioG+G/a0N284=
-gitlab.yoyiit.com/youyi/go-common v0.0.0-20240322051648-cad07e9b5d90 h1:VaeuWnNcSc/HtNl5xztEj2ztom8euYO8XQUS+jpWRT8=
-gitlab.yoyiit.com/youyi/go-common v0.0.0-20240322051648-cad07e9b5d90/go.mod h1:zyEgqlhTnfPXc13MhWOt8G7UC3Tzaf2gggvkuOUpQDs=
 gitlab.yoyiit.com/youyi/go-core v0.0.0-20240331114826-aa31f4bc2da3 h1:EtZXFlQbsYsb5PPukQGc0xTlJfyvOs20XNra4t33wcI=
 gitlab.yoyiit.com/youyi/go-core v0.0.0-20240331114826-aa31f4bc2da3/go.mod h1:MQNiFThQfqHDEXxkpc2fZIUgHkV1qizy135NpNBsfWc=
 go.etcd.io/bbolt v1.3.2/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=

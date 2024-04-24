@@ -56,7 +56,7 @@ func initServer() (server.Server, error) {
 	paymentReceiptSubProcess := sub_process.NewPaymentReceiptSubProcess(paymentReceiptRepo, oaClient, client, paymentReceiptApplicationCustomFieldRepo, invoiceClient)
 	processAuthRepo := process.NewProcessAuthRepo(db)
 	somsClient := rpc_soms.NewSomsClient()
-	paymentReceiptService := service.NewPaymentReceiptService(paymentReceiptSubProcess, client, paymentReceiptRepo, bankCodeRepo, guilinBankSDK, spdBankSDK, pinganBankSDK, oaClient, dingtalkClient, processAuthRepo, somsClient, paymentReceiptApplicationCustomFieldRepo, invoiceClient)
+	paymentReceiptService := service.NewPaymentReceiptService(paymentReceiptSubProcess, client, paymentReceiptRepo, bankCodeRepo, guilinBankSDK, spdBankSDK, pinganBankSDK, oaClient, dingtalkClient, processAuthRepo, somsClient, paymentReceiptApplicationCustomFieldRepo, invoiceClient, minShengSDK)
 	bank := newBankImpl(bankService, paymentReceiptService)
 	serverServer := newServer(bank)
 	return serverServer, nil

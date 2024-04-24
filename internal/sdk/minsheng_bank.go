@@ -23,17 +23,13 @@ type MinShengSDK interface {
 type minShengSDK struct{}
 
 func (s *minShengSDK) BankTransfer(ctx context.Context, req stru.MinShengTransferRequest) (map[string]interface{}, error) {
-	id, sfErr := util.SonyflakeID()
-	if sfErr != nil {
-		return nil, handler.HandleError(sfErr)
-	}
 	// 业务参数
 	busiParamMap := make(map[string]interface{})
-	busiParamMap["req_seq"] = id
+	busiParamMap["req_seq"] = req.ReqSeq
 	busiParamMap["acct_no"] = req.AcctNo
-	busiParamMap["pay_type"] = "1" // 直接支付
+	busiParamMap["pay_type"] = req.PayType // 直接支付
 	busiParamMap["is_cross"] = req.IsCross
-	busiParamMap["currency"] = "CNY"
+	busiParamMap["currency"] = req.Currency
 	busiParamMap["trans_amt"] = req.TransAmt
 	busiParamMap["bank_route"] = req.BankRoute
 	busiParamMap["bank_code"] = req.BankCode // 开户行号
