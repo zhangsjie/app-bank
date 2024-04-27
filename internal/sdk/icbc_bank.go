@@ -16,7 +16,8 @@ import (
 type IcbcBankSDK interface {
 	QueryAgreeNo(ctx context.Context, zuId, account string) (string, error)
 	ListTransactionDetail(ctx context.Context, account string, beginDate string, endDate string, accCompNo string) ([]stru.IcbcAccDetailItem, error)
-	IcbcUserAcctSignatureApply(ctx context.Context, accountNo string, phone string, remark string, accCompNo string) (*stru.IcbcSignConfirmResponse, error)
+	IcbcUserAcctSignatureApply(ctx context.Context, accountNo string, phone string, remark string, accCompNo string) (string, error)
+	IcbcUserAcctSignatureAgreePush(ctx context.Context, accountNo string, phone string, remark string, accCompNo string) (*stru.IcbcSignConfirmResponse, error)
 	IcbcUserAcctSignatureQuery(ctx context.Context, accountNo string, accCompNo string) (*stru.IcbcSignatureQueryResponse, error)
 }
 
@@ -76,7 +77,7 @@ func (i *icbcBankSDK) IcbcUserAcctSignatureQuery(ctx context.Context, accountNo 
 	return &result, nil
 }
 
-func (i *icbcBankSDK) IcbcUserAcctSignatureApply(ctx context.Context, accountNo string, phone string, remark string, accCompNo string) (*stru.IcbcSignConfirmResponse, error) {
+func (i *icbcBankSDK) IcbcUserAcctSignatureApply(ctx context.Context, accountNo string, phone string, remark string, accCompNo string) (string, error) {
 	appId := config.GetString(enum.IcbcAppId, "")
 	corpNo := config.GetString(enum.IcbcCorpNo, "")
 	coMode := "1"
@@ -115,6 +116,13 @@ func (i *icbcBankSDK) IcbcUserAcctSignatureApply(ctx context.Context, accountNo 
 	}
 	resu := stru.ICBCPostHttpUIResult(*request)
 	zap.L().Info(fmt.Sprintf("==ICBCPostHttpUIResult%v", resu))
+
+	return resu, nil
+}
+func (i *icbcBankSDK) IcbcUserAcctSignatureAgreePush(ctx context.Context, accountNo string, phone string, remark string, accCompNo string) (*stru.IcbcSignConfirmResponse, error) {
+	appId := config.GetString(enum.IcbcAppId, "")
+	corpNo := config.GetString(enum.IcbcCorpNo, "")
+	coMode := "1"
 	//申请签约之后把待确认信息同步到工行,
 	confirmRequest := stru.NewIcbcGlobalRequest()
 	confirmList := make([]*stru.ConfirmListItem, 0)

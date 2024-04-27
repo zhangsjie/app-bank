@@ -144,16 +144,16 @@ func (s *bankService) IcbcBankAccountSignatureApply(ctx context.Context, req *ap
 		Id:                   req.Id,
 		SignatureApplyStatus: "",
 		ZuId:                 accCompNo,
-		Remark:               result.RetCode + result.RetMsg,
+		Remark:               req.Remark,
 		PaymentMode:          "1",
 	})
-	if result.RetCode == "9008100" {
+	/*if result.RetCode == "9008100" {
 		//协议信息已同步至工行,请联系工行工作人员开通相关协议,二级协议编码为accCompNo
 		return accCompNo, nil
 	} else {
 		return "", handler.HandleNewError(result.RetMsg)
-	}
-
+	}*/
+	return result, err
 }
 
 func (s *bankService) IcbcBankAccountSignatureQuery(ctx context.Context, req *api.IcbcBankAccountSignatureRequest) (*api.IcbcBankAccountSignatureQueryResponse, error) {
