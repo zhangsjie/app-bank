@@ -80,6 +80,7 @@ func NewServiceInfo() *kitex.ServiceInfo {
 		"systemApprovePaymentReceipt":                kitex.NewMethodInfo(systemApprovePaymentReceiptHandler, newBankSystemApprovePaymentReceiptArgs, newBankSystemApprovePaymentReceiptResult, false),
 		"icbcBankAccountSignatureApply":              kitex.NewMethodInfo(icbcBankAccountSignatureApplyHandler, newBankIcbcBankAccountSignatureApplyArgs, newBankIcbcBankAccountSignatureApplyResult, false),
 		"icbcBankAccountSignatureQuery":              kitex.NewMethodInfo(icbcBankAccountSignatureQueryHandler, newBankIcbcBankAccountSignatureQueryArgs, newBankIcbcBankAccountSignatureQueryResult, false),
+		"icbcBankListTransactionDetail":              kitex.NewMethodInfo(icbcBankListTransactionDetailHandler, newBankIcbcBankListTransactionDetailArgs, newBankIcbcBankListTransactionDetailResult, false),
 	}
 	extra := map[string]interface{}{
 		"PackageName":     "api",
@@ -1193,6 +1194,24 @@ func newBankIcbcBankAccountSignatureQueryResult() interface{} {
 	return api.NewBankIcbcBankAccountSignatureQueryResult()
 }
 
+func icbcBankListTransactionDetailHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	realArg := arg.(*api.BankIcbcBankListTransactionDetailArgs)
+
+	err := handler.(api.Bank).IcbcBankListTransactionDetail(ctx, realArg.BeginDate, realArg.EndDate, realArg.OrganizationId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+func newBankIcbcBankListTransactionDetailArgs() interface{} {
+	return api.NewBankIcbcBankListTransactionDetailArgs()
+}
+
+func newBankIcbcBankListTransactionDetailResult() interface{} {
+	return api.NewBankIcbcBankListTransactionDetailResult()
+}
+
 type kClient struct {
 	c client.Client
 }
@@ -1835,4 +1854,16 @@ func (p *kClient) IcbcBankAccountSignatureQuery(ctx context.Context, req *api.Ic
 		return
 	}
 	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) IcbcBankListTransactionDetail(ctx context.Context, beginDate string, endDate string, organizationId int64) (err error) {
+	var _args api.BankIcbcBankListTransactionDetailArgs
+	_args.BeginDate = beginDate
+	_args.EndDate = endDate
+	_args.OrganizationId = organizationId
+	var _result api.BankIcbcBankListTransactionDetailResult
+	if err = p.c.Call(ctx, "icbcBankListTransactionDetail", &_args, &_result); err != nil {
+		return
+	}
+	return nil
 }

@@ -148,7 +148,6 @@ func (i *icbcBankSDK) IcbcUserAcctSignatureAgreePush(ctx context.Context, accoun
 }
 
 func (i *icbcBankSDK) ListTransactionDetail(ctx context.Context, account string, beginDate string, endDate string, accCompNo string) ([]stru.IcbcAccDetailItem, error) {
-	accDetailUrlPath := config.GetString(enum.IcbcAccDetailURL, "")
 	request := stru.NewIcbcGlobalRequest()
 	seq, _ := util.SonyflakeID()
 
@@ -172,7 +171,7 @@ func (i *icbcBankSDK) ListTransactionDetail(ctx context.Context, account string,
 	}
 	request.BizContent = accDetailRequest
 	var result stru.AccDetailResponse
-	err := stru.ICBCPostHttpResult(accDetailUrlPath, *request, &result)
+	err := stru.ICBCPostHttpResult(enum.IcbcAccDetailURL, *request, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -185,7 +184,7 @@ func (i *icbcBankSDK) ListTransactionDetail(ctx context.Context, account string,
 	}
 	for hasNext {
 		accDetailRequest.SerialNo = serialNo
-		err := stru.ICBCPostHttpResult(accDetailUrlPath, *request, &result)
+		err := stru.ICBCPostHttpResult(enum.IcbcAccDetailURL, *request, &result)
 		if err != nil {
 			return nil, err
 		}
