@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
 	"gitlab.yoyiit.com/youyi/app-bank/internal/enum"
@@ -14,25 +15,59 @@ import (
 )
 
 type IcbcBankSDK interface {
-	QueryAgreeNo(ctx context.Context, zuId, account string) (string, error)
-	ListTransactionDetail(ctx context.Context, account string, beginDate string, endDate string, accCompNo string) ([]stru.IcbcAccDetailItem, error)
+	QueryAgreeNo(ctx context.Context, zuId, account string) (*stru.Agreement, error)
+	ListTransactionDetail(ctx context.Context, account string, beginDate string, endDate string, accCompNo string, agreeNo string) ([]stru.IcbcAccDetailItem, error)
 	IcbcUserAcctSignatureApply(ctx context.Context, accountNo string, phone string, remark string, accCompNo string) (string, error)
 	IcbcUserAcctSignatureAgreePush(ctx context.Context, accountNo string, phone string, remark string, accCompNo string) (*stru.IcbcSignConfirmResponse, error)
 	IcbcUserAcctSignatureQuery(ctx context.Context, accountNo string, accCompNo string) (*stru.IcbcSignatureQueryResponse, error)
+	IcbcReceiptNoQuery(ctx context.Context, accountNo, accCompNo, agreeNo, serialNo string) (*stru.IcbcReceiptNoQueryResponse, error)
 }
 
 type icbcBankSDK struct {
 }
 
-func (i *icbcBankSDK) QueryAgreeNo(ctx context.Context, zuId, account string) (string, error) {
+func (i *icbcBankSDK) IcbcReceiptNoQuery(ctx context.Context, accountNo, accCompNo, agreeNo, serialNo string) (*stru.IcbcReceiptNoQueryResponse, error) {
+	request := stru.NewIcbcGlobalRequest()
+	serl := []string{serialNo}
+	cond := stru.IcbcReceiptNoQueryCond{
+		SeqList: serl,
+	}
+	fseqNo, _ := util.SonyflakeID()
+	request.BizContent = &stru.IcbcReceiptNoQueryRequest{
+		FseqNo:    fseqNo,
+		CorpNo:    config.GetString(enum.IcbcCorpNo, ""),
+		AccCompNo: accCompNo,
+		AgreeNo:   agreeNo,
+		Account:   accountNo,
+		CurrType:  "",
+		QryType:   "2",
+		QryCond:   cond,
+	}
+	var result stru.IcbcReceiptNoQueryResponse
+	resultInterface, err := stru.ICBCPostHttpResult(enum.IcbcAdsReceiptAryURL, *request)
+	if err != nil {
+		return nil, err
+	}
+	jsonString, _ := json.Marshal(resultInterface)
+	err = json.Unmarshal(jsonString, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	if result.RetCode != "9008100" {
+		return nil, errors.New(result.RetMsg)
+	}
+	return &result, nil
+}
+func (i *icbcBankSDK) QueryAgreeNo(ctx context.Context, zuId, account string) (*stru.Agreement, error) {
 	//IcbcAdsAgreementGryURL
 	request := stru.NewIcbcGlobalRequest()
 	inqwork := stru.Inqwork{
-		BegNum: 0,
-		FetNum: 10,
+		BegNum: "0",
+		FetNum: "10",
 	}
 	cond := stru.Cond{
-		QryType:   1,
+		QryType:   "1",
 		AccCompNo: zuId,
 		Account:   account,
 		CurrType:  "",
@@ -44,15 +79,26 @@ func (i *icbcBankSDK) QueryAgreeNo(ctx context.Context, zuId, account string) (s
 		Cond:    cond,
 	}
 	var result stru.QueryAgreeNoResponse
-	err := stru.ICBCPostHttpResult(enum.IcbcAdsAgreementGryURL, *request, &result)
+	resultInterface, err := stru.ICBCPostHttpResult(enum.IcbcAdsAgreementGryURL, *request)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
+	// 检查 response.ResponseBizContent 是否可以转换为 QueryAgreeNoResponse
+
+	jsonString, _ := json.Marshal(resultInterface)
+	err = json.Unmarshal(jsonString, &result)
+	if err != nil {
+		return nil, err
+	}
+
 	if result.RetCode != "9008100" {
-		return "", errors.New(result.RetMsg)
+		return nil, errors.New(result.RetMsg)
 	}
-	agreeNo := result.AgrList[0].AgreeNo
-	return agreeNo, nil
+	if len(result.AgrList) == 0 {
+		return nil, errors.New("根据相关编号未能查询到协议信息[" + "zuId]")
+	}
+	agreement := result.AgrList[0]
+	return &agreement, nil
 }
 
 func (i *icbcBankSDK) IcbcUserAcctSignatureQuery(ctx context.Context, accountNo string, accCompNo string) (*stru.IcbcSignatureQueryResponse, error) {
@@ -67,10 +113,17 @@ func (i *icbcBankSDK) IcbcUserAcctSignatureQuery(ctx context.Context, accountNo 
 		AccCompName: "",
 	}
 	var result stru.IcbcSignatureQueryResponse
-	err := stru.ICBCPostHttpResult(url, *request, &result)
+	resultInterface, err := stru.ICBCPostHttpResult(url, *request)
 	if err != nil {
 		return nil, err
 	}
+	// 检查 response.ResponseBizContent 是否可以转换为 IcbcSignatureQueryResponse
+	if responseValue, ok := resultInterface.(stru.IcbcSignatureQueryResponse); ok {
+		result = responseValue
+	} else {
+		zap.L().Info(fmt.Sprintf("ICBCPostResult: ResponseBizContent 不是预期的 stru.IcbcSignatureQueryResponse resultInterface=%+v", resultInterface))
+	}
+
 	if result.RetCode != "9008100" {
 		return nil, errors.New(result.RetMsg)
 	}
@@ -138,18 +191,21 @@ func (i *icbcBankSDK) IcbcUserAcctSignatureAgreePush(ctx context.Context, accoun
 		CoMode:      coMode,
 		ConfirmList: confirmList,
 	}
-	confirmResu := stru.IcbcSignConfirmResponse{}
-	err := stru.ICBCPostHttpResult(enum.IcbcAdsAgrConfirmSynURL, *confirmRequest, &confirmResu)
+	var confirmResu stru.IcbcSignConfirmResponse
+	resultInterface, err := stru.ICBCPostHttpResult(enum.IcbcAdsAgrConfirmSynURL, *confirmRequest)
 	if err != nil {
 		return nil, err
 	}
-
+	// 检查 response.ResponseBizContent 是否可以转换为 IcbcSignConfirmResponse
+	if responseValue, ok := resultInterface.(stru.IcbcSignConfirmResponse); ok {
+		confirmResu = responseValue
+	} else {
+		zap.L().Info(fmt.Sprintf("ICBCPostResult: ResponseBizContent 不是预期的 stru.IcbcSignConfirmResponse resultInterface=%+v", resultInterface))
+	}
 	return &confirmResu, nil
 }
 
-func (i *icbcBankSDK) ListTransactionDetail(ctx context.Context, account string, beginDate string, endDate string, accCompNo string) ([]stru.IcbcAccDetailItem, error) {
-	request := stru.NewIcbcGlobalRequest()
-	seq, _ := util.SonyflakeID()
+func (i *icbcBankSDK) ListTransactionDetail(ctx context.Context, account string, beginDate string, endDate string, accCompNo string, agreeNo string) ([]stru.IcbcAccDetailItem, error) {
 
 	begin, _ := time.Parse("20060102", beginDate)
 	beginD := begin.Format("2006-01-02")
@@ -158,41 +214,42 @@ func (i *icbcBankSDK) ListTransactionDetail(ctx context.Context, account string,
 
 	endD := end.Format("2006-01-02")
 	serialNo := ""
-	accDetailRequest := &stru.AccDetailRequest{
-		FSeqNo:    seq,
-		Account:   account,
-		CurrType:  1,
-		StartDate: beginD,
-		EndDate:   endD,
-		SerialNo:  serialNo,
-		CorpNo:    config.GetString(enum.IcbcCorpNo, ""),
-		AccCompNo: config.GetString(enum.IcbcCorpNo, ""),
-		AgreeNo:   "",
-	}
-	request.BizContent = accDetailRequest
-	var result stru.AccDetailResponse
-	err := stru.ICBCPostHttpResult(enum.IcbcAccDetailURL, *request, &result)
-	if err != nil {
-		return nil, err
-	}
-	hasNext := false
-	var resultDetail []stru.IcbcAccDetailItem
-	resultDetail = append(resultDetail, result.DtlList...)
-	if result.NextPage == "1" {
-		hasNext = true
-		serialNo = result.DtlList[len(result.DtlList)-1].SerialNo
-	}
+
+	hasNext := true
+	var resultDetails []stru.IcbcAccDetailItem
 	for hasNext {
-		accDetailRequest.SerialNo = serialNo
-		err := stru.ICBCPostHttpResult(enum.IcbcAccDetailURL, *request, &result)
+		request := stru.NewIcbcGlobalRequest()
+		seq, _ := util.SonyflakeID()
+		accDetailRequest := &stru.AccDetailRequest{
+			FSeqNo:    seq,
+			Account:   account,
+			CurrType:  "1",
+			StartDate: beginD,
+			EndDate:   endD,
+			SerialNo:  serialNo,
+			CorpNo:    config.GetString(enum.IcbcCorpNo, ""),
+			AccCompNo: accCompNo,
+			AgreeNo:   agreeNo,
+		}
+		request.BizContent = accDetailRequest
+		var result stru.AccDetailResponse
+		resultInterface, err := stru.ICBCPostHttpResult(enum.IcbcAccDetailURL, *request)
 		if err != nil {
 			return nil, err
 		}
-		resultDetail = append(resultDetail, result.DtlList...)
+		jsonString, _ := json.Marshal(resultInterface)
+		err = json.Unmarshal(jsonString, &result)
+		if err != nil {
+			return nil, err
+		}
+		resultDetails = append(resultDetails, result.DtlList...)
+
 		if result.NextPage == "1" {
 			hasNext = true
-			serialNo = result.DtlList[len(result.DtlList)-1].SerialNo
+			serialNo = result.SerialNo
+		} else {
+			hasNext = false
 		}
 	}
-	return resultDetail, nil
+	return resultDetails, nil
 }

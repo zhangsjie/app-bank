@@ -20,14 +20,14 @@ import (
 	"time"
 )
 
-func ICBCPostHttpResult(urlPath string, requestData IcbcGlobalRequest, result interface{}) error {
+func ICBCPostHttpResult(urlPath string, requestData IcbcGlobalRequest) (interface{}, error) {
 	host := config.GetString(enum.IcbcHost, "")
 	//生成privateKey
 	privateKey, _ := parsePrivateKey(config.GetString(enum.IcbcPrivateKey, ""))
 	// 将 BizContent 转换为 JSON 字符串
 	bizContent, err := json.Marshal(requestData.BizContent)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	//生成签名字符串
 	signString := urlPath + "?app_id=" + requestData.AppID + "&biz_content=" + string(bizContent) + "&msg_id=" + requestData.MsgID + "&sign_type=" + requestData.SignType + "&timestamp=" + requestData.Timestamp
@@ -36,7 +36,7 @@ func ICBCPostHttpResult(urlPath string, requestData IcbcGlobalRequest, result in
 	sign, err := generateRSASign([]byte(signString), privateKey)
 	if err != nil {
 		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult 生成签名字符串失败err=%+v", err))
-		return err
+		return nil, err
 	}
 	//组装请求参数
 
@@ -68,19 +68,21 @@ func ICBCPostHttpResult(urlPath string, requestData IcbcGlobalRequest, result in
 		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult t请求工行出错bodyData=%+v,resp=%+v,err=%+v", baseUrl.String(), resp, err))
 	}
 
-	zap.L().Info(fmt.Sprintf("ICBCPostHttp respone==\n %+v", string(body)))
+	zap.L().Info(fmt.Sprintf("ICBCPostHttp response==\n %+v", string(body)))
 
 	// 处理响应
-	responseData := IcbcGlobalResponse{
-		ResponseBizContent: result,
-	}
-	err = json.NewDecoder(bytes.NewReader(body)).Decode(&responseData)
+	var response IcbcGlobalResponse
+	//responseData := IcbcGlobalResponse{
+	//	ResponseBizContent: result,
+	//}
+	err = json.NewDecoder(bytes.NewReader(body)).Decode(&response)
 
 	if err != nil {
 		zap.L().Info(fmt.Sprintf("ICBCPostResult 解析响应出错：%v", err))
-		return err
+		return nil, err
 	}
-	return nil
+
+	return response.ResponseBizContent, nil
 }
 func ICBCPostHttpUIResult(requestData IcbcGlobalRequest) string {
 	//生成privateKey
@@ -229,11 +231,11 @@ type IcbcSignConfirmResponse struct {
 	Data    string `json:"data"`    // 返回数据
 }
 
-// AccDetailRequest 单账号交易明细查询参数
+//单账号交易明细查询参数
 type AccDetailRequest struct {
 	FSeqNo    string `json:"fseqno"`    //合作方上送，需保证全局唯一，每次调用校验表里是否重复；建议拼接携带一级合作方编号、调用类型（0单账户流水提取；1流水批量提取；2回单下载）；
 	Account   string `json:"account"`   //银行卡号
-	CurrType  int    `json:"currtype"`  //币种
+	CurrType  string `json:"currtype"`  //币种
 	StartDate string `json:"startdate"` //提交起始日期 YYYY-MM-DD
 	EndDate   string `json:"enddate"`   //提交结束日期 YYYY-MM-DD
 	SerialNo  string `json:"serialno"`  //流水号 第一次查询送“”，分页查询下一页需要送上当前页最后一笔明细的序列号，上一页需要送上当前页第一笔明细的序列号
@@ -252,50 +254,63 @@ type AccDetailResponse struct {
 }
 
 type IcbcAccDetailItem struct {
-	SerialNo  string `json:"serialno"`  //流水号
-	BusiDate  string `json:"busidate"`  //入账日期
-	BusiTime  string `json:"busitime"`  //入账时间
-	TrxCode   string `json:"trxcode"`   //交易代码
-	DetailF   string `json:"detailf"`   //明细性质
-	DrcrF     string `json:"drcrf"`     //借贷标记
-	VouhType  string `json:"vouhtype"`  //凭证种类
-	VouhNo    string `json:"vouhno"`    //凭证号
-	Summary   string `json:"summary"`   //摘要
-	Amount    string `json:"amount"`    //金额
-	CurrType  string `json:"currtype"`  //币种
-	Balance   string `json:"balance"`   //当前余额
-	WorkDate  string `json:"workdate"`  //工作日期
-	ValueDay  string `json:"valueday"`  //调整起息日期
-	StatCode  string `json:"statcode"`  //外汇统计代码
-	SettMode  string `json:"settmode"`  //外汇结算方式
-	ActCode   string `json:"actcode"`   //账户核算机构号
-	TellerNo  string `json:"tellerno"`  //柜员号
-	AuthtlNo  string `json:"authtlno"`  //授权柜员号
-	AuthNo    string `json:"authno"`    //授权代号
-	TermId    string `json:"termid"`    //终端号
-	RecipAcc  string `json:"recipacc"`  //对方账号
-	RecipNam  string `json:"recipnam"`  //对方户名
-	CrvouhTyp string `json:"crvouhtyp"` //对方凭证种类
-	CrvouhNo  string `json:"crvouhno"`  //对方凭证号
-	VagenRef  string `json:"vagen_ref"` //业务编号
-	OreF      string `json:"oref"`      //相关业务编号
-	DrbusCode string `json:"drbuscode"` //借方业务代码
-	CrbusCode string `json:"crbuscode"` //贷方业务代码
-	EnSummry  string `json:"ensummry"`  //英文备注
-	TranTel   string `json:"trantel"`   //经办柜员号
-	Importel  string `json:"importel"`  //录入柜员号
-	CheckTel  string `json:"checktel"`  //复核柜员号
-	RecipcNo  string `json:"recipcno"`  //对方客户编号
-	RecipBkn  string `json:"recipbkn"`  //对方行号
-	RecipBna  string `json:"recipbna"`  //对方行名
-	OperType  string `json:"opertype"`  //网银业务种类
-	Notes     string `json:"notes"`     //附言
-	Purpose   string `json:"purpose"`   //用途
-	ServFace  string `json:"servface"`  //服务界面
-	EventSeq  string `json:"eventseq"`  //大交易序号
-	PtrxSeq   string `json:"ptrxseq"`   //小交易序号
-	UpdTranf  string `json:"updtranf"`  //冲正标志
-	RevTranf  string `json:"revtranf"`  //正反交易标志
+	SerialNo   int64   `json:"serialno"`   //流水号
+	BusiDate   string  `json:"busidate"`   //入账日期
+	BusiTime   string  `json:"busitime"`   //入账时间
+	TrxCode    int64   `json:"trxcode"`    //交易代码
+	DetailF    int     `json:"detailf"`    //明细性质
+	DrcrF      int     `json:"drcrf"`      //借贷标记 1-借，2-贷，借是出账，贷是入账
+	VouhType   int     `json:"vouhtype"`   //凭证种类
+	VouhNo     int     `json:"vouhno"`     //凭证号
+	Summary    string  `json:"summary"`    //摘要
+	Amount     float64 `json:"amount"`     //金额
+	CurrType   int     `json:"currtype"`   //币种
+	Balance    float64 `json:"balance"`    //当前余额
+	WorkDate   string  `json:"workdate"`   //工作日期
+	ValueDay   string  `json:"valueday"`   //调整起息日期
+	StatCode   int     `json:"statcode"`   //外汇统计代码
+	SettMode   int     `json:"settmode"`   //外汇结算方式
+	ActCode    int64   `json:"actcode"`    //账户核算机构号
+	TellerNo   int64   `json:"tellerno"`   //柜员号
+	AuthtlNo   int64   `json:"authtlno"`   //授权柜员号
+	AuthNo     string  `json:"authno"`     //授权代号
+	TermId     string  `json:"termid"`     //终端号
+	RecipAcc   string  `json:"recipacc"`   //对方账号
+	RecipNam   string  `json:"recipnam"`   //对方户名
+	CrvouhType int     `json:"crvouhtype"` //对方凭证种类
+	CrvouhNo   int     `json:"crvouhno"`   //对方凭证号
+	VagenRef   string  `json:"vagen_ref"`  //业务编号
+	OreF       string  `json:"oref"`       //相关业务编号
+	DrbusCode  string  `json:"drbuscode"`  //借方业务代码
+	CrbusCode  string  `json:"crbuscode"`  //贷方业务代码
+	EnSummry   string  `json:"ensummry"`   //英文备注
+	TranTel    int64   `json:"trantel"`    //经办柜员号
+	Importel   int64   `json:"importel"`   //录入柜员号
+	CheckTel   int64   `json:"checktel"`   //复核柜员号
+	RecipcNo   int64   `json:"recipcno"`   //对方客户编号
+	RecipBkn   string  `json:"recipbkn"`   //对方行号
+	RecipBna   string  `json:"recipbna"`   //对方行名
+	OperType   string  `json:"opertype"`   //网银业务种类
+	Notes      string  `json:"notes"`      //附言
+	Purpose    string  `json:"purpose"`    //用途
+	ServFace   int64   `json:"servface"`   //服务界面
+	EventSeq   int64   `json:"eventseq"`   //大交易序号
+	PtrxSeq    int64   `json:"ptrxseq"`    //小交易序号
+	UpdTranf   int     `json:"updtranf"`   //冲正标志
+	RevTranf   int     `json:"revtranf"`   //正反交易标志
+	// 新增的字段
+	BusTypNo  int    `json:"busTypNo"`
+	Cardno    string `json:"cardno"`
+	ReciPna2  string `json:"reciPna2"`
+	ReciPac2  string `json:"reciPac2"`
+	Trxorgann string `json:"trxorgann"`
+	RecipNams string `json:"recipNams"`
+	OtactNo1  string `json:"otactNo1"`
+	OtactNam1 string `json:"otactNam1"`
+	CnlType   int    `json:"cnlType"`
+	FinFo     string `json:"finFo"`
+	NeagnFlg  string `json:"neagnFlg"`
+	seFlag    string `json:"useFlag"`
 }
 
 type IcbcSignatureQueryRequest struct {
@@ -333,11 +348,11 @@ type QueryAgreeNoRequest struct {
 	Cond    Cond    `json:"cond"`    // 查询条件
 }
 type Inqwork struct {
-	BegNum int `json:"begnum"` // 查询起始位置，0开始
-	FetNum int `json:"fetnum"` // 查询条数，最多支持10条，后同
+	BegNum string `json:"begnum"` // 查询起始位置，0开始
+	FetNum string `json:"fetnum"` // 查询条数，最多支持10条，后同
 }
 type Cond struct {
-	QryType   int           `json:"qrytype"`   // 查询类型：1按合作企业/合作企业+代账公司查询（可输入主账户），2按协议列表方式查询
+	QryType   string        `json:"qrytype"`   // 查询类型：1按合作企业/合作企业+代账公司查询（可输入主账户），2按协议列表方式查询
 	AccCompNo string        `json:"acccompno"` // 二级合作方编号，qrytype为1时选输
 	Account   string        `json:"account"`   // 主账户，qrytype为1时选输
 	CurrType  string        `json:"currtype"`  // 币种，qrytype为1时选输
@@ -351,7 +366,7 @@ type QueryAgreeNoResponse struct {
 	AgrList []Agreement `json:"agrlist"` // 返回协议列表
 }
 type Agreement struct {
-	AgreeNo         string        `json:"agreeno"`         // 协议号
+	AgreeNo         int64         `json:"agreeno"`         // 协议号
 	CorpNo          string        `json:"corpno"`          // 一级合作方编号
 	CoMode          string        `json:"comode"`          // 合作模式
 	AccCompNo       string        `json:"acccompno"`       // 二级合作方编号
@@ -360,7 +375,7 @@ type Agreement struct {
 	ActDate         string        `json:"actdate"`         // 生效日期
 	MatDate         string        `json:"matdate"`         // 到期日期
 	EpType          string        `json:"eptype"`          // 是否自动展期
-	EpTimes         string        `json:"eptimes"`         // 展期期数
+	EpTimes         int64         `json:"eptimes"`         // 展期期数
 	FeeFlag         string        `json:"feeflag"`         // 收费标识
 	Remark          string        `json:"remark"`          // 备注
 	LstModft        string        `json:"lstmodft"`        // 最后修改时间
@@ -381,4 +396,24 @@ type ConfirmListItem struct {
 	AcCount   string `json:"ACCOUNT"`   // 主申请账户
 	CurrType  string `json:"CURRTYPE"`  // 主申请账户币种
 	CHANNEL   string `json:"CHANNEL"`   // 申请渠道 2:api
+}
+type IcbcReceiptNoQueryRequest struct {
+	FseqNo    string                 `json:"fseqno" `   // 请求序列号
+	CorpNo    string                 `json:"corpno"`    // 一级合作方编号
+	AccCompNo string                 `json:"acccompno"` // 二级合作方编号
+	AgreeNo   string                 `json:"agreeno" `  // 协议编号
+	Account   string                 `json:"account"`   // 账号/卡号
+	CurrType  string                 `json:"currtype"`  // 币种
+	QryType   string                 `json:"qrytype" `  // 查询类型
+	QryCond   IcbcReceiptNoQueryCond `json:"qrycond"`   // 查询条件
+}
+type IcbcReceiptNoQueryCond struct {
+	StartDate string   `json:"startDate" ` // 提交起始日期，qrytype为1时必输
+	EndDate   string   `json:"endDate"`    // 提交结束日期，qrytype为1时必输
+	SeqList   []string `json:"seqlist"`    // 回单编号列表，qrytype为2时必输，最多50条
+}
+type IcbcReceiptNoQueryResponse struct {
+	RetCode string `json:"retcode" ` // 9008100-处理成功 9008101-处理失败 9008200-参数错误
+	RetMsg  string `json:"retmsg"`   //
+	OrderId string `json:"orderid"`  // 根据orderid在共享目录搜索回单文件，订单编号示例：“2021082711075662E0D0D48C860002E0537A196D225495”
 }
