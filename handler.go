@@ -319,11 +319,6 @@ func (s *BankImpl) IcbcBankAccountSignatureQuery(ctx context.Context, req *api.I
 	return s.bankService.IcbcBankAccountSignatureQuery(ctx, req)
 }
 
-// IcbcBankAccountSignatureApply implements the BankImpl interface.
-func (s *BankImpl) IcbcBankAccountSignatureApply(ctx context.Context, req *api.IcbcBankAccountSignatureRequest) (resp string, err error) {
-	return
-}
-
 // IcbcBankListTransactionDetail implements the BankImpl interface.
 func (s *BankImpl) IcbcBankListTransactionDetail(ctx context.Context, beginDate string, endDate string, organizationId int64) (err error) {
 	return s.bankService.IcbcBankListTransactionDetail(ctx, beginDate, endDate, organizationId)

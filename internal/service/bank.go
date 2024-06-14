@@ -106,7 +106,6 @@ type BankService interface {
 	PinganBankAccountSignatureApply(ctx context.Context, req *api.PinganBankAccountSignatureApplyRequest) (*api.PinganUserAcctSignatureApplyResponse, error)
 	PinganBankAccountSignatureQuery(ctx context.Context, req *api.PinganBankAccountSignatureApplyRequest) (*api.PinganUserAcctSignatureApplyResponse, error)
 	PinganBankVirtualSubAcctBalanceAdjust(ctx context.Context, id int64, req *api.BankTransferReceiptData) (*api.BankVirtualAccountTranscationResponse, error)
-	IcbcBankAccountSignatureApply(ctx context.Context, req *api.IcbcBankAccountSignatureRequest) (string, error)
 	IcbcBankAccountSignatureQuery(ctx context.Context, req *api.IcbcBankAccountSignatureRequest) (*api.IcbcBankAccountSignatureQueryResponse, error)
 	IcbcBankListTransactionDetail(ctx context.Context, beginDate string, endDate string, organizationId int64) error
 }

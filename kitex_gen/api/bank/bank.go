@@ -78,7 +78,6 @@ func NewServiceInfo() *kitex.ServiceInfo {
 		"pinganBankAccountSignatureQuery":            kitex.NewMethodInfo(pinganBankAccountSignatureQueryHandler, newBankPinganBankAccountSignatureQueryArgs, newBankPinganBankAccountSignatureQueryResult, false),
 		"systemRefusePaymentReceipt":                 kitex.NewMethodInfo(systemRefusePaymentReceiptHandler, newBankSystemRefusePaymentReceiptArgs, newBankSystemRefusePaymentReceiptResult, false),
 		"systemApprovePaymentReceipt":                kitex.NewMethodInfo(systemApprovePaymentReceiptHandler, newBankSystemApprovePaymentReceiptArgs, newBankSystemApprovePaymentReceiptResult, false),
-		"icbcBankAccountSignatureApply":              kitex.NewMethodInfo(icbcBankAccountSignatureApplyHandler, newBankIcbcBankAccountSignatureApplyArgs, newBankIcbcBankAccountSignatureApplyResult, false),
 		"icbcBankAccountSignatureQuery":              kitex.NewMethodInfo(icbcBankAccountSignatureQueryHandler, newBankIcbcBankAccountSignatureQueryArgs, newBankIcbcBankAccountSignatureQueryResult, false),
 		"icbcBankListTransactionDetail":              kitex.NewMethodInfo(icbcBankListTransactionDetailHandler, newBankIcbcBankListTransactionDetailArgs, newBankIcbcBankListTransactionDetailResult, false),
 	}
@@ -1158,24 +1157,6 @@ func newBankSystemApprovePaymentReceiptResult() interface{} {
 	return api.NewBankSystemApprovePaymentReceiptResult()
 }
 
-func icbcBankAccountSignatureApplyHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
-	realArg := arg.(*api.BankIcbcBankAccountSignatureApplyArgs)
-	realResult := result.(*api.BankIcbcBankAccountSignatureApplyResult)
-	success, err := handler.(api.Bank).IcbcBankAccountSignatureApply(ctx, realArg.Req)
-	if err != nil {
-		return err
-	}
-	realResult.Success = &success
-	return nil
-}
-func newBankIcbcBankAccountSignatureApplyArgs() interface{} {
-	return api.NewBankIcbcBankAccountSignatureApplyArgs()
-}
-
-func newBankIcbcBankAccountSignatureApplyResult() interface{} {
-	return api.NewBankIcbcBankAccountSignatureApplyResult()
-}
-
 func icbcBankAccountSignatureQueryHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
 	realArg := arg.(*api.BankIcbcBankAccountSignatureQueryArgs)
 	realResult := result.(*api.BankIcbcBankAccountSignatureQueryResult)
@@ -1834,16 +1815,6 @@ func (p *kClient) SystemApprovePaymentReceipt(ctx context.Context, id int64) (er
 		return
 	}
 	return nil
-}
-
-func (p *kClient) IcbcBankAccountSignatureApply(ctx context.Context, req *api.IcbcBankAccountSignatureRequest) (r string, err error) {
-	var _args api.BankIcbcBankAccountSignatureApplyArgs
-	_args.Req = req
-	var _result api.BankIcbcBankAccountSignatureApplyResult
-	if err = p.c.Call(ctx, "icbcBankAccountSignatureApply", &_args, &_result); err != nil {
-		return
-	}
-	return _result.GetSuccess(), nil
 }
 
 func (p *kClient) IcbcBankAccountSignatureQuery(ctx context.Context, req *api.IcbcBankAccountSignatureRequest) (r *api.IcbcBankAccountSignatureQueryResponse, err error) {
