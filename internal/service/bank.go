@@ -146,7 +146,7 @@ func (s *bankService) IcbcBankListTransactionDetail(ctx context.Context, beginDa
 	}
 	for _, bankAccount := range bankAccounts {
 
-		datas, err := s.icbcBank.ListTransactionDetail(ctx, bankAccount.Account, beginDate, endDate, bankAccount.ZuId, bankAccount.AgreeNo)
+		datas, err := s.icbcBank.ListTransactionDetail(ctx, bankAccount.Account, beginDate, endDate, bankAccount.ZuId)
 		if err != nil {
 			return err
 		}
@@ -288,7 +288,9 @@ func (s *bankService) IcbcBankAccountSignatureApply(ctx context.Context, req *ap
 
 func (s *bankService) IcbcBankAccountSignatureQuery(ctx context.Context, req *api.IcbcBankAccountSignatureRequest) (*api.IcbcBankAccountSignatureQueryResponse, error) {
 	bankAccount, _ := s.baseClient.GetOrganizationBankAccount(ctx, &baseApi.OrganizationBankAccountData{Id: req.Id})
+
 	agreement, err := s.icbcBank.QueryAgreeNo(ctx, bankAccount.ZuId, bankAccount.Account)
+
 	if err != nil {
 		return nil, err
 	}
@@ -300,15 +302,14 @@ func (s *bankService) IcbcBankAccountSignatureQuery(ctx context.Context, req *ap
 	}
 	s.baseClient.EditOrganizationBankAccount(ctx, &baseApi.OrganizationBankAccountData{
 		Id:                   req.Id,
+		ZuId:                 agreeNo,
 		SignatureApplyStatus: status,
-		AgreeNo:              agreeNo,
 		Remark:               "",
 	})
 	return &api.IcbcBankAccountSignatureQueryResponse{
 		Signatureapplystatus: status,
-		ZuId:                 bankAccount.ZuId,
+		ZuId:                 agreeNo,
 		Remark:               bankAccount.Remark,
-		AgreeNo:              agreeNo,
 	}, nil
 }
 

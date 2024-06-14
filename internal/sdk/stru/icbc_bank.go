@@ -10,11 +10,14 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/pkg/sftp"
 	"gitlab.yoyiit.com/youyi/app-bank/internal/enum"
 	"gitlab.yoyiit.com/youyi/go-core/config"
 	"gitlab.yoyiit.com/youyi/go-core/util"
 	"go.uber.org/zap"
+	"golang.org/x/crypto/ssh"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"time"
@@ -84,6 +87,58 @@ func ICBCPostHttpResult(urlPath string, requestData IcbcGlobalRequest) (interfac
 
 	return response.ResponseBizContent, nil
 }
+
+func SftpClient() *sftp.Client {
+	host := config.GetString("bankConfig.icbc.sftpHost", "")
+	port := config.GetString("bankConfig.icbc.sftPort", "")
+	userName := config.GetString("bankConfig.icbc.userName", "")
+	//生成privateKey
+	privateKeyBytes, err := base64.StdEncoding.DecodeString(config.GetString(enum.IcbcPrivateKey, ""))
+	if err != nil {
+		fmt.Errorf("failed to decode Base64 encoded private key: %w", err)
+	}
+
+	privateKey, err := x509.ParsePKCS8PrivateKey(privateKeyBytes)
+	// 将PKCS8私钥转换为ssh.Signer
+	var rsaPrivateKey *rsa.PrivateKey
+	switch k := privateKey.(type) {
+	case *rsa.PrivateKey:
+		rsaPrivateKey = k
+	default:
+		log.Fatal("Unsupported private key type")
+	}
+	// 创建SSH Signer
+	signer, err := ssh.NewSignerFromKey(rsaPrivateKey)
+	if err != nil {
+		log.Fatal("Failed to create SSH signer:", err)
+	}
+
+	// 创建SSH配置，使用自定义的HostKeyCallback
+	config := &ssh.ClientConfig{
+		User: userName,
+		Auth: []ssh.AuthMethod{
+			ssh.PublicKeys(signer),
+		},
+		//HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+		//	return checkHostKey(hostname, remote, knownHosts, key)
+		//},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // 生产环境请替换为有效的HostKeyCallback
+	}
+
+	// 连接SSH服务器
+	conn, err := ssh.Dial("tcp", fmt.Sprintf("%s:%s", host, port), config)
+	if err != nil {
+		log.Fatal("Failed to dial SSH:", err)
+	}
+	// 建立SFTP会话
+	sftpClient, err := sftp.NewClient(conn)
+	if err != nil {
+		conn.Close()
+		log.Fatal("Failed to create SFTP client:", err)
+	}
+	return sftpClient
+}
+
 func ICBCPostHttpUIResult(requestData IcbcGlobalRequest) string {
 	//生成privateKey
 	privateKey, err := parsePrivateKey(config.GetString(enum.IcbcPrivateKey, ""))

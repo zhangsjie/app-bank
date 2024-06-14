@@ -28668,7 +28668,6 @@ type IcbcBankAccountSignatureQueryResponse struct {
 	Signatureapplystatus string `thrift:"signatureapplystatus,1" frugal:"1,default,string" json:"signatureapplystatus"`
 	ZuId                 string `thrift:"zuId,2" frugal:"2,default,string" json:"zuId"`
 	Remark               string `thrift:"remark,3" frugal:"3,default,string" json:"remark"`
-	AgreeNo              string `thrift:"agreeNo,4" frugal:"4,default,string" json:"agreeNo"`
 }
 
 func NewIcbcBankAccountSignatureQueryResponse() *IcbcBankAccountSignatureQueryResponse {
@@ -28690,10 +28689,6 @@ func (p *IcbcBankAccountSignatureQueryResponse) GetZuId() (v string) {
 func (p *IcbcBankAccountSignatureQueryResponse) GetRemark() (v string) {
 	return p.Remark
 }
-
-func (p *IcbcBankAccountSignatureQueryResponse) GetAgreeNo() (v string) {
-	return p.AgreeNo
-}
 func (p *IcbcBankAccountSignatureQueryResponse) SetSignatureapplystatus(val string) {
 	p.Signatureapplystatus = val
 }
@@ -28703,15 +28698,11 @@ func (p *IcbcBankAccountSignatureQueryResponse) SetZuId(val string) {
 func (p *IcbcBankAccountSignatureQueryResponse) SetRemark(val string) {
 	p.Remark = val
 }
-func (p *IcbcBankAccountSignatureQueryResponse) SetAgreeNo(val string) {
-	p.AgreeNo = val
-}
 
 var fieldIDToName_IcbcBankAccountSignatureQueryResponse = map[int16]string{
 	1: "signatureapplystatus",
 	2: "zuId",
 	3: "remark",
-	4: "agreeNo",
 }
 
 func (p *IcbcBankAccountSignatureQueryResponse) Read(iprot thrift.TProtocol) (err error) {
@@ -28756,16 +28747,6 @@ func (p *IcbcBankAccountSignatureQueryResponse) Read(iprot thrift.TProtocol) (er
 		case 3:
 			if fieldTypeId == thrift.STRING {
 				if err = p.ReadField3(iprot); err != nil {
-					goto ReadFieldError
-				}
-			} else {
-				if err = iprot.Skip(fieldTypeId); err != nil {
-					goto SkipFieldError
-				}
-			}
-		case 4:
-			if fieldTypeId == thrift.STRING {
-				if err = p.ReadField4(iprot); err != nil {
 					goto ReadFieldError
 				}
 			} else {
@@ -28830,15 +28811,6 @@ func (p *IcbcBankAccountSignatureQueryResponse) ReadField3(iprot thrift.TProtoco
 	return nil
 }
 
-func (p *IcbcBankAccountSignatureQueryResponse) ReadField4(iprot thrift.TProtocol) error {
-	if v, err := iprot.ReadString(); err != nil {
-		return err
-	} else {
-		p.AgreeNo = v
-	}
-	return nil
-}
-
 func (p *IcbcBankAccountSignatureQueryResponse) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
 	if err = oprot.WriteStructBegin("IcbcBankAccountSignatureQueryResponse"); err != nil {
@@ -28855,10 +28827,6 @@ func (p *IcbcBankAccountSignatureQueryResponse) Write(oprot thrift.TProtocol) (e
 		}
 		if err = p.writeField3(oprot); err != nil {
 			fieldId = 3
-			goto WriteFieldError
-		}
-		if err = p.writeField4(oprot); err != nil {
-			fieldId = 4
 			goto WriteFieldError
 		}
 
@@ -28931,23 +28899,6 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 3 end error: ", p), err)
 }
 
-func (p *IcbcBankAccountSignatureQueryResponse) writeField4(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("agreeNo", thrift.STRING, 4); err != nil {
-		goto WriteFieldBeginError
-	}
-	if err := oprot.WriteString(p.AgreeNo); err != nil {
-		return err
-	}
-	if err = oprot.WriteFieldEnd(); err != nil {
-		goto WriteFieldEndError
-	}
-	return nil
-WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 4 begin error: ", p), err)
-WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 4 end error: ", p), err)
-}
-
 func (p *IcbcBankAccountSignatureQueryResponse) String() string {
 	if p == nil {
 		return "<nil>"
@@ -28970,9 +28921,6 @@ func (p *IcbcBankAccountSignatureQueryResponse) DeepEqual(ano *IcbcBankAccountSi
 	if !p.Field3DeepEqual(ano.Remark) {
 		return false
 	}
-	if !p.Field4DeepEqual(ano.AgreeNo) {
-		return false
-	}
 	return true
 }
 
@@ -28993,13 +28941,6 @@ func (p *IcbcBankAccountSignatureQueryResponse) Field2DeepEqual(src string) bool
 func (p *IcbcBankAccountSignatureQueryResponse) Field3DeepEqual(src string) bool {
 
 	if strings.Compare(p.Remark, src) != 0 {
-		return false
-	}
-	return true
-}
-func (p *IcbcBankAccountSignatureQueryResponse) Field4DeepEqual(src string) bool {
-
-	if strings.Compare(p.AgreeNo, src) != 0 {
 		return false
 	}
 	return true

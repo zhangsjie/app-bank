@@ -610,7 +610,6 @@ struct IcbcBankAccountSignatureQueryResponse {
 1:string signatureapplystatus
 2:string zuId
 3:string remark
-4:string agreeNo
 }
 
 struct icbcAcctSignatureResponse {

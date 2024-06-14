@@ -321,7 +321,7 @@ func (s *BankImpl) IcbcBankAccountSignatureQuery(ctx context.Context, req *api.I
 
 // IcbcBankAccountSignatureApply implements the BankImpl interface.
 func (s *BankImpl) IcbcBankAccountSignatureApply(ctx context.Context, req *api.IcbcBankAccountSignatureRequest) (resp string, err error) {
-	return s.bankService.IcbcBankAccountSignatureApply(ctx, req)
+	return
 }
 
 // IcbcBankListTransactionDetail implements the BankImpl interface.

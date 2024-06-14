@@ -16,14 +16,38 @@ import (
 
 type IcbcBankSDK interface {
 	QueryAgreeNo(ctx context.Context, zuId, account string) (*stru.Agreement, error)
-	ListTransactionDetail(ctx context.Context, account string, beginDate string, endDate string, accCompNo string, agreeNo string) ([]stru.IcbcAccDetailItem, error)
+	ListTransactionDetail(ctx context.Context, account string, beginDate string, endDate string, agreeNo string) ([]stru.IcbcAccDetailItem, error)
 	IcbcUserAcctSignatureApply(ctx context.Context, accountNo string, phone string, remark string, accCompNo string) (string, error)
 	IcbcUserAcctSignatureAgreePush(ctx context.Context, accountNo string, phone string, remark string, accCompNo string) (*stru.IcbcSignConfirmResponse, error)
 	IcbcUserAcctSignatureQuery(ctx context.Context, accountNo string, accCompNo string) (*stru.IcbcSignatureQueryResponse, error)
 	IcbcReceiptNoQuery(ctx context.Context, accountNo, accCompNo, agreeNo, serialNo string) (*stru.IcbcReceiptNoQueryResponse, error)
+	IcbcReceiptFileDownload(ctx context.Context, accountNo, accCompNo, agreeNo, serialNo string) (string, error)
 }
 
 type icbcBankSDK struct {
+}
+
+func (i *icbcBankSDK) IcbcReceiptFileDownload(ctx context.Context, accountNo, accCompNo, agreeNo, serialNo string) (string, error) {
+
+	////生成privateKey
+	//privateKeyBytes, err := base64.StdEncoding.DecodeString(config.GetString(enum.IcbcPrivateKey, ""))
+	//if err != nil {
+	//	fmt.Errorf("failed to decode Base64 encoded private key: %w", err)
+	//}
+	//
+	//err = ioutil.WriteFile("./ssh_key.pem", privateKeyBytes, 0600)
+	//
+	//fmt.Println("SSH密钥文件已成功生成")
+	//return "", nil
+	client := stru.SftpClient()
+	dir, err := client.ReadDir("/")
+	if err != nil {
+		return "", err
+	}
+	for _, v := range dir {
+		zap.L().Info(fmt.Sprintf("sftp%s", v.Name()))
+	}
+	return "", err
 }
 
 func (i *icbcBankSDK) IcbcReceiptNoQuery(ctx context.Context, accountNo, accCompNo, agreeNo, serialNo string) (*stru.IcbcReceiptNoQueryResponse, error) {
@@ -69,7 +93,7 @@ func (i *icbcBankSDK) QueryAgreeNo(ctx context.Context, zuId, account string) (*
 	cond := stru.Cond{
 		QryType:   "1",
 		AccCompNo: zuId,
-		Account:   account,
+		Account:   "",
 		CurrType:  "",
 		AgrList:   nil,
 	}
@@ -205,8 +229,8 @@ func (i *icbcBankSDK) IcbcUserAcctSignatureAgreePush(ctx context.Context, accoun
 	return &confirmResu, nil
 }
 
-func (i *icbcBankSDK) ListTransactionDetail(ctx context.Context, account string, beginDate string, endDate string, accCompNo string, agreeNo string) ([]stru.IcbcAccDetailItem, error) {
-
+func (i *icbcBankSDK) ListTransactionDetail(ctx context.Context, account string, beginDate string, endDate string, agreeNo string) ([]stru.IcbcAccDetailItem, error) {
+	//i.IcbcReceiptFileDownload(ctx, account, agreeNo, "")
 	begin, _ := time.Parse("20060102", beginDate)
 	beginD := begin.Format("2006-01-02")
 
@@ -228,7 +252,7 @@ func (i *icbcBankSDK) ListTransactionDetail(ctx context.Context, account string,
 			EndDate:   endD,
 			SerialNo:  serialNo,
 			CorpNo:    config.GetString(enum.IcbcCorpNo, ""),
-			AccCompNo: accCompNo,
+			AccCompNo: config.GetString(enum.IcbcAccCompNo, ""),
 			AgreeNo:   agreeNo,
 		}
 		request.BizContent = accDetailRequest
