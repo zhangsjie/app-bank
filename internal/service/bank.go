@@ -261,31 +261,6 @@ func (s *bankService) IcbcBankListTransactionDetail(ctx context.Context, beginDa
 	return nil
 }
 
-func (s *bankService) IcbcBankAccountSignatureApply(ctx context.Context, req *api.IcbcBankAccountSignatureRequest) (string, error) {
-	r, _ := s.baseClient.GetOrganizationBankAccount(ctx, &baseApi.OrganizationBankAccountData{Id: req.Id})
-	//生成二级合作方编号
-	msgId, _ := util.SonyflakeID()
-	accCompNo := "ICBC-" + msgId
-	result, err := s.icbcBank.IcbcUserAcctSignatureApply(ctx, r.Account, req.Phone, req.Remark, accCompNo)
-	if err != nil {
-		return "", handler.HandleError(err)
-	}
-	s.baseClient.EditOrganizationBankAccount(ctx, &baseApi.OrganizationBankAccountData{
-		Id:                   req.Id,
-		SignatureApplyStatus: "",
-		ZuId:                 accCompNo,
-		Remark:               req.Remark,
-		PaymentMode:          "1",
-	})
-	/*if result.RetCode == "9008100" {
-		//协议信息已同步至工行,请联系工行工作人员开通相关协议,二级协议编码为accCompNo
-		return accCompNo, nil
-	} else {
-		return "", handler.HandleNewError(result.RetMsg)
-	}*/
-	return result, err
-}
-
 func (s *bankService) IcbcBankAccountSignatureQuery(ctx context.Context, req *api.IcbcBankAccountSignatureRequest) (*api.IcbcBankAccountSignatureQueryResponse, error) {
 	bankAccount, _ := s.baseClient.GetOrganizationBankAccount(ctx, &baseApi.OrganizationBankAccountData{Id: req.Id})
 

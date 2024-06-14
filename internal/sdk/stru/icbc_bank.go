@@ -139,52 +139,6 @@ func SftpClient() *sftp.Client {
 	return sftpClient
 }
 
-func ICBCPostHttpUIResult(requestData IcbcGlobalRequest) string {
-	//生成privateKey
-	privateKey, err := parsePrivateKey(config.GetString(enum.IcbcPrivateKey, ""))
-	// 将 BizContent 转换为 JSON 字符串
-	bizContent, err := json.Marshal(requestData.BizContent)
-	if err != nil {
-		return ""
-	}
-	signString := enum.IcbcAdsAgrSigUiURL + "?app_id=" + requestData.AppID + "&biz_content=" + string(bizContent) + "&msg_id=" + requestData.MsgID + "&sign_type=" + requestData.SignType + "&timestamp=" + requestData.Timestamp
-
-	// 生成签名
-	sign, err := generateRSASign([]byte(signString), privateKey)
-	if err != nil {
-		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult 生成签名出错requestData=%+v,privateKey=%+v", requestData, privateKey))
-		return ""
-	}
-	//组装请求参数
-
-	baseUrl, _ := url.Parse(config.GetString(enum.IcbcHost, ""))
-	baseUrl.Path = enum.IcbcAdsAgrSigUiURL
-	//signData := s + "&sign=" + sign
-	// 进行Base64编码
-	params := url.Values{}
-	params.Add("app_id", requestData.AppID)
-	params.Add("msg_id", requestData.MsgID)
-	params.Add("sign_type", requestData.SignType)
-	params.Add("timestamp", requestData.Timestamp)
-	params.Add("sign", sign)
-	params.Add("biz_content", string(bizContent))
-	baseUrl.RawQuery = params.Encode()
-	zap.L().Info(fmt.Sprintf("ICBCPostHttp request==\n %+v", baseUrl.String()))
-	resp, err := http.PostForm(baseUrl.String(), nil)
-	if err != nil {
-		zap.L().Error(err.Error())
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		zap.L().Info(fmt.Sprintf("ICBCPostHttpResult t请求工行出错bodyData=%+v,resp=%+v,err=%+v", baseUrl.String(), resp, err))
-	}
-
-	zap.L().Info(fmt.Sprintf("ICBCPostHttp respone==\n %+v", string(body)))
-	return string(body)
-
-}
-
 func generateRSASign(data []byte, privateKey *rsa.PrivateKey) (string, error) {
 
 	digest := sha256.Sum256(data)
@@ -245,48 +199,6 @@ type IcbcGlobalResponse struct {
 	ResponseBizContent interface{} `json:"response_biz_content"` // 消息通讯唯一编号，每次调用独立生成，APP级唯一
 }
 
-// IcbcSignRequest 签约参数
-type IcbcSignRequest struct {
-	AppID      string         `json:"app_id"`      // APP的编号,应用在API开放平台注册时生成
-	ApiName    string         `json:"api_name"`    // api接口名称
-	ApiVersion string         `json:"api_version"` // api接口版本
-	CorpNo     string         `json:"corpNo"`      // 一级合作方编号
-	CoMode     string         `json:"coMode"`      // 合作模式，1：代理记账；2：自主记账
-	AccCompNo  string         `json:"accCompNo"`   // 二级合作方编号，合作模式为1时，必输 (可选字段)
-	Account    string         `json:"account"`     // 主账户
-	CurrType   string         `json:"currType"`    // 主账户币种，1：人民币
-	AccFlag    string         `json:"accFlag"`     // 本他行标志，1：本行；2：他行
-	CnTioFlag  string         `json:"cntioFlag"`   // 境内外标志，1：境内；2：境外
-	Phone      string         `json:"phone"`       // 手机号
-	EpType     string         `json:"epType"`      // 是否自动展期，0：否；1：是
-	EpTimes    string         `json:"epTimes"`     // 展期期数，epType为1时，必输 (可选字段)
-	PayAccNo   string         `json:"payAccNo"`    // 收费账号 (可选字段)
-	PayCurr    string         `json:"payCurr"`     // 收费账号币种 (可选字段)
-	PayAccName string         `json:"payAccName"`  // 收费账号户名，默认为空 (可选字段)
-	PayLimit   string         `json:"payLimit"`    // 收费周期，默认为空 (可选字段)
-	PayBegDate string         `json:"payBegDate"`  // 收费开始日期，默认为空 (可选字段)
-	PayEndDate string         `json:"payEndDate"`  // 收费结束日期，默认为空 (可选字段)
-	Remark     string         `json:"remark"`      // 备注，默认为空 (可选字段)
-	AccList    []*AccListItem `json:"accList"`     // 下挂账号列表
-}
-
-type AccListItem struct {
-	Account       string `json:"account"`       // 账号
-	CurrType      string `json:"currType"`      // 币种
-	AccFlag       string `json:"accFlag"`       // 本他行标志，1：本行；2：他行
-	CnTioFlag     string `json:"cntioFlag"`     // 境内外标志，1：境内；2：境外
-	IsMainAcc     string `json:"isMainAcc"`     // 主帐户标志，0：否；1：是
-	ReceiptFlag   string `json:"receiptFlag"`   // 开通电子单据标示，0：关；1：开
-	StatementFlag string `json:"statementFlag"` // 开通账务明细查询标示，0：关；1：开
-}
-
-type IcbcSignConfirmResponse struct {
-	RetCode string `json:"retcode"` // 返回状态码。9008100-处理成功 9008101-处理失败 9008200-参数错误
-	RetMsg  string `json:"retmsg"`  // 返回信息
-	Data    string `json:"data"`    // 返回数据
-}
-
-//单账号交易明细查询参数
 type AccDetailRequest struct {
 	FSeqNo    string `json:"fseqno"`    //合作方上送，需保证全局唯一，每次调用校验表里是否重复；建议拼接携带一级合作方编号、调用类型（0单账户流水提取；1流水批量提取；2回单下载）；
 	Account   string `json:"account"`   //银行卡号
@@ -368,35 +280,6 @@ type IcbcAccDetailItem struct {
 	seFlag    string `json:"useFlag"`
 }
 
-type IcbcSignatureQueryRequest struct {
-	StartIndex  string `json:"startindex"`  // 查询起始位置，从0开始
-	QrySize     string `json:"qrysize"`     // 查询条数，最多20
-	CorpNo      int64  `json:"corpno"`      // 一级合作方编号
-	AccCompNo   string `json:"acccompno"`   // 二级合作方编号，为空则查该合作企业下全量有效代账公司
-	AccCompName string `json:"acccompname"` // 二级合作方名称，模糊查询
-}
-type IcbcSignatureQueryResponse struct {
-	RetCode     string       `json:"retcode"`     // 返回状态码。9008100-处理成功 -999/9008101-处理失败 9008200-参数错误
-	RetMsg      string       `json:"retmsg"`      // 返回信息。9008100-处理成功 9008101-处理失败 9008200-参数错误
-	CorpNo      string       `json:"corpno"`      // 一级合作方编号
-	TotalNum    string       `json:"totalnum"`    // 总条数。9008100时有值
-	StartIndex  string       `json:"startindex"`  // 起始条数
-	TotalPage   string       `json:"totalpage"`   // 总页数
-	AccCompList []AccCompany `json:"acccomplist"` // 代账公司列表。最多20条
-	MsgID       string       `json:"msgid"`       // 消息通讯唯一编号，每次调用独立生成，APP级唯一。urcnl24ciutr9
-}
-type AccCompany struct {
-	AccCompNo     string `json:"acccompno"`     // 二级合作方编号
-	AccCompName   string `json:"acccompname"`   // 二级合作方名称
-	StatementFlag string `json:"statementflag"` // 开通账务明细查询标示。0否1是
-	ReceiptFlag   string `json:"receiptflag"`   // 开通电子单据标示。0否1是
-	ActDate       string `json:"actdate"`       // 生效日期
-	Status        string `json:"status"`        // 状态。1生效 2作废
-	CreateTime    string `json:"createtime"`    // 创建时间
-	LstModft      string `json:"lstmodft"`      // 最后修改时间
-	Notes         string `json:"notes"`         // 收费信息备注
-}
-
 type QueryAgreeNoRequest struct {
 	Inqwork Inqwork `json:"inqwork"` // 翻页控制
 	Corpno  string  `json:"corpno"`  // 一级合作方编号
@@ -437,21 +320,6 @@ type Agreement struct {
 	AccountInfoList []interface{} `json:"accountinfolist"` // 账户信息列表
 }
 
-//https://gw.open.icbc.com.cn/api/mybank/account/accountdetailservice/adsagrconfirmsyn/V1
-
-type IcbcSignConfirmRequest struct {
-	AppID       string             `json:"APPID"`  // APP的编号,应用在API开放平台注册时生成
-	CorpNo      string             `json:"CORPNO"` // 一级合作方编号
-	CoMode      string             `json:"COMODE"` // 合作模式，1：代理记账；2：自主记账
-	ConfirmList []*ConfirmListItem `json:"LIST"`   // 下挂账号列表
-}
-
-type ConfirmListItem struct {
-	AccCompNo string `json:"ACCCOMPNO"` // 二级合作方编号
-	AcCount   string `json:"ACCOUNT"`   // 主申请账户
-	CurrType  string `json:"CURRTYPE"`  // 主申请账户币种
-	CHANNEL   string `json:"CHANNEL"`   // 申请渠道 2:api
-}
 type IcbcReceiptNoQueryRequest struct {
 	FseqNo    string                 `json:"fseqno" `   // 请求序列号
 	CorpNo    string                 `json:"corpno"`    // 一级合作方编号
