@@ -108,6 +108,8 @@ type BankService interface {
 	PinganBankVirtualSubAcctBalanceAdjust(ctx context.Context, id int64, req *api.BankTransferReceiptData) (*api.BankVirtualAccountTranscationResponse, error)
 	IcbcBankAccountSignatureQuery(ctx context.Context, req *api.IcbcBankAccountSignatureRequest) (*api.IcbcBankAccountSignatureQueryResponse, error)
 	IcbcBankListTransactionDetail(ctx context.Context, beginDate string, endDate string, organizationId int64) error
+
+	GetTransactionReceipt(ctx context.Context, bankTransactionDetailId int64) error
 }
 
 type bankService struct {
@@ -129,6 +131,22 @@ type bankService struct {
 	pdfToImageService                        PdfToImageService
 	financeClient                            finance.Client
 	icbcBank                                 sdk.IcbcBankSDK
+}
+
+func (s *bankService) GetTransactionReceipt(ctx context.Context, bankTransactionDetailId int64) error {
+	bankTransactionDetail, _ := s.bankTransactionDetailRepo.Get(ctx, &repo.BankTransactionDetailDBData{
+		BaseDBData: repository.BaseDBData{
+			BaseCommonDBData: repository.BaseCommonDBData{Id: bankTransactionDetailId},
+		},
+	})
+	if bankTransactionDetail.Type == "3" {
+		account, _ := s.baseClient.GetOrganizationBankAccount(ctx, &baseApi.OrganizationBankAccountData{
+			OrganizationId: bankTransactionDetail.OrganizationId,
+			Type:           "3",
+		})
+		s.icbcBank.IcbcReceiptFileDownload(ctx, account.Account, account.ZuId, bankTransactionDetail.HostFlowNo)
+	}
+	return nil
 }
 
 func (s *bankService) IcbcBankListTransactionDetail(ctx context.Context, beginDate string, endDate string, organizationId int64) error {

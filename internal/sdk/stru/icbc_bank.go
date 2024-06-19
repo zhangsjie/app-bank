@@ -92,25 +92,16 @@ func SftpClient() *sftp.Client {
 	host := config.GetString("bankConfig.icbc.sftpHost", "")
 	port := config.GetString("bankConfig.icbc.sftPort", "")
 	userName := config.GetString("bankConfig.icbc.userName", "")
-	//生成privateKey
-	privateKeyBytes, err := base64.StdEncoding.DecodeString(config.GetString(enum.IcbcPrivateKey, ""))
+	// 读取私钥文件
+	keyBytes, err := ioutil.ReadFile("id_rsa.txt")
 	if err != nil {
 		fmt.Errorf("failed to decode Base64 encoded private key: %w", err)
 	}
 
-	privateKey, err := x509.ParsePKCS8PrivateKey(privateKeyBytes)
-	// 将PKCS8私钥转换为ssh.Signer
-	var rsaPrivateKey *rsa.PrivateKey
-	switch k := privateKey.(type) {
-	case *rsa.PrivateKey:
-		rsaPrivateKey = k
-	default:
-		log.Fatal("Unsupported private key type")
-	}
-	// 创建SSH Signer
-	signer, err := ssh.NewSignerFromKey(rsaPrivateKey)
+	signer, err := ssh.ParsePrivateKey(keyBytes)
 	if err != nil {
-		log.Fatal("Failed to create SSH signer:", err)
+		fmt.Println("读取私钥文件失败：", err)
+		return nil
 	}
 
 	// 创建SSH配置，使用自定义的HostKeyCallback

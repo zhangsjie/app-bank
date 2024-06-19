@@ -17,13 +17,13 @@ type IcbcBankSDK interface {
 	QueryAgreeNo(ctx context.Context, zuId, account string) (*stru.Agreement, error)
 	ListTransactionDetail(ctx context.Context, account string, beginDate string, endDate string, agreeNo string) ([]stru.IcbcAccDetailItem, error)
 	IcbcReceiptNoQuery(ctx context.Context, accountNo, accCompNo, agreeNo, serialNo string) (*stru.IcbcReceiptNoQueryResponse, error)
-	IcbcReceiptFileDownload(ctx context.Context, accountNo, accCompNo, agreeNo, serialNo string) (string, error)
+	IcbcReceiptFileDownload(ctx context.Context, accountNo, agreeNo, serialNo string) (string, error)
 }
 
 type icbcBankSDK struct {
 }
 
-func (i *icbcBankSDK) IcbcReceiptFileDownload(ctx context.Context, accountNo, accCompNo, agreeNo, serialNo string) (string, error) {
+func (i *icbcBankSDK) IcbcReceiptFileDownload(ctx context.Context, accountNo, agreeNo, serialNo string) (string, error) {
 	////生成privateKey
 	//privateKeyBytes, err := base64.StdEncoding.DecodeString(config.GetString(enum.IcbcPrivateKey, ""))
 	//if err != nil {
@@ -88,7 +88,7 @@ func (i *icbcBankSDK) QueryAgreeNo(ctx context.Context, zuId, account string) (*
 	cond := stru.Cond{
 		QryType:   "1",
 		AccCompNo: zuId,
-		Account:   "",
+		Account:   account,
 		CurrType:  "",
 		AgrList:   nil,
 	}
@@ -102,26 +102,22 @@ func (i *icbcBankSDK) QueryAgreeNo(ctx context.Context, zuId, account string) (*
 	if err != nil {
 		return nil, err
 	}
-	// 检查 response.ResponseBizContent 是否可以转换为 QueryAgreeNoResponse
-
 	jsonString, _ := json.Marshal(resultInterface)
 	err = json.Unmarshal(jsonString, &result)
 	if err != nil {
 		return nil, err
 	}
-
 	if result.RetCode != "9008100" {
 		return nil, errors.New(result.RetMsg)
 	}
 	if len(result.AgrList) == 0 {
-		return nil, errors.New("根据相关编号未能查询到协议信息[" + "zuId]")
+		return nil, errors.New("未能查询到账号协议信息[" + "zuId]")
 	}
 	agreement := result.AgrList[0]
 	return &agreement, nil
 }
 
 func (i *icbcBankSDK) ListTransactionDetail(ctx context.Context, account string, beginDate string, endDate string, agreeNo string) ([]stru.IcbcAccDetailItem, error) {
-	//i.IcbcReceiptFileDownload(ctx, account, agreeNo, "")
 	begin, _ := time.Parse("20060102", beginDate)
 	beginD := begin.Format("2006-01-02")
 

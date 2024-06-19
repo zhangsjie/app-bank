@@ -323,3 +323,9 @@ func (s *BankImpl) IcbcBankAccountSignatureQuery(ctx context.Context, req *api.I
 func (s *BankImpl) IcbcBankListTransactionDetail(ctx context.Context, beginDate string, endDate string, organizationId int64) (err error) {
 	return s.bankService.IcbcBankListTransactionDetail(ctx, beginDate, endDate, organizationId)
 }
+
+// GetTransactionReceipt implements the BankImpl interface.
+func (s *BankImpl) GetTransactionReceipt(ctx context.Context, id int64) (err error) {
+	// TODO: Your code here...
+	return
+}

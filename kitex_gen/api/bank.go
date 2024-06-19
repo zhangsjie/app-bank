@@ -29868,6 +29868,8 @@ type Bank interface {
 	IcbcBankAccountSignatureQuery(ctx context.Context, req *IcbcBankAccountSignatureRequest) (r *IcbcBankAccountSignatureQueryResponse, err error)
 
 	IcbcBankListTransactionDetail(ctx context.Context, beginDate string, endDate string, organizationId int64) (err error)
+
+	GetTransactionReceipt(ctx context.Context, id int64) (err error)
 }
 
 type BankClient struct {
@@ -30471,6 +30473,15 @@ func (p *BankClient) IcbcBankListTransactionDetail(ctx context.Context, beginDat
 	}
 	return nil
 }
+func (p *BankClient) GetTransactionReceipt(ctx context.Context, id int64) (err error) {
+	var _args BankGetTransactionReceiptArgs
+	_args.Id = id
+	var _result BankGetTransactionReceiptResult
+	if err = p.Client_().Call(ctx, "getTransactionReceipt", &_args, &_result); err != nil {
+		return
+	}
+	return nil
+}
 
 type BankProcessor struct {
 	processorMap map[string]thrift.TProcessorFunction
@@ -30553,6 +30564,7 @@ func NewBankProcessor(handler Bank) *BankProcessor {
 	self.AddToProcessorMap("systemApprovePaymentReceipt", &bankProcessorSystemApprovePaymentReceipt{handler: handler})
 	self.AddToProcessorMap("icbcBankAccountSignatureQuery", &bankProcessorIcbcBankAccountSignatureQuery{handler: handler})
 	self.AddToProcessorMap("icbcBankListTransactionDetail", &bankProcessorIcbcBankListTransactionDetail{handler: handler})
+	self.AddToProcessorMap("getTransactionReceipt", &bankProcessorGetTransactionReceipt{handler: handler})
 	return self
 }
 func (p *BankProcessor) Process(ctx context.Context, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
@@ -33391,6 +33403,51 @@ func (p *bankProcessorIcbcBankListTransactionDetail) Process(ctx context.Context
 		return true, err2
 	}
 	if err2 = oprot.WriteMessageBegin("icbcBankListTransactionDetail", thrift.REPLY, seqId); err2 != nil {
+		err = err2
+	}
+	if err2 = result.Write(oprot); err == nil && err2 != nil {
+		err = err2
+	}
+	if err2 = oprot.WriteMessageEnd(); err == nil && err2 != nil {
+		err = err2
+	}
+	if err2 = oprot.Flush(ctx); err == nil && err2 != nil {
+		err = err2
+	}
+	if err != nil {
+		return
+	}
+	return true, err
+}
+
+type bankProcessorGetTransactionReceipt struct {
+	handler Bank
+}
+
+func (p *bankProcessorGetTransactionReceipt) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+	args := BankGetTransactionReceiptArgs{}
+	if err = args.Read(iprot); err != nil {
+		iprot.ReadMessageEnd()
+		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
+		oprot.WriteMessageBegin("getTransactionReceipt", thrift.EXCEPTION, seqId)
+		x.Write(oprot)
+		oprot.WriteMessageEnd()
+		oprot.Flush(ctx)
+		return false, err
+	}
+
+	iprot.ReadMessageEnd()
+	var err2 error
+	result := BankGetTransactionReceiptResult{}
+	if err2 = p.handler.GetTransactionReceipt(ctx, args.Id); err2 != nil {
+		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing getTransactionReceipt: "+err2.Error())
+		oprot.WriteMessageBegin("getTransactionReceipt", thrift.EXCEPTION, seqId)
+		x.Write(oprot)
+		oprot.WriteMessageEnd()
+		oprot.Flush(ctx)
+		return true, err2
+	}
+	if err2 = oprot.WriteMessageBegin("getTransactionReceipt", thrift.REPLY, seqId); err2 != nil {
 		err = err2
 	}
 	if err2 = result.Write(oprot); err == nil && err2 != nil {
@@ -53379,6 +53436,264 @@ func (p *BankIcbcBankListTransactionDetailResult) String() string {
 }
 
 func (p *BankIcbcBankListTransactionDetailResult) DeepEqual(ano *BankIcbcBankListTransactionDetailResult) bool {
+	if p == ano {
+		return true
+	} else if p == nil || ano == nil {
+		return false
+	}
+	return true
+}
+
+type BankGetTransactionReceiptArgs struct {
+	Id int64 `thrift:"id,1" frugal:"1,default,i64" json:"id"`
+}
+
+func NewBankGetTransactionReceiptArgs() *BankGetTransactionReceiptArgs {
+	return &BankGetTransactionReceiptArgs{}
+}
+
+func (p *BankGetTransactionReceiptArgs) InitDefault() {
+	*p = BankGetTransactionReceiptArgs{}
+}
+
+func (p *BankGetTransactionReceiptArgs) GetId() (v int64) {
+	return p.Id
+}
+func (p *BankGetTransactionReceiptArgs) SetId(val int64) {
+	p.Id = val
+}
+
+var fieldIDToName_BankGetTransactionReceiptArgs = map[int16]string{
+	1: "id",
+}
+
+func (p *BankGetTransactionReceiptArgs) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+
+		switch fieldId {
+		case 1:
+			if fieldTypeId == thrift.I64 {
+				if err = p.ReadField1(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				if err = iprot.Skip(fieldTypeId); err != nil {
+					goto SkipFieldError
+				}
+			}
+		default:
+			if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		}
+
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_BankGetTransactionReceiptArgs[fieldId]), err)
+SkipFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *BankGetTransactionReceiptArgs) ReadField1(iprot thrift.TProtocol) error {
+	if v, err := iprot.ReadI64(); err != nil {
+		return err
+	} else {
+		p.Id = v
+	}
+	return nil
+}
+
+func (p *BankGetTransactionReceiptArgs) Write(oprot thrift.TProtocol) (err error) {
+	var fieldId int16
+	if err = oprot.WriteStructBegin("getTransactionReceipt_args"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+		if err = p.writeField1(oprot); err != nil {
+			fieldId = 1
+			goto WriteFieldError
+		}
+
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *BankGetTransactionReceiptArgs) writeField1(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("id", thrift.I64, 1); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteI64(p.Id); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
+}
+
+func (p *BankGetTransactionReceiptArgs) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("BankGetTransactionReceiptArgs(%+v)", *p)
+}
+
+func (p *BankGetTransactionReceiptArgs) DeepEqual(ano *BankGetTransactionReceiptArgs) bool {
+	if p == ano {
+		return true
+	} else if p == nil || ano == nil {
+		return false
+	}
+	if !p.Field1DeepEqual(ano.Id) {
+		return false
+	}
+	return true
+}
+
+func (p *BankGetTransactionReceiptArgs) Field1DeepEqual(src int64) bool {
+
+	if p.Id != src {
+		return false
+	}
+	return true
+}
+
+type BankGetTransactionReceiptResult struct {
+}
+
+func NewBankGetTransactionReceiptResult() *BankGetTransactionReceiptResult {
+	return &BankGetTransactionReceiptResult{}
+}
+
+func (p *BankGetTransactionReceiptResult) InitDefault() {
+	*p = BankGetTransactionReceiptResult{}
+}
+
+var fieldIDToName_BankGetTransactionReceiptResult = map[int16]string{}
+
+func (p *BankGetTransactionReceiptResult) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+		if err = iprot.Skip(fieldTypeId); err != nil {
+			goto SkipFieldTypeError
+		}
+
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+SkipFieldTypeError:
+	return thrift.PrependError(fmt.Sprintf("%T skip field type %d error", p, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *BankGetTransactionReceiptResult) Write(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteStructBegin("getTransactionReceipt_result"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *BankGetTransactionReceiptResult) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("BankGetTransactionReceiptResult(%+v)", *p)
+}
+
+func (p *BankGetTransactionReceiptResult) DeepEqual(ano *BankGetTransactionReceiptResult) bool {
 	if p == ano {
 		return true
 	} else if p == nil || ano == nil {
