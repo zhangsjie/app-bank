@@ -39492,7 +39492,7 @@ func (p *BankIcbcBankListTransactionDetailResult) BLength() int {
 	return l
 }
 
-func (p *BankGetTransactionReceiptArgs) FastRead(buf []byte) (int, error) {
+func (p *BankGetBankTransactionReceiptArgs) FastRead(buf []byte) (int, error) {
 	var err error
 	var offset int
 	var l int
@@ -39554,7 +39554,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return offset, thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return offset, thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_BankGetTransactionReceiptArgs[fieldId]), err)
+	return offset, thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_BankGetBankTransactionReceiptArgs[fieldId]), err)
 SkipFieldError:
 	return offset, thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 ReadFieldEndError:
@@ -39563,7 +39563,7 @@ ReadStructEndError:
 	return offset, thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *BankGetTransactionReceiptArgs) FastReadField1(buf []byte) (int, error) {
+func (p *BankGetBankTransactionReceiptArgs) FastReadField1(buf []byte) (int, error) {
 	offset := 0
 
 	if v, l, err := bthrift.Binary.ReadI64(buf[offset:]); err != nil {
@@ -39578,13 +39578,13 @@ func (p *BankGetTransactionReceiptArgs) FastReadField1(buf []byte) (int, error) 
 }
 
 // for compatibility
-func (p *BankGetTransactionReceiptArgs) FastWrite(buf []byte) int {
+func (p *BankGetBankTransactionReceiptArgs) FastWrite(buf []byte) int {
 	return 0
 }
 
-func (p *BankGetTransactionReceiptArgs) FastWriteNocopy(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+func (p *BankGetBankTransactionReceiptArgs) FastWriteNocopy(buf []byte, binaryWriter bthrift.BinaryWriter) int {
 	offset := 0
-	offset += bthrift.Binary.WriteStructBegin(buf[offset:], "getTransactionReceipt_args")
+	offset += bthrift.Binary.WriteStructBegin(buf[offset:], "getBankTransactionReceipt_args")
 	if p != nil {
 		offset += p.fastWriteField1(buf[offset:], binaryWriter)
 	}
@@ -39593,9 +39593,9 @@ func (p *BankGetTransactionReceiptArgs) FastWriteNocopy(buf []byte, binaryWriter
 	return offset
 }
 
-func (p *BankGetTransactionReceiptArgs) BLength() int {
+func (p *BankGetBankTransactionReceiptArgs) BLength() int {
 	l := 0
-	l += bthrift.Binary.StructBeginLength("getTransactionReceipt_args")
+	l += bthrift.Binary.StructBeginLength("getBankTransactionReceipt_args")
 	if p != nil {
 		l += p.field1Length()
 	}
@@ -39604,7 +39604,7 @@ func (p *BankGetTransactionReceiptArgs) BLength() int {
 	return l
 }
 
-func (p *BankGetTransactionReceiptArgs) fastWriteField1(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+func (p *BankGetBankTransactionReceiptArgs) fastWriteField1(buf []byte, binaryWriter bthrift.BinaryWriter) int {
 	offset := 0
 	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "id", thrift.I64, 1)
 	offset += bthrift.Binary.WriteI64(buf[offset:], p.Id)
@@ -39613,7 +39613,7 @@ func (p *BankGetTransactionReceiptArgs) fastWriteField1(buf []byte, binaryWriter
 	return offset
 }
 
-func (p *BankGetTransactionReceiptArgs) field1Length() int {
+func (p *BankGetBankTransactionReceiptArgs) field1Length() int {
 	l := 0
 	l += bthrift.Binary.FieldBeginLength("id", thrift.I64, 1)
 	l += bthrift.Binary.I64Length(p.Id)
@@ -39622,7 +39622,7 @@ func (p *BankGetTransactionReceiptArgs) field1Length() int {
 	return l
 }
 
-func (p *BankGetTransactionReceiptResult) FastRead(buf []byte) (int, error) {
+func (p *BankGetBankTransactionReceiptResult) FastRead(buf []byte) (int, error) {
 	var err error
 	var offset int
 	var l int
@@ -39675,13 +39675,13 @@ ReadStructEndError:
 }
 
 // for compatibility
-func (p *BankGetTransactionReceiptResult) FastWrite(buf []byte) int {
+func (p *BankGetBankTransactionReceiptResult) FastWrite(buf []byte) int {
 	return 0
 }
 
-func (p *BankGetTransactionReceiptResult) FastWriteNocopy(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+func (p *BankGetBankTransactionReceiptResult) FastWriteNocopy(buf []byte, binaryWriter bthrift.BinaryWriter) int {
 	offset := 0
-	offset += bthrift.Binary.WriteStructBegin(buf[offset:], "getTransactionReceipt_result")
+	offset += bthrift.Binary.WriteStructBegin(buf[offset:], "getBankTransactionReceipt_result")
 	if p != nil {
 	}
 	offset += bthrift.Binary.WriteFieldStop(buf[offset:])
@@ -39689,9 +39689,9 @@ func (p *BankGetTransactionReceiptResult) FastWriteNocopy(buf []byte, binaryWrit
 	return offset
 }
 
-func (p *BankGetTransactionReceiptResult) BLength() int {
+func (p *BankGetBankTransactionReceiptResult) BLength() int {
 	l := 0
-	l += bthrift.Binary.StructBeginLength("getTransactionReceipt_result")
+	l += bthrift.Binary.StructBeginLength("getBankTransactionReceipt_result")
 	if p != nil {
 	}
 	l += bthrift.Binary.FieldStopLength()
@@ -40187,10 +40187,10 @@ func (p *BankIcbcBankListTransactionDetailResult) GetResult() interface{} {
 	return nil
 }
 
-func (p *BankGetTransactionReceiptArgs) GetFirstArgument() interface{} {
+func (p *BankGetBankTransactionReceiptArgs) GetFirstArgument() interface{} {
 	return p.Id
 }
 
-func (p *BankGetTransactionReceiptResult) GetResult() interface{} {
+func (p *BankGetBankTransactionReceiptResult) GetResult() interface{} {
 	return nil
 }

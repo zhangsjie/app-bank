@@ -324,8 +324,7 @@ func (s *BankImpl) IcbcBankListTransactionDetail(ctx context.Context, beginDate 
 	return s.bankService.IcbcBankListTransactionDetail(ctx, beginDate, endDate, organizationId)
 }
 
-// GetTransactionReceipt implements the BankImpl interface.
-func (s *BankImpl) GetTransactionReceipt(ctx context.Context, id int64) (err error) {
-	// TODO: Your code here...
-	return
+// GetBankTransactionReceipt implements the BankImpl interface.
+func (s *BankImpl) GetBankTransactionReceipt(ctx context.Context, id int64) (err error) {
+	return s.bankService.GetBankTransactionReceipt(ctx, id)
 }

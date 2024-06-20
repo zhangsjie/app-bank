@@ -17,7 +17,6 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/crypto/ssh"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"time"
@@ -92,6 +91,7 @@ func SftpClient() *sftp.Client {
 	host := config.GetString("bankConfig.icbc.sftpHost", "")
 	port := config.GetString("bankConfig.icbc.sftPort", "")
 	userName := config.GetString("bankConfig.icbc.userName", "")
+	ip := host + ":" + port
 	// 读取私钥文件
 	keyBytes, err := ioutil.ReadFile("id_rsa.txt")
 	if err != nil {
@@ -110,6 +110,9 @@ func SftpClient() *sftp.Client {
 		Auth: []ssh.AuthMethod{
 			ssh.PublicKeys(signer),
 		},
+		HostKeyAlgorithms: []string{
+			ssh.KeyAlgoRSA,
+		},
 		//HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
 		//	return checkHostKey(hostname, remote, knownHosts, key)
 		//},
@@ -117,15 +120,15 @@ func SftpClient() *sftp.Client {
 	}
 
 	// 连接SSH服务器
-	conn, err := ssh.Dial("tcp", fmt.Sprintf("%s:%s", host, port), config)
+	conn, err := ssh.Dial("tcp", ip, config)
 	if err != nil {
-		log.Fatal("Failed to dial SSH:", err)
+		fmt.Println("Failed to dial SSH:", err)
 	}
 	// 建立SFTP会话
 	sftpClient, err := sftp.NewClient(conn)
 	if err != nil {
 		conn.Close()
-		log.Fatal("Failed to create SFTP client:", err)
+		fmt.Println("Failed to create SFTP client:", err)
 	}
 	return sftpClient
 }

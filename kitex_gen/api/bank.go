@@ -29869,7 +29869,7 @@ type Bank interface {
 
 	IcbcBankListTransactionDetail(ctx context.Context, beginDate string, endDate string, organizationId int64) (err error)
 
-	GetTransactionReceipt(ctx context.Context, id int64) (err error)
+	GetBankTransactionReceipt(ctx context.Context, id int64) (err error)
 }
 
 type BankClient struct {
@@ -30473,11 +30473,11 @@ func (p *BankClient) IcbcBankListTransactionDetail(ctx context.Context, beginDat
 	}
 	return nil
 }
-func (p *BankClient) GetTransactionReceipt(ctx context.Context, id int64) (err error) {
-	var _args BankGetTransactionReceiptArgs
+func (p *BankClient) GetBankTransactionReceipt(ctx context.Context, id int64) (err error) {
+	var _args BankGetBankTransactionReceiptArgs
 	_args.Id = id
-	var _result BankGetTransactionReceiptResult
-	if err = p.Client_().Call(ctx, "getTransactionReceipt", &_args, &_result); err != nil {
+	var _result BankGetBankTransactionReceiptResult
+	if err = p.Client_().Call(ctx, "getBankTransactionReceipt", &_args, &_result); err != nil {
 		return
 	}
 	return nil
@@ -30564,7 +30564,7 @@ func NewBankProcessor(handler Bank) *BankProcessor {
 	self.AddToProcessorMap("systemApprovePaymentReceipt", &bankProcessorSystemApprovePaymentReceipt{handler: handler})
 	self.AddToProcessorMap("icbcBankAccountSignatureQuery", &bankProcessorIcbcBankAccountSignatureQuery{handler: handler})
 	self.AddToProcessorMap("icbcBankListTransactionDetail", &bankProcessorIcbcBankListTransactionDetail{handler: handler})
-	self.AddToProcessorMap("getTransactionReceipt", &bankProcessorGetTransactionReceipt{handler: handler})
+	self.AddToProcessorMap("getBankTransactionReceipt", &bankProcessorGetBankTransactionReceipt{handler: handler})
 	return self
 }
 func (p *BankProcessor) Process(ctx context.Context, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
@@ -33420,16 +33420,16 @@ func (p *bankProcessorIcbcBankListTransactionDetail) Process(ctx context.Context
 	return true, err
 }
 
-type bankProcessorGetTransactionReceipt struct {
+type bankProcessorGetBankTransactionReceipt struct {
 	handler Bank
 }
 
-func (p *bankProcessorGetTransactionReceipt) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
-	args := BankGetTransactionReceiptArgs{}
+func (p *bankProcessorGetBankTransactionReceipt) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+	args := BankGetBankTransactionReceiptArgs{}
 	if err = args.Read(iprot); err != nil {
 		iprot.ReadMessageEnd()
 		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
-		oprot.WriteMessageBegin("getTransactionReceipt", thrift.EXCEPTION, seqId)
+		oprot.WriteMessageBegin("getBankTransactionReceipt", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -33438,16 +33438,16 @@ func (p *bankProcessorGetTransactionReceipt) Process(ctx context.Context, seqId 
 
 	iprot.ReadMessageEnd()
 	var err2 error
-	result := BankGetTransactionReceiptResult{}
-	if err2 = p.handler.GetTransactionReceipt(ctx, args.Id); err2 != nil {
-		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing getTransactionReceipt: "+err2.Error())
-		oprot.WriteMessageBegin("getTransactionReceipt", thrift.EXCEPTION, seqId)
+	result := BankGetBankTransactionReceiptResult{}
+	if err2 = p.handler.GetBankTransactionReceipt(ctx, args.Id); err2 != nil {
+		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing getBankTransactionReceipt: "+err2.Error())
+		oprot.WriteMessageBegin("getBankTransactionReceipt", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
 		return true, err2
 	}
-	if err2 = oprot.WriteMessageBegin("getTransactionReceipt", thrift.REPLY, seqId); err2 != nil {
+	if err2 = oprot.WriteMessageBegin("getBankTransactionReceipt", thrift.REPLY, seqId); err2 != nil {
 		err = err2
 	}
 	if err2 = result.Write(oprot); err == nil && err2 != nil {
@@ -53444,30 +53444,30 @@ func (p *BankIcbcBankListTransactionDetailResult) DeepEqual(ano *BankIcbcBankLis
 	return true
 }
 
-type BankGetTransactionReceiptArgs struct {
+type BankGetBankTransactionReceiptArgs struct {
 	Id int64 `thrift:"id,1" frugal:"1,default,i64" json:"id"`
 }
 
-func NewBankGetTransactionReceiptArgs() *BankGetTransactionReceiptArgs {
-	return &BankGetTransactionReceiptArgs{}
+func NewBankGetBankTransactionReceiptArgs() *BankGetBankTransactionReceiptArgs {
+	return &BankGetBankTransactionReceiptArgs{}
 }
 
-func (p *BankGetTransactionReceiptArgs) InitDefault() {
-	*p = BankGetTransactionReceiptArgs{}
+func (p *BankGetBankTransactionReceiptArgs) InitDefault() {
+	*p = BankGetBankTransactionReceiptArgs{}
 }
 
-func (p *BankGetTransactionReceiptArgs) GetId() (v int64) {
+func (p *BankGetBankTransactionReceiptArgs) GetId() (v int64) {
 	return p.Id
 }
-func (p *BankGetTransactionReceiptArgs) SetId(val int64) {
+func (p *BankGetBankTransactionReceiptArgs) SetId(val int64) {
 	p.Id = val
 }
 
-var fieldIDToName_BankGetTransactionReceiptArgs = map[int16]string{
+var fieldIDToName_BankGetBankTransactionReceiptArgs = map[int16]string{
 	1: "id",
 }
 
-func (p *BankGetTransactionReceiptArgs) Read(iprot thrift.TProtocol) (err error) {
+func (p *BankGetBankTransactionReceiptArgs) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -53516,7 +53516,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_BankGetTransactionReceiptArgs[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_BankGetBankTransactionReceiptArgs[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -53526,7 +53526,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *BankGetTransactionReceiptArgs) ReadField1(iprot thrift.TProtocol) error {
+func (p *BankGetBankTransactionReceiptArgs) ReadField1(iprot thrift.TProtocol) error {
 	if v, err := iprot.ReadI64(); err != nil {
 		return err
 	} else {
@@ -53535,9 +53535,9 @@ func (p *BankGetTransactionReceiptArgs) ReadField1(iprot thrift.TProtocol) error
 	return nil
 }
 
-func (p *BankGetTransactionReceiptArgs) Write(oprot thrift.TProtocol) (err error) {
+func (p *BankGetBankTransactionReceiptArgs) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("getTransactionReceipt_args"); err != nil {
+	if err = oprot.WriteStructBegin("getBankTransactionReceipt_args"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -53564,7 +53564,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *BankGetTransactionReceiptArgs) writeField1(oprot thrift.TProtocol) (err error) {
+func (p *BankGetBankTransactionReceiptArgs) writeField1(oprot thrift.TProtocol) (err error) {
 	if err = oprot.WriteFieldBegin("id", thrift.I64, 1); err != nil {
 		goto WriteFieldBeginError
 	}
@@ -53581,14 +53581,14 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
 }
 
-func (p *BankGetTransactionReceiptArgs) String() string {
+func (p *BankGetBankTransactionReceiptArgs) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("BankGetTransactionReceiptArgs(%+v)", *p)
+	return fmt.Sprintf("BankGetBankTransactionReceiptArgs(%+v)", *p)
 }
 
-func (p *BankGetTransactionReceiptArgs) DeepEqual(ano *BankGetTransactionReceiptArgs) bool {
+func (p *BankGetBankTransactionReceiptArgs) DeepEqual(ano *BankGetBankTransactionReceiptArgs) bool {
 	if p == ano {
 		return true
 	} else if p == nil || ano == nil {
@@ -53600,7 +53600,7 @@ func (p *BankGetTransactionReceiptArgs) DeepEqual(ano *BankGetTransactionReceipt
 	return true
 }
 
-func (p *BankGetTransactionReceiptArgs) Field1DeepEqual(src int64) bool {
+func (p *BankGetBankTransactionReceiptArgs) Field1DeepEqual(src int64) bool {
 
 	if p.Id != src {
 		return false
@@ -53608,20 +53608,20 @@ func (p *BankGetTransactionReceiptArgs) Field1DeepEqual(src int64) bool {
 	return true
 }
 
-type BankGetTransactionReceiptResult struct {
+type BankGetBankTransactionReceiptResult struct {
 }
 
-func NewBankGetTransactionReceiptResult() *BankGetTransactionReceiptResult {
-	return &BankGetTransactionReceiptResult{}
+func NewBankGetBankTransactionReceiptResult() *BankGetBankTransactionReceiptResult {
+	return &BankGetBankTransactionReceiptResult{}
 }
 
-func (p *BankGetTransactionReceiptResult) InitDefault() {
-	*p = BankGetTransactionReceiptResult{}
+func (p *BankGetBankTransactionReceiptResult) InitDefault() {
+	*p = BankGetBankTransactionReceiptResult{}
 }
 
-var fieldIDToName_BankGetTransactionReceiptResult = map[int16]string{}
+var fieldIDToName_BankGetBankTransactionReceiptResult = map[int16]string{}
 
-func (p *BankGetTransactionReceiptResult) Read(iprot thrift.TProtocol) (err error) {
+func (p *BankGetBankTransactionReceiptResult) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -53664,8 +53664,8 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *BankGetTransactionReceiptResult) Write(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteStructBegin("getTransactionReceipt_result"); err != nil {
+func (p *BankGetBankTransactionReceiptResult) Write(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteStructBegin("getBankTransactionReceipt_result"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -53686,14 +53686,14 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *BankGetTransactionReceiptResult) String() string {
+func (p *BankGetBankTransactionReceiptResult) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("BankGetTransactionReceiptResult(%+v)", *p)
+	return fmt.Sprintf("BankGetBankTransactionReceiptResult(%+v)", *p)
 }
 
-func (p *BankGetTransactionReceiptResult) DeepEqual(ano *BankGetTransactionReceiptResult) bool {
+func (p *BankGetBankTransactionReceiptResult) DeepEqual(ano *BankGetBankTransactionReceiptResult) bool {
 	if p == ano {
 		return true
 	} else if p == nil || ano == nil {

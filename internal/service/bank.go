@@ -109,7 +109,7 @@ type BankService interface {
 	IcbcBankAccountSignatureQuery(ctx context.Context, req *api.IcbcBankAccountSignatureRequest) (*api.IcbcBankAccountSignatureQueryResponse, error)
 	IcbcBankListTransactionDetail(ctx context.Context, beginDate string, endDate string, organizationId int64) error
 
-	GetTransactionReceipt(ctx context.Context, bankTransactionDetailId int64) error
+	GetBankTransactionReceipt(ctx context.Context, bankTransactionDetailId int64) error
 }
 
 type bankService struct {
@@ -133,17 +133,20 @@ type bankService struct {
 	icbcBank                                 sdk.IcbcBankSDK
 }
 
-func (s *bankService) GetTransactionReceipt(ctx context.Context, bankTransactionDetailId int64) error {
+func (s *bankService) GetBankTransactionReceipt(ctx context.Context, bankTransactionDetailId int64) error {
 	bankTransactionDetail, _ := s.bankTransactionDetailRepo.Get(ctx, &repo.BankTransactionDetailDBData{
 		BaseDBData: repository.BaseDBData{
 			BaseCommonDBData: repository.BaseCommonDBData{Id: bankTransactionDetailId},
 		},
 	})
-	if bankTransactionDetail.Type == "3" {
-		account, _ := s.baseClient.GetOrganizationBankAccount(ctx, &baseApi.OrganizationBankAccountData{
-			OrganizationId: bankTransactionDetail.OrganizationId,
-			Type:           "3",
-		})
+	account, err := s.baseClient.GetOrganizationBankAccount(ctx, &baseApi.OrganizationBankAccountData{
+		OrganizationId: bankTransactionDetail.OrganizationId,
+		Type:           bankTransactionDetail.PayAccountType,
+	})
+	if err != nil {
+		return handler.HandleError(err)
+	}
+	if account.Type == "3" {
 		s.icbcBank.IcbcReceiptFileDownload(ctx, account.Account, account.ZuId, bankTransactionDetail.HostFlowNo)
 	}
 	return nil
@@ -240,7 +243,7 @@ func (s *bankService) IcbcBankListTransactionDetail(ctx context.Context, beginDa
 						AccountName:        data.RecipNam,
 						AccountOpenNode:    data.RecipBna,
 						ProcessTotalStatus: enum.ProcessInstanceTotalStatusRunning,
-						PayAccountType:     enum.PinganBankType,
+						PayAccountType:     "3",
 					}
 
 					//查询回单
