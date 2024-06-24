@@ -4,48 +4,97 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	czip "github.com/dablelv/cyan/zip"
 	"github.com/pkg/errors"
 	"gitlab.yoyiit.com/youyi/app-bank/internal/enum"
 	"gitlab.yoyiit.com/youyi/app-bank/internal/sdk/stru"
 	"gitlab.yoyiit.com/youyi/go-core/config"
 	"gitlab.yoyiit.com/youyi/go-core/util"
 	"go.uber.org/zap"
+	"io"
+	"os"
+	"path"
+	"strings"
+	"sync"
 	"time"
 )
 
 type IcbcBankSDK interface {
 	QueryAgreeNo(ctx context.Context, zuId, account string) (*stru.Agreement, error)
 	ListTransactionDetail(ctx context.Context, account string, beginDate string, endDate string, agreeNo string) ([]stru.IcbcAccDetailItem, error)
-	IcbcReceiptNoQuery(ctx context.Context, accountNo, accCompNo, agreeNo, serialNo string) (*stru.IcbcReceiptNoQueryResponse, error)
-	IcbcReceiptFileDownload(ctx context.Context, accountNo, agreeNo, serialNo string) (string, error)
+	IcbcReceiptNoQuery(ctx context.Context, accountNo, agreeNo, serialNo string) (*stru.IcbcReceiptNoQueryResponse, error)
+	IcbcReceiptFileDownload(ctx context.Context) (string, error)
 }
 
 type icbcBankSDK struct {
 }
 
-func (i *icbcBankSDK) IcbcReceiptFileDownload(ctx context.Context, accountNo, agreeNo, serialNo string) (string, error) {
-	////生成privateKey
-	//privateKeyBytes, err := base64.StdEncoding.DecodeString(config.GetString(enum.IcbcPrivateKey, ""))
-	//if err != nil {
-	//	fmt.Errorf("failed to decode Base64 encoded private key: %w", err)
-	//}
-	//
-	//err = ioutil.WriteFile("./ssh_key.pem", privateKeyBytes, 0600)
-	//
-	//fmt.Println("SSH密钥文件已成功生成")
-	//return "", nil
+func (i *icbcBankSDK) IcbcReceiptFileDownload(ctx context.Context) (string, error) {
 	client := stru.SftpClient()
-	dir, err := client.ReadDir("/")
+	defer client.Close()
+	remotePath := "/Ebillsend/download"
+	downloadDir, err := client.ReadDir(remotePath)
 	if err != nil {
 		return "", err
 	}
-	for _, v := range dir {
-		zap.L().Info(fmt.Sprintf("sftp%s", v.Name()))
+	if downloadDir == nil || len(downloadDir) == 0 {
+		zap.L().Info(fmt.Sprintf("IcbcReceiptFileDownload当前文件夹为空"))
+		return "", nil
 	}
+	//下载.删除所有文件,然后重新从文件服务器上下载
+	filePathDir, _ := util.Mkdir("tempFile/icbc")
+	err = os.RemoveAll("filePathDir")
+	if err != nil {
+		return "", err
+	}
+
+	if _, err = os.Stat(filePathDir); os.IsNotExist(err) {
+		os.MkdirAll(filePathDir, 0755)
+	}
+	var wg sync.WaitGroup
+	//下载zip包到本地临时路径并且解压缩
+	for _, v := range downloadDir {
+		wg.Add(1)
+		fileName := v.Name()
+		remoteFilePath := path.Join(remotePath, fileName)
+		localFilePath := path.Join(filePathDir, fileName)
+		if !strings.HasSuffix(fileName, ".zip") {
+			continue
+		}
+		//创建本地文件
+		localFile, err := os.Create(localFilePath)
+		if err != nil {
+			zap.L().Info(fmt.Sprintf("IcbcReceiptFileDownload创建本地文件失败： %s", err))
+			continue
+		}
+
+		//打开远程文件
+		remoteFile, err := client.Open(remoteFilePath)
+		if err != nil {
+			zap.L().Info(fmt.Sprintf("IcbcReceiptFileDownload打开远程文件失败： %s", err))
+			continue
+		}
+		//复制远程文件到本地
+		_, err = io.Copy(localFile, remoteFile)
+		if err != nil {
+			zap.L().Info(fmt.Sprintf("IcbcReceiptFileDownload复制文件内容失败： %s", err))
+			continue
+		}
+
+		localFile.Close()
+		remoteFile.Close()
+		go func() {
+			err = czip.Unzip(localFilePath, filePathDir)
+			if err != nil {
+				zap.L().Info(fmt.Sprintf("IcbcReceiptFileDownload解压zip包失败： %s", err))
+			}
+		}()
+	}
+	wg.Wait()
 	return "", err
 }
 
-func (i *icbcBankSDK) IcbcReceiptNoQuery(ctx context.Context, accountNo, accCompNo, agreeNo, serialNo string) (*stru.IcbcReceiptNoQueryResponse, error) {
+func (i *icbcBankSDK) IcbcReceiptNoQuery(ctx context.Context, accountNo, agreeNo, serialNo string) (*stru.IcbcReceiptNoQueryResponse, error) {
 	request := stru.NewIcbcGlobalRequest()
 	serl := []string{serialNo}
 	cond := stru.IcbcReceiptNoQueryCond{
@@ -55,10 +104,10 @@ func (i *icbcBankSDK) IcbcReceiptNoQuery(ctx context.Context, accountNo, accComp
 	request.BizContent = &stru.IcbcReceiptNoQueryRequest{
 		FseqNo:    fseqNo,
 		CorpNo:    config.GetString(enum.IcbcCorpNo, ""),
-		AccCompNo: accCompNo,
+		AccCompNo: config.GetString(enum.IcbcAccCompNo, ""),
 		AgreeNo:   agreeNo,
 		Account:   accountNo,
-		CurrType:  "",
+		CurrType:  "001",
 		QryType:   "2",
 		QryCond:   cond,
 	}

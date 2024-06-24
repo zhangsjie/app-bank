@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/apache/thrift v0.13.0
 	github.com/cloudwego/kitex v0.5.2
+	github.com/dablelv/cyan v0.0.54
 	github.com/gen2brain/go-fitz v1.20.2
 	github.com/google/wire v0.5.0
 	github.com/pkg/errors v0.9.1
@@ -16,14 +17,12 @@ require (
 	gitlab.yoyiit.com/youyi/app-invoice v0.0.0-20240108074559-b028901a7781
 	gitlab.yoyiit.com/youyi/app-oa v0.0.0-20240131092823-402146d9c44a
 	gitlab.yoyiit.com/youyi/app-soms v0.0.0-20230725111904-77cace21e85e
-	gitlab.yoyiit.com/youyi/go-common v0.0.0-20240402092240-0000fdc58606
+	gitlab.yoyiit.com/youyi/go-common v0.0.0-20240624093707-f6776d27a63e
 	gitlab.yoyiit.com/youyi/go-core v0.0.0-20240405163909-34d581f7005e
 	go.uber.org/zap v1.24.0
 	golang.org/x/crypto v0.23.0
 	gorm.io/gorm v1.24.5
 )
-
-replace gitlab.yoyiit.com/youyi/app-base => ../app-base
 
 require (
 	github.com/Shopify/sarama v1.38.1 // indirect

@@ -72,7 +72,8 @@ type Client interface {
 	SystemApprovePaymentReceipt(ctx context.Context, id int64, callOptions ...callopt.Option) (err error)
 	IcbcBankAccountSignatureQuery(ctx context.Context, req *api.IcbcBankAccountSignatureRequest, callOptions ...callopt.Option) (r *api.IcbcBankAccountSignatureQueryResponse, err error)
 	IcbcBankListTransactionDetail(ctx context.Context, beginDate string, endDate string, organizationId int64, callOptions ...callopt.Option) (err error)
-	GetBankTransactionReceipt(ctx context.Context, id int64, callOptions ...callopt.Option) (err error)
+	IcbcBankTransactionReceiptDown(ctx context.Context, beginDate string, endDate string, organizationId int64, callOptions ...callopt.Option) (err error)
+	SyncBankTransactionReceipt(ctx context.Context, beginDate string, endDate string, organizationId int64, callOptions ...callopt.Option) (err error)
 }
 
 // NewClient creates a client for the service defined in IDL.
@@ -409,7 +410,12 @@ func (p *kBankClient) IcbcBankListTransactionDetail(ctx context.Context, beginDa
 	return p.kClient.IcbcBankListTransactionDetail(ctx, beginDate, endDate, organizationId)
 }
 
-func (p *kBankClient) GetBankTransactionReceipt(ctx context.Context, id int64, callOptions ...callopt.Option) (err error) {
+func (p *kBankClient) IcbcBankTransactionReceiptDown(ctx context.Context, beginDate string, endDate string, organizationId int64, callOptions ...callopt.Option) (err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
-	return p.kClient.GetBankTransactionReceipt(ctx, id)
+	return p.kClient.IcbcBankTransactionReceiptDown(ctx, beginDate, endDate, organizationId)
+}
+
+func (p *kBankClient) SyncBankTransactionReceipt(ctx context.Context, beginDate string, endDate string, organizationId int64, callOptions ...callopt.Option) (err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.SyncBankTransactionReceipt(ctx, beginDate, endDate, organizationId)
 }

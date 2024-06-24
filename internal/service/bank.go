@@ -29,6 +29,7 @@ import (
 	"gorm.io/gorm"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -108,8 +109,8 @@ type BankService interface {
 	PinganBankVirtualSubAcctBalanceAdjust(ctx context.Context, id int64, req *api.BankTransferReceiptData) (*api.BankVirtualAccountTranscationResponse, error)
 	IcbcBankAccountSignatureQuery(ctx context.Context, req *api.IcbcBankAccountSignatureRequest) (*api.IcbcBankAccountSignatureQueryResponse, error)
 	IcbcBankListTransactionDetail(ctx context.Context, beginDate string, endDate string, organizationId int64) error
-
-	GetBankTransactionReceipt(ctx context.Context, bankTransactionDetailId int64) error
+	SyncIcbcBankTransactionReceipt(ctx context.Context, beginDate string, endDate string, organizationId int64) error
+	GetIcbcBankTransactionReceipt(ctx context.Context, bankTransactionDetailId int64) error
 }
 
 type bankService struct {
@@ -133,7 +134,78 @@ type bankService struct {
 	icbcBank                                 sdk.IcbcBankSDK
 }
 
-func (s *bankService) GetBankTransactionReceipt(ctx context.Context, bankTransactionDetailId int64) error {
+func (s *bankService) SyncIcbcBankTransactionReceipt(ctx context.Context, beginDate string, endDate string, organizationId int64) error {
+	//_, err := s.icbcBank.IcbcReceiptFileDownload(ctx)
+	//if err != nil {
+	//	return handler.HandleError(err)
+	//}
+
+	bankAccounts, err := s.baseClient.ListOrganizationBankAccount(ctx, &baseApi.ListOrganizationBankAccountRequest{
+		OrganizationId:       organizationId,
+		Type:                 "3",
+		SignatureApplyStatus: "0",
+	})
+	if err != nil {
+		return handler.HandleError(err)
+	}
+	if bankAccounts == nil || len(bankAccounts) <= 0 {
+		return nil
+	}
+	for _, bankAccount := range bankAccounts {
+		//找到没有回单附件的流水
+		datas, _, err := s.bankTransactionDetailRepo.List(ctx, "-1", 0, 1000, &repo.BankTransactionDetailDBDataParam{
+			BankTransactionDetailDBData: repo.BankTransactionDetailDBData{
+				BaseDBData:        repository.BaseDBData{},
+				MerchantAccountId: bankAccount.Id,
+				TransferDate:      beginDate,
+			},
+			IsElectronicReceiptFileNull: false,
+		})
+		if err != nil {
+			return err
+		}
+		zap.L().Info(fmt.Sprintf("==IcbcBankAccountListTransactionDetail%v", datas))
+		if err != nil {
+			zap.L().Error(fmt.Sprintf("s.icbcBank.ListTransactionDetail__error_info%s", err.Error()))
+			continue
+		}
+		if *datas != nil {
+			for _, data := range *datas {
+				//在临时回单文件中寻找匹配的回单文件,
+				dir, err := ioutil.ReadDir("tempFile/icbc")
+				if err != nil {
+					return handler.HandleError(err)
+				}
+				for _, fileInfo := range dir {
+					fileName := fileInfo.Name()
+					if strings.Contains(fileName, bankAccount.Account) && strings.Contains(fileName, data.HostFlowNo) && strings.HasSuffix(fileName, ".pdf") {
+						f, err := os.ReadFile("tempFile/icbc" + fileName)
+						if err != nil {
+							zap.L().Error(fmt.Sprintf("SyncIcbcBankTransactionReceipt读取icbc回单失败: %v\n", err.Error()))
+						}
+						electronicReceiptFile, err := store.UploadOSSFileBytes("pdf", ".pdf", f, s.ossConfig, false)
+						if err != nil {
+							zap.L().Error(fmt.Sprintf("SyncIcbcBankTransactionReceipt上传icbc电子凭证到OSS失败: %v\n", err.Error()))
+						}
+						err = s.bankTransactionDetailRepo.UpdateById(ctx, data.Id, &repo.BankTransactionDetailDBData{
+							ElectronicReceiptFile: electronicReceiptFile,
+						})
+						if err != nil {
+							zap.L().Error(fmt.Sprintf("更新icbc电子凭证失败: %v\n", err.Error()))
+						}
+						//todo 更新单据的明细回单
+						break
+
+					}
+				}
+
+			}
+		}
+	}
+	return nil
+}
+
+func (s *bankService) GetIcbcBankTransactionReceipt(ctx context.Context, bankTransactionDetailId int64) error {
 	bankTransactionDetail, _ := s.bankTransactionDetailRepo.Get(ctx, &repo.BankTransactionDetailDBData{
 		BaseDBData: repository.BaseDBData{
 			BaseCommonDBData: repository.BaseCommonDBData{Id: bankTransactionDetailId},
@@ -146,8 +218,17 @@ func (s *bankService) GetBankTransactionReceipt(ctx context.Context, bankTransac
 	if err != nil {
 		return handler.HandleError(err)
 	}
-	if account.Type == "3" {
-		s.icbcBank.IcbcReceiptFileDownload(ctx, account.Account, account.ZuId, bankTransactionDetail.HostFlowNo)
+	if account.Type == enum.IcbcBankType {
+		//s.icbcBank.IcbcReceiptFileDownload(ctx, account.Account, account.ZuId, bankTransactionDetail.HostFlowNo)
+		query, err := s.icbcBank.IcbcReceiptNoQuery(ctx, account.Account, account.ZuId, bankTransactionDetail.HostFlowNo)
+		if err != nil {
+			return handler.HandleError(err)
+		}
+		if query.RetCode != "0" {
+			return handler.HandleError(errors.New(query.RetMsg))
+		}
+		zap.L().Info(fmt.Sprintf("==GetBankTransactionReceipt%s", query.OrderId))
+
 	}
 	return nil
 }
@@ -155,7 +236,7 @@ func (s *bankService) GetBankTransactionReceipt(ctx context.Context, bankTransac
 func (s *bankService) IcbcBankListTransactionDetail(ctx context.Context, beginDate string, endDate string, organizationId int64) error {
 	bankAccounts, err := s.baseClient.ListOrganizationBankAccount(ctx, &baseApi.ListOrganizationBankAccountRequest{
 		OrganizationId:       organizationId,
-		Type:                 "3",
+		Type:                 enum.IcbcBankType,
 		SignatureApplyStatus: "0",
 	})
 	if err != nil {
@@ -202,15 +283,15 @@ func (s *bankService) IcbcBankListTransactionDetail(ctx context.Context, beginDa
 						continue
 					}
 					if data.DrcrF == 2 {
-						recAmount = tranAmount
+						recAmount = tranAmount / 100
 						TransactionType = enum.GuilinBankTransactionDetailRecType
 
 					} else if data.DrcrF == 1 {
-						payAmount = tranAmount
+						payAmount = tranAmount / 100
 						TransactionType = enum.GuilinBankTransactionDetailPayType
 
 					}
-					acctBalance := data.Balance
+					acctBalance := data.Balance / 100
 					if err != nil {
 						continue
 					}
@@ -233,7 +314,7 @@ func (s *bankService) IcbcBankListTransactionDetail(ctx context.Context, beginDa
 						CurrencyType:        "CNY",
 						Balance:             acctBalance,
 						//OrderFlowNo:         data.BussSeqNo,
-						OrderFlowNo:        strconv.Itoa(data.DetailF),
+						OrderFlowNo:        strconv.FormatInt(data.TrxCode, 10),
 						HostFlowNo:         strconv.FormatInt(data.SerialNo, 10),
 						VouchersType:       strconv.Itoa(data.VouhType),
 						VouchersNo:         strconv.Itoa(data.VouhNo),
@@ -243,7 +324,7 @@ func (s *bankService) IcbcBankListTransactionDetail(ctx context.Context, beginDa
 						AccountName:        data.RecipNam,
 						AccountOpenNode:    data.RecipBna,
 						ProcessTotalStatus: enum.ProcessInstanceTotalStatusRunning,
-						PayAccountType:     "3",
+						PayAccountType:     enum.IcbcBankType,
 					}
 
 					//查询回单
@@ -1168,7 +1249,8 @@ func (s *bankService) HandleTransactionDetail(ctx context.Context, beginDate str
 	if endDate == util.FormatTimeyyyyMMdd(now) {
 		s.HandlePinganBankVirtualTransactionDetail(ctx, enum.PinganBankType, endDate, endDate, organizationId)
 	}
-
+	//查询工商银行
+	s.IcbcBankListTransactionDetail(ctx, beginDate, endDate, organizationId)
 	return nil
 }
 

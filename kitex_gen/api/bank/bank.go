@@ -80,7 +80,8 @@ func NewServiceInfo() *kitex.ServiceInfo {
 		"systemApprovePaymentReceipt":                kitex.NewMethodInfo(systemApprovePaymentReceiptHandler, newBankSystemApprovePaymentReceiptArgs, newBankSystemApprovePaymentReceiptResult, false),
 		"icbcBankAccountSignatureQuery":              kitex.NewMethodInfo(icbcBankAccountSignatureQueryHandler, newBankIcbcBankAccountSignatureQueryArgs, newBankIcbcBankAccountSignatureQueryResult, false),
 		"icbcBankListTransactionDetail":              kitex.NewMethodInfo(icbcBankListTransactionDetailHandler, newBankIcbcBankListTransactionDetailArgs, newBankIcbcBankListTransactionDetailResult, false),
-		"getBankTransactionReceipt":                  kitex.NewMethodInfo(getBankTransactionReceiptHandler, newBankGetBankTransactionReceiptArgs, newBankGetBankTransactionReceiptResult, false),
+		"icbcBankTransactionReceiptDown":             kitex.NewMethodInfo(icbcBankTransactionReceiptDownHandler, newBankIcbcBankTransactionReceiptDownArgs, newBankIcbcBankTransactionReceiptDownResult, false),
+		"syncBankTransactionReceipt":                 kitex.NewMethodInfo(syncBankTransactionReceiptHandler, newBankSyncBankTransactionReceiptArgs, newBankSyncBankTransactionReceiptResult, false),
 	}
 	extra := map[string]interface{}{
 		"PackageName":     "api",
@@ -1194,22 +1195,40 @@ func newBankIcbcBankListTransactionDetailResult() interface{} {
 	return api.NewBankIcbcBankListTransactionDetailResult()
 }
 
-func getBankTransactionReceiptHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
-	realArg := arg.(*api.BankGetBankTransactionReceiptArgs)
+func icbcBankTransactionReceiptDownHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	realArg := arg.(*api.BankIcbcBankTransactionReceiptDownArgs)
 
-	err := handler.(api.Bank).GetBankTransactionReceipt(ctx, realArg.Id)
+	err := handler.(api.Bank).IcbcBankTransactionReceiptDown(ctx, realArg.BeginDate, realArg.EndDate, realArg.OrganizationId)
 	if err != nil {
 		return err
 	}
 
 	return nil
 }
-func newBankGetBankTransactionReceiptArgs() interface{} {
-	return api.NewBankGetBankTransactionReceiptArgs()
+func newBankIcbcBankTransactionReceiptDownArgs() interface{} {
+	return api.NewBankIcbcBankTransactionReceiptDownArgs()
 }
 
-func newBankGetBankTransactionReceiptResult() interface{} {
-	return api.NewBankGetBankTransactionReceiptResult()
+func newBankIcbcBankTransactionReceiptDownResult() interface{} {
+	return api.NewBankIcbcBankTransactionReceiptDownResult()
+}
+
+func syncBankTransactionReceiptHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	realArg := arg.(*api.BankSyncBankTransactionReceiptArgs)
+
+	err := handler.(api.Bank).SyncBankTransactionReceipt(ctx, realArg.BeginDate, realArg.EndDate, realArg.OrganizationId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+func newBankSyncBankTransactionReceiptArgs() interface{} {
+	return api.NewBankSyncBankTransactionReceiptArgs()
+}
+
+func newBankSyncBankTransactionReceiptResult() interface{} {
+	return api.NewBankSyncBankTransactionReceiptResult()
 }
 
 type kClient struct {
@@ -1858,11 +1877,25 @@ func (p *kClient) IcbcBankListTransactionDetail(ctx context.Context, beginDate s
 	return nil
 }
 
-func (p *kClient) GetBankTransactionReceipt(ctx context.Context, id int64) (err error) {
-	var _args api.BankGetBankTransactionReceiptArgs
-	_args.Id = id
-	var _result api.BankGetBankTransactionReceiptResult
-	if err = p.c.Call(ctx, "getBankTransactionReceipt", &_args, &_result); err != nil {
+func (p *kClient) IcbcBankTransactionReceiptDown(ctx context.Context, beginDate string, endDate string, organizationId int64) (err error) {
+	var _args api.BankIcbcBankTransactionReceiptDownArgs
+	_args.BeginDate = beginDate
+	_args.EndDate = endDate
+	_args.OrganizationId = organizationId
+	var _result api.BankIcbcBankTransactionReceiptDownResult
+	if err = p.c.Call(ctx, "icbcBankTransactionReceiptDown", &_args, &_result); err != nil {
+		return
+	}
+	return nil
+}
+
+func (p *kClient) SyncBankTransactionReceipt(ctx context.Context, beginDate string, endDate string, organizationId int64) (err error) {
+	var _args api.BankSyncBankTransactionReceiptArgs
+	_args.BeginDate = beginDate
+	_args.EndDate = endDate
+	_args.OrganizationId = organizationId
+	var _result api.BankSyncBankTransactionReceiptResult
+	if err = p.c.Call(ctx, "syncBankTransactionReceipt", &_args, &_result); err != nil {
 		return
 	}
 	return nil

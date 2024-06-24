@@ -97,13 +97,11 @@ func SftpClient() *sftp.Client {
 	if err != nil {
 		fmt.Errorf("failed to decode Base64 encoded private key: %w", err)
 	}
-
 	signer, err := ssh.ParsePrivateKey(keyBytes)
 	if err != nil {
 		fmt.Println("读取私钥文件失败：", err)
 		return nil
 	}
-
 	// 创建SSH配置，使用自定义的HostKeyCallback
 	config := &ssh.ClientConfig{
 		User: userName,
@@ -113,9 +111,6 @@ func SftpClient() *sftp.Client {
 		HostKeyAlgorithms: []string{
 			ssh.KeyAlgoRSA,
 		},
-		//HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
-		//	return checkHostKey(hostname, remote, knownHosts, key)
-		//},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // 生产环境请替换为有效的HostKeyCallback
 	}
 
