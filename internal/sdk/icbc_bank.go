@@ -136,7 +136,7 @@ func (i *icbcBankSDK) QueryAgreeNo(ctx context.Context, zuId, account string) (*
 	}
 	cond := stru.Cond{
 		QryType:   "1",
-		AccCompNo: zuId,
+		AccCompNo: config.GetString(enum.IcbcAccCompNo, ""),
 		Account:   account,
 		CurrType:  "",
 		AgrList:   nil,
