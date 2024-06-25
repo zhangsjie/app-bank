@@ -30,6 +30,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path"
 	"regexp"
 	"strconv"
 	"strings"
@@ -135,11 +136,11 @@ type bankService struct {
 }
 
 func (s *bankService) SyncIcbcBankTransactionReceipt(ctx context.Context, beginDate string, endDate string, organizationId int64) error {
-	//_, err := s.icbcBank.IcbcReceiptFileDownload(ctx)
-	//if err != nil {
-	//	return handler.HandleError(err)
-	//}
-
+	_, err := s.icbcBank.IcbcReceiptFileDownload(ctx)
+	if err != nil {
+		return handler.HandleError(err)
+	}
+	zap.L().Info(fmt.Sprintf("sSyncIcbcBankTransactionReceipt开始查询icbc没有回单的流水"))
 	bankAccounts, err := s.baseClient.ListOrganizationBankAccount(ctx, &baseApi.ListOrganizationBankAccountRequest{
 		OrganizationId:       organizationId,
 		Type:                 "3",
@@ -179,7 +180,7 @@ func (s *bankService) SyncIcbcBankTransactionReceipt(ctx context.Context, beginD
 				for _, fileInfo := range dir {
 					fileName := fileInfo.Name()
 					if strings.Contains(fileName, bankAccount.Account) && strings.Contains(fileName, data.HostFlowNo) && strings.HasSuffix(fileName, ".pdf") {
-						f, err := os.ReadFile("tempFile/icbc" + fileName)
+						f, err := os.ReadFile(path.Join("tempFile/icbc", fileName))
 						if err != nil {
 							zap.L().Error(fmt.Sprintf("SyncIcbcBankTransactionReceipt读取icbc回单失败: %v\n", err.Error()))
 						}
