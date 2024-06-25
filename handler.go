@@ -319,7 +319,23 @@ func (s *BankImpl) IcbcBankAccountSignatureQuery(ctx context.Context, req *api.I
 	return s.bankService.IcbcBankAccountSignatureQuery(ctx, req)
 }
 
-// IcbcBankAccountSignatureApply implements the BankImpl interface.
-func (s *BankImpl) IcbcBankAccountSignatureApply(ctx context.Context, req *api.IcbcBankAccountSignatureRequest) (resp string, err error) {
-	return s.bankService.IcbcBankAccountSignatureApply(ctx, req)
+// IcbcBankListTransactionDetail implements the BankImpl interface.
+func (s *BankImpl) IcbcBankListTransactionDetail(ctx context.Context, beginDate string, endDate string, organizationId int64) (err error) {
+	return s.bankService.IcbcBankListTransactionDetail(ctx, beginDate, endDate, organizationId)
+}
+
+// GetBankTransactionReceipt implements the BankImpl interface.
+func (s *BankImpl) GetBankTransactionReceipt(ctx context.Context, id int64) (err error) {
+	return s.bankService.GetIcbcBankTransactionReceipt(ctx, id)
+}
+
+// IcbcBankTransactionReceiptDown implements the BankImpl interface.
+func (s *BankImpl) IcbcBankTransactionReceiptDown(ctx context.Context, beginDate string, endDate string, organizationId int64) (err error) {
+	// TODO: Your code here...
+	return
+}
+
+// SyncBankTransactionReceipt implements the BankImpl interface.
+func (s *BankImpl) SyncBankTransactionReceipt(ctx context.Context, beginDate string, endDate string, organizationId int64) (err error) {
+	return s.bankService.SyncIcbcBankTransactionReceipt(ctx, beginDate, endDate, organizationId)
 }

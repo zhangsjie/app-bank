@@ -28668,7 +28668,6 @@ type IcbcBankAccountSignatureQueryResponse struct {
 	Signatureapplystatus string `thrift:"signatureapplystatus,1" frugal:"1,default,string" json:"signatureapplystatus"`
 	ZuId                 string `thrift:"zuId,2" frugal:"2,default,string" json:"zuId"`
 	Remark               string `thrift:"remark,3" frugal:"3,default,string" json:"remark"`
-	AgreeNo              string `thrift:"agreeNo,4" frugal:"4,default,string" json:"agreeNo"`
 }
 
 func NewIcbcBankAccountSignatureQueryResponse() *IcbcBankAccountSignatureQueryResponse {
@@ -28690,10 +28689,6 @@ func (p *IcbcBankAccountSignatureQueryResponse) GetZuId() (v string) {
 func (p *IcbcBankAccountSignatureQueryResponse) GetRemark() (v string) {
 	return p.Remark
 }
-
-func (p *IcbcBankAccountSignatureQueryResponse) GetAgreeNo() (v string) {
-	return p.AgreeNo
-}
 func (p *IcbcBankAccountSignatureQueryResponse) SetSignatureapplystatus(val string) {
 	p.Signatureapplystatus = val
 }
@@ -28703,15 +28698,11 @@ func (p *IcbcBankAccountSignatureQueryResponse) SetZuId(val string) {
 func (p *IcbcBankAccountSignatureQueryResponse) SetRemark(val string) {
 	p.Remark = val
 }
-func (p *IcbcBankAccountSignatureQueryResponse) SetAgreeNo(val string) {
-	p.AgreeNo = val
-}
 
 var fieldIDToName_IcbcBankAccountSignatureQueryResponse = map[int16]string{
 	1: "signatureapplystatus",
 	2: "zuId",
 	3: "remark",
-	4: "agreeNo",
 }
 
 func (p *IcbcBankAccountSignatureQueryResponse) Read(iprot thrift.TProtocol) (err error) {
@@ -28756,16 +28747,6 @@ func (p *IcbcBankAccountSignatureQueryResponse) Read(iprot thrift.TProtocol) (er
 		case 3:
 			if fieldTypeId == thrift.STRING {
 				if err = p.ReadField3(iprot); err != nil {
-					goto ReadFieldError
-				}
-			} else {
-				if err = iprot.Skip(fieldTypeId); err != nil {
-					goto SkipFieldError
-				}
-			}
-		case 4:
-			if fieldTypeId == thrift.STRING {
-				if err = p.ReadField4(iprot); err != nil {
 					goto ReadFieldError
 				}
 			} else {
@@ -28830,15 +28811,6 @@ func (p *IcbcBankAccountSignatureQueryResponse) ReadField3(iprot thrift.TProtoco
 	return nil
 }
 
-func (p *IcbcBankAccountSignatureQueryResponse) ReadField4(iprot thrift.TProtocol) error {
-	if v, err := iprot.ReadString(); err != nil {
-		return err
-	} else {
-		p.AgreeNo = v
-	}
-	return nil
-}
-
 func (p *IcbcBankAccountSignatureQueryResponse) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
 	if err = oprot.WriteStructBegin("IcbcBankAccountSignatureQueryResponse"); err != nil {
@@ -28855,10 +28827,6 @@ func (p *IcbcBankAccountSignatureQueryResponse) Write(oprot thrift.TProtocol) (e
 		}
 		if err = p.writeField3(oprot); err != nil {
 			fieldId = 3
-			goto WriteFieldError
-		}
-		if err = p.writeField4(oprot); err != nil {
-			fieldId = 4
 			goto WriteFieldError
 		}
 
@@ -28931,23 +28899,6 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 3 end error: ", p), err)
 }
 
-func (p *IcbcBankAccountSignatureQueryResponse) writeField4(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("agreeNo", thrift.STRING, 4); err != nil {
-		goto WriteFieldBeginError
-	}
-	if err := oprot.WriteString(p.AgreeNo); err != nil {
-		return err
-	}
-	if err = oprot.WriteFieldEnd(); err != nil {
-		goto WriteFieldEndError
-	}
-	return nil
-WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 4 begin error: ", p), err)
-WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 4 end error: ", p), err)
-}
-
 func (p *IcbcBankAccountSignatureQueryResponse) String() string {
 	if p == nil {
 		return "<nil>"
@@ -28970,9 +28921,6 @@ func (p *IcbcBankAccountSignatureQueryResponse) DeepEqual(ano *IcbcBankAccountSi
 	if !p.Field3DeepEqual(ano.Remark) {
 		return false
 	}
-	if !p.Field4DeepEqual(ano.AgreeNo) {
-		return false
-	}
 	return true
 }
 
@@ -28993,13 +28941,6 @@ func (p *IcbcBankAccountSignatureQueryResponse) Field2DeepEqual(src string) bool
 func (p *IcbcBankAccountSignatureQueryResponse) Field3DeepEqual(src string) bool {
 
 	if strings.Compare(p.Remark, src) != 0 {
-		return false
-	}
-	return true
-}
-func (p *IcbcBankAccountSignatureQueryResponse) Field4DeepEqual(src string) bool {
-
-	if strings.Compare(p.AgreeNo, src) != 0 {
 		return false
 	}
 	return true
@@ -29924,9 +29865,13 @@ type Bank interface {
 
 	SystemApprovePaymentReceipt(ctx context.Context, id int64) (err error)
 
-	IcbcBankAccountSignatureApply(ctx context.Context, req *IcbcBankAccountSignatureRequest) (r string, err error)
-
 	IcbcBankAccountSignatureQuery(ctx context.Context, req *IcbcBankAccountSignatureRequest) (r *IcbcBankAccountSignatureQueryResponse, err error)
+
+	IcbcBankListTransactionDetail(ctx context.Context, beginDate string, endDate string, organizationId int64) (err error)
+
+	IcbcBankTransactionReceiptDown(ctx context.Context, beginDate string, endDate string, organizationId int64) (err error)
+
+	SyncBankTransactionReceipt(ctx context.Context, beginDate string, endDate string, organizationId int64) (err error)
 }
 
 type BankClient struct {
@@ -30510,15 +30455,6 @@ func (p *BankClient) SystemApprovePaymentReceipt(ctx context.Context, id int64) 
 	}
 	return nil
 }
-func (p *BankClient) IcbcBankAccountSignatureApply(ctx context.Context, req *IcbcBankAccountSignatureRequest) (r string, err error) {
-	var _args BankIcbcBankAccountSignatureApplyArgs
-	_args.Req = req
-	var _result BankIcbcBankAccountSignatureApplyResult
-	if err = p.Client_().Call(ctx, "icbcBankAccountSignatureApply", &_args, &_result); err != nil {
-		return
-	}
-	return _result.GetSuccess(), nil
-}
 func (p *BankClient) IcbcBankAccountSignatureQuery(ctx context.Context, req *IcbcBankAccountSignatureRequest) (r *IcbcBankAccountSignatureQueryResponse, err error) {
 	var _args BankIcbcBankAccountSignatureQueryArgs
 	_args.Req = req
@@ -30527,6 +30463,39 @@ func (p *BankClient) IcbcBankAccountSignatureQuery(ctx context.Context, req *Icb
 		return
 	}
 	return _result.GetSuccess(), nil
+}
+func (p *BankClient) IcbcBankListTransactionDetail(ctx context.Context, beginDate string, endDate string, organizationId int64) (err error) {
+	var _args BankIcbcBankListTransactionDetailArgs
+	_args.BeginDate = beginDate
+	_args.EndDate = endDate
+	_args.OrganizationId = organizationId
+	var _result BankIcbcBankListTransactionDetailResult
+	if err = p.Client_().Call(ctx, "icbcBankListTransactionDetail", &_args, &_result); err != nil {
+		return
+	}
+	return nil
+}
+func (p *BankClient) IcbcBankTransactionReceiptDown(ctx context.Context, beginDate string, endDate string, organizationId int64) (err error) {
+	var _args BankIcbcBankTransactionReceiptDownArgs
+	_args.BeginDate = beginDate
+	_args.EndDate = endDate
+	_args.OrganizationId = organizationId
+	var _result BankIcbcBankTransactionReceiptDownResult
+	if err = p.Client_().Call(ctx, "icbcBankTransactionReceiptDown", &_args, &_result); err != nil {
+		return
+	}
+	return nil
+}
+func (p *BankClient) SyncBankTransactionReceipt(ctx context.Context, beginDate string, endDate string, organizationId int64) (err error) {
+	var _args BankSyncBankTransactionReceiptArgs
+	_args.BeginDate = beginDate
+	_args.EndDate = endDate
+	_args.OrganizationId = organizationId
+	var _result BankSyncBankTransactionReceiptResult
+	if err = p.Client_().Call(ctx, "syncBankTransactionReceipt", &_args, &_result); err != nil {
+		return
+	}
+	return nil
 }
 
 type BankProcessor struct {
@@ -30608,8 +30577,10 @@ func NewBankProcessor(handler Bank) *BankProcessor {
 	self.AddToProcessorMap("pinganBankAccountSignatureQuery", &bankProcessorPinganBankAccountSignatureQuery{handler: handler})
 	self.AddToProcessorMap("systemRefusePaymentReceipt", &bankProcessorSystemRefusePaymentReceipt{handler: handler})
 	self.AddToProcessorMap("systemApprovePaymentReceipt", &bankProcessorSystemApprovePaymentReceipt{handler: handler})
-	self.AddToProcessorMap("icbcBankAccountSignatureApply", &bankProcessorIcbcBankAccountSignatureApply{handler: handler})
 	self.AddToProcessorMap("icbcBankAccountSignatureQuery", &bankProcessorIcbcBankAccountSignatureQuery{handler: handler})
+	self.AddToProcessorMap("icbcBankListTransactionDetail", &bankProcessorIcbcBankListTransactionDetail{handler: handler})
+	self.AddToProcessorMap("icbcBankTransactionReceiptDown", &bankProcessorIcbcBankTransactionReceiptDown{handler: handler})
+	self.AddToProcessorMap("syncBankTransactionReceipt", &bankProcessorSyncBankTransactionReceipt{handler: handler})
 	return self
 }
 func (p *BankProcessor) Process(ctx context.Context, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
@@ -33372,54 +33343,6 @@ func (p *bankProcessorSystemApprovePaymentReceipt) Process(ctx context.Context, 
 	return true, err
 }
 
-type bankProcessorIcbcBankAccountSignatureApply struct {
-	handler Bank
-}
-
-func (p *bankProcessorIcbcBankAccountSignatureApply) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
-	args := BankIcbcBankAccountSignatureApplyArgs{}
-	if err = args.Read(iprot); err != nil {
-		iprot.ReadMessageEnd()
-		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
-		oprot.WriteMessageBegin("icbcBankAccountSignatureApply", thrift.EXCEPTION, seqId)
-		x.Write(oprot)
-		oprot.WriteMessageEnd()
-		oprot.Flush(ctx)
-		return false, err
-	}
-
-	iprot.ReadMessageEnd()
-	var err2 error
-	result := BankIcbcBankAccountSignatureApplyResult{}
-	var retval string
-	if retval, err2 = p.handler.IcbcBankAccountSignatureApply(ctx, args.Req); err2 != nil {
-		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing icbcBankAccountSignatureApply: "+err2.Error())
-		oprot.WriteMessageBegin("icbcBankAccountSignatureApply", thrift.EXCEPTION, seqId)
-		x.Write(oprot)
-		oprot.WriteMessageEnd()
-		oprot.Flush(ctx)
-		return true, err2
-	} else {
-		result.Success = &retval
-	}
-	if err2 = oprot.WriteMessageBegin("icbcBankAccountSignatureApply", thrift.REPLY, seqId); err2 != nil {
-		err = err2
-	}
-	if err2 = result.Write(oprot); err == nil && err2 != nil {
-		err = err2
-	}
-	if err2 = oprot.WriteMessageEnd(); err == nil && err2 != nil {
-		err = err2
-	}
-	if err2 = oprot.Flush(ctx); err == nil && err2 != nil {
-		err = err2
-	}
-	if err != nil {
-		return
-	}
-	return true, err
-}
-
 type bankProcessorIcbcBankAccountSignatureQuery struct {
 	handler Bank
 }
@@ -33451,6 +33374,141 @@ func (p *bankProcessorIcbcBankAccountSignatureQuery) Process(ctx context.Context
 		result.Success = retval
 	}
 	if err2 = oprot.WriteMessageBegin("icbcBankAccountSignatureQuery", thrift.REPLY, seqId); err2 != nil {
+		err = err2
+	}
+	if err2 = result.Write(oprot); err == nil && err2 != nil {
+		err = err2
+	}
+	if err2 = oprot.WriteMessageEnd(); err == nil && err2 != nil {
+		err = err2
+	}
+	if err2 = oprot.Flush(ctx); err == nil && err2 != nil {
+		err = err2
+	}
+	if err != nil {
+		return
+	}
+	return true, err
+}
+
+type bankProcessorIcbcBankListTransactionDetail struct {
+	handler Bank
+}
+
+func (p *bankProcessorIcbcBankListTransactionDetail) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+	args := BankIcbcBankListTransactionDetailArgs{}
+	if err = args.Read(iprot); err != nil {
+		iprot.ReadMessageEnd()
+		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
+		oprot.WriteMessageBegin("icbcBankListTransactionDetail", thrift.EXCEPTION, seqId)
+		x.Write(oprot)
+		oprot.WriteMessageEnd()
+		oprot.Flush(ctx)
+		return false, err
+	}
+
+	iprot.ReadMessageEnd()
+	var err2 error
+	result := BankIcbcBankListTransactionDetailResult{}
+	if err2 = p.handler.IcbcBankListTransactionDetail(ctx, args.BeginDate, args.EndDate, args.OrganizationId); err2 != nil {
+		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing icbcBankListTransactionDetail: "+err2.Error())
+		oprot.WriteMessageBegin("icbcBankListTransactionDetail", thrift.EXCEPTION, seqId)
+		x.Write(oprot)
+		oprot.WriteMessageEnd()
+		oprot.Flush(ctx)
+		return true, err2
+	}
+	if err2 = oprot.WriteMessageBegin("icbcBankListTransactionDetail", thrift.REPLY, seqId); err2 != nil {
+		err = err2
+	}
+	if err2 = result.Write(oprot); err == nil && err2 != nil {
+		err = err2
+	}
+	if err2 = oprot.WriteMessageEnd(); err == nil && err2 != nil {
+		err = err2
+	}
+	if err2 = oprot.Flush(ctx); err == nil && err2 != nil {
+		err = err2
+	}
+	if err != nil {
+		return
+	}
+	return true, err
+}
+
+type bankProcessorIcbcBankTransactionReceiptDown struct {
+	handler Bank
+}
+
+func (p *bankProcessorIcbcBankTransactionReceiptDown) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+	args := BankIcbcBankTransactionReceiptDownArgs{}
+	if err = args.Read(iprot); err != nil {
+		iprot.ReadMessageEnd()
+		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
+		oprot.WriteMessageBegin("icbcBankTransactionReceiptDown", thrift.EXCEPTION, seqId)
+		x.Write(oprot)
+		oprot.WriteMessageEnd()
+		oprot.Flush(ctx)
+		return false, err
+	}
+
+	iprot.ReadMessageEnd()
+	var err2 error
+	result := BankIcbcBankTransactionReceiptDownResult{}
+	if err2 = p.handler.IcbcBankTransactionReceiptDown(ctx, args.BeginDate, args.EndDate, args.OrganizationId); err2 != nil {
+		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing icbcBankTransactionReceiptDown: "+err2.Error())
+		oprot.WriteMessageBegin("icbcBankTransactionReceiptDown", thrift.EXCEPTION, seqId)
+		x.Write(oprot)
+		oprot.WriteMessageEnd()
+		oprot.Flush(ctx)
+		return true, err2
+	}
+	if err2 = oprot.WriteMessageBegin("icbcBankTransactionReceiptDown", thrift.REPLY, seqId); err2 != nil {
+		err = err2
+	}
+	if err2 = result.Write(oprot); err == nil && err2 != nil {
+		err = err2
+	}
+	if err2 = oprot.WriteMessageEnd(); err == nil && err2 != nil {
+		err = err2
+	}
+	if err2 = oprot.Flush(ctx); err == nil && err2 != nil {
+		err = err2
+	}
+	if err != nil {
+		return
+	}
+	return true, err
+}
+
+type bankProcessorSyncBankTransactionReceipt struct {
+	handler Bank
+}
+
+func (p *bankProcessorSyncBankTransactionReceipt) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+	args := BankSyncBankTransactionReceiptArgs{}
+	if err = args.Read(iprot); err != nil {
+		iprot.ReadMessageEnd()
+		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
+		oprot.WriteMessageBegin("syncBankTransactionReceipt", thrift.EXCEPTION, seqId)
+		x.Write(oprot)
+		oprot.WriteMessageEnd()
+		oprot.Flush(ctx)
+		return false, err
+	}
+
+	iprot.ReadMessageEnd()
+	var err2 error
+	result := BankSyncBankTransactionReceiptResult{}
+	if err2 = p.handler.SyncBankTransactionReceipt(ctx, args.BeginDate, args.EndDate, args.OrganizationId); err2 != nil {
+		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing syncBankTransactionReceipt: "+err2.Error())
+		oprot.WriteMessageBegin("syncBankTransactionReceipt", thrift.EXCEPTION, seqId)
+		x.Write(oprot)
+		oprot.WriteMessageEnd()
+		oprot.Flush(ctx)
+		return true, err2
+	}
+	if err2 = oprot.WriteMessageBegin("syncBankTransactionReceipt", thrift.REPLY, seqId); err2 != nil {
 		err = err2
 	}
 	if err2 = result.Write(oprot); err == nil && err2 != nil {
@@ -52725,358 +52783,6 @@ func (p *BankSystemApprovePaymentReceiptResult) DeepEqual(ano *BankSystemApprove
 	return true
 }
 
-type BankIcbcBankAccountSignatureApplyArgs struct {
-	Req *IcbcBankAccountSignatureRequest `thrift:"req,1" frugal:"1,default,IcbcBankAccountSignatureRequest" json:"req"`
-}
-
-func NewBankIcbcBankAccountSignatureApplyArgs() *BankIcbcBankAccountSignatureApplyArgs {
-	return &BankIcbcBankAccountSignatureApplyArgs{}
-}
-
-func (p *BankIcbcBankAccountSignatureApplyArgs) InitDefault() {
-	*p = BankIcbcBankAccountSignatureApplyArgs{}
-}
-
-var BankIcbcBankAccountSignatureApplyArgs_Req_DEFAULT *IcbcBankAccountSignatureRequest
-
-func (p *BankIcbcBankAccountSignatureApplyArgs) GetReq() (v *IcbcBankAccountSignatureRequest) {
-	if !p.IsSetReq() {
-		return BankIcbcBankAccountSignatureApplyArgs_Req_DEFAULT
-	}
-	return p.Req
-}
-func (p *BankIcbcBankAccountSignatureApplyArgs) SetReq(val *IcbcBankAccountSignatureRequest) {
-	p.Req = val
-}
-
-var fieldIDToName_BankIcbcBankAccountSignatureApplyArgs = map[int16]string{
-	1: "req",
-}
-
-func (p *BankIcbcBankAccountSignatureApplyArgs) IsSetReq() bool {
-	return p.Req != nil
-}
-
-func (p *BankIcbcBankAccountSignatureApplyArgs) Read(iprot thrift.TProtocol) (err error) {
-
-	var fieldTypeId thrift.TType
-	var fieldId int16
-
-	if _, err = iprot.ReadStructBegin(); err != nil {
-		goto ReadStructBeginError
-	}
-
-	for {
-		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
-		if err != nil {
-			goto ReadFieldBeginError
-		}
-		if fieldTypeId == thrift.STOP {
-			break
-		}
-
-		switch fieldId {
-		case 1:
-			if fieldTypeId == thrift.STRUCT {
-				if err = p.ReadField1(iprot); err != nil {
-					goto ReadFieldError
-				}
-			} else {
-				if err = iprot.Skip(fieldTypeId); err != nil {
-					goto SkipFieldError
-				}
-			}
-		default:
-			if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		}
-
-		if err = iprot.ReadFieldEnd(); err != nil {
-			goto ReadFieldEndError
-		}
-	}
-	if err = iprot.ReadStructEnd(); err != nil {
-		goto ReadStructEndError
-	}
-
-	return nil
-ReadStructBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
-ReadFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
-ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_BankIcbcBankAccountSignatureApplyArgs[fieldId]), err)
-SkipFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
-
-ReadFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
-ReadStructEndError:
-	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
-}
-
-func (p *BankIcbcBankAccountSignatureApplyArgs) ReadField1(iprot thrift.TProtocol) error {
-	p.Req = NewIcbcBankAccountSignatureRequest()
-	if err := p.Req.Read(iprot); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (p *BankIcbcBankAccountSignatureApplyArgs) Write(oprot thrift.TProtocol) (err error) {
-	var fieldId int16
-	if err = oprot.WriteStructBegin("icbcBankAccountSignatureApply_args"); err != nil {
-		goto WriteStructBeginError
-	}
-	if p != nil {
-		if err = p.writeField1(oprot); err != nil {
-			fieldId = 1
-			goto WriteFieldError
-		}
-
-	}
-	if err = oprot.WriteFieldStop(); err != nil {
-		goto WriteFieldStopError
-	}
-	if err = oprot.WriteStructEnd(); err != nil {
-		goto WriteStructEndError
-	}
-	return nil
-WriteStructBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
-WriteFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
-WriteFieldStopError:
-	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
-WriteStructEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
-}
-
-func (p *BankIcbcBankAccountSignatureApplyArgs) writeField1(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("req", thrift.STRUCT, 1); err != nil {
-		goto WriteFieldBeginError
-	}
-	if err := p.Req.Write(oprot); err != nil {
-		return err
-	}
-	if err = oprot.WriteFieldEnd(); err != nil {
-		goto WriteFieldEndError
-	}
-	return nil
-WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
-WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
-}
-
-func (p *BankIcbcBankAccountSignatureApplyArgs) String() string {
-	if p == nil {
-		return "<nil>"
-	}
-	return fmt.Sprintf("BankIcbcBankAccountSignatureApplyArgs(%+v)", *p)
-}
-
-func (p *BankIcbcBankAccountSignatureApplyArgs) DeepEqual(ano *BankIcbcBankAccountSignatureApplyArgs) bool {
-	if p == ano {
-		return true
-	} else if p == nil || ano == nil {
-		return false
-	}
-	if !p.Field1DeepEqual(ano.Req) {
-		return false
-	}
-	return true
-}
-
-func (p *BankIcbcBankAccountSignatureApplyArgs) Field1DeepEqual(src *IcbcBankAccountSignatureRequest) bool {
-
-	if !p.Req.DeepEqual(src) {
-		return false
-	}
-	return true
-}
-
-type BankIcbcBankAccountSignatureApplyResult struct {
-	Success *string `thrift:"success,0,optional" frugal:"0,optional,string" json:"success,omitempty"`
-}
-
-func NewBankIcbcBankAccountSignatureApplyResult() *BankIcbcBankAccountSignatureApplyResult {
-	return &BankIcbcBankAccountSignatureApplyResult{}
-}
-
-func (p *BankIcbcBankAccountSignatureApplyResult) InitDefault() {
-	*p = BankIcbcBankAccountSignatureApplyResult{}
-}
-
-var BankIcbcBankAccountSignatureApplyResult_Success_DEFAULT string
-
-func (p *BankIcbcBankAccountSignatureApplyResult) GetSuccess() (v string) {
-	if !p.IsSetSuccess() {
-		return BankIcbcBankAccountSignatureApplyResult_Success_DEFAULT
-	}
-	return *p.Success
-}
-func (p *BankIcbcBankAccountSignatureApplyResult) SetSuccess(x interface{}) {
-	p.Success = x.(*string)
-}
-
-var fieldIDToName_BankIcbcBankAccountSignatureApplyResult = map[int16]string{
-	0: "success",
-}
-
-func (p *BankIcbcBankAccountSignatureApplyResult) IsSetSuccess() bool {
-	return p.Success != nil
-}
-
-func (p *BankIcbcBankAccountSignatureApplyResult) Read(iprot thrift.TProtocol) (err error) {
-
-	var fieldTypeId thrift.TType
-	var fieldId int16
-
-	if _, err = iprot.ReadStructBegin(); err != nil {
-		goto ReadStructBeginError
-	}
-
-	for {
-		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
-		if err != nil {
-			goto ReadFieldBeginError
-		}
-		if fieldTypeId == thrift.STOP {
-			break
-		}
-
-		switch fieldId {
-		case 0:
-			if fieldTypeId == thrift.STRING {
-				if err = p.ReadField0(iprot); err != nil {
-					goto ReadFieldError
-				}
-			} else {
-				if err = iprot.Skip(fieldTypeId); err != nil {
-					goto SkipFieldError
-				}
-			}
-		default:
-			if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		}
-
-		if err = iprot.ReadFieldEnd(); err != nil {
-			goto ReadFieldEndError
-		}
-	}
-	if err = iprot.ReadStructEnd(); err != nil {
-		goto ReadStructEndError
-	}
-
-	return nil
-ReadStructBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
-ReadFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
-ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_BankIcbcBankAccountSignatureApplyResult[fieldId]), err)
-SkipFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
-
-ReadFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
-ReadStructEndError:
-	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
-}
-
-func (p *BankIcbcBankAccountSignatureApplyResult) ReadField0(iprot thrift.TProtocol) error {
-	if v, err := iprot.ReadString(); err != nil {
-		return err
-	} else {
-		p.Success = &v
-	}
-	return nil
-}
-
-func (p *BankIcbcBankAccountSignatureApplyResult) Write(oprot thrift.TProtocol) (err error) {
-	var fieldId int16
-	if err = oprot.WriteStructBegin("icbcBankAccountSignatureApply_result"); err != nil {
-		goto WriteStructBeginError
-	}
-	if p != nil {
-		if err = p.writeField0(oprot); err != nil {
-			fieldId = 0
-			goto WriteFieldError
-		}
-
-	}
-	if err = oprot.WriteFieldStop(); err != nil {
-		goto WriteFieldStopError
-	}
-	if err = oprot.WriteStructEnd(); err != nil {
-		goto WriteStructEndError
-	}
-	return nil
-WriteStructBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
-WriteFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
-WriteFieldStopError:
-	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
-WriteStructEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
-}
-
-func (p *BankIcbcBankAccountSignatureApplyResult) writeField0(oprot thrift.TProtocol) (err error) {
-	if p.IsSetSuccess() {
-		if err = oprot.WriteFieldBegin("success", thrift.STRING, 0); err != nil {
-			goto WriteFieldBeginError
-		}
-		if err := oprot.WriteString(*p.Success); err != nil {
-			return err
-		}
-		if err = oprot.WriteFieldEnd(); err != nil {
-			goto WriteFieldEndError
-		}
-	}
-	return nil
-WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 0 begin error: ", p), err)
-WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 0 end error: ", p), err)
-}
-
-func (p *BankIcbcBankAccountSignatureApplyResult) String() string {
-	if p == nil {
-		return "<nil>"
-	}
-	return fmt.Sprintf("BankIcbcBankAccountSignatureApplyResult(%+v)", *p)
-}
-
-func (p *BankIcbcBankAccountSignatureApplyResult) DeepEqual(ano *BankIcbcBankAccountSignatureApplyResult) bool {
-	if p == ano {
-		return true
-	} else if p == nil || ano == nil {
-		return false
-	}
-	if !p.Field0DeepEqual(ano.Success) {
-		return false
-	}
-	return true
-}
-
-func (p *BankIcbcBankAccountSignatureApplyResult) Field0DeepEqual(src *string) bool {
-
-	if p.Success == src {
-		return true
-	} else if p.Success == nil || src == nil {
-		return false
-	}
-	if strings.Compare(*p.Success, *src) != 0 {
-		return false
-	}
-	return true
-}
-
 type BankIcbcBankAccountSignatureQueryArgs struct {
 	Req *IcbcBankAccountSignatureRequest `thrift:"req,1" frugal:"1,default,IcbcBankAccountSignatureRequest" json:"req"`
 }
@@ -53418,6 +53124,1134 @@ func (p *BankIcbcBankAccountSignatureQueryResult) DeepEqual(ano *BankIcbcBankAcc
 func (p *BankIcbcBankAccountSignatureQueryResult) Field0DeepEqual(src *IcbcBankAccountSignatureQueryResponse) bool {
 
 	if !p.Success.DeepEqual(src) {
+		return false
+	}
+	return true
+}
+
+type BankIcbcBankListTransactionDetailArgs struct {
+	BeginDate      string `thrift:"beginDate,1" frugal:"1,default,string" json:"beginDate"`
+	EndDate        string `thrift:"endDate,2" frugal:"2,default,string" json:"endDate"`
+	OrganizationId int64  `thrift:"organizationId,3" frugal:"3,default,i64" json:"organizationId"`
+}
+
+func NewBankIcbcBankListTransactionDetailArgs() *BankIcbcBankListTransactionDetailArgs {
+	return &BankIcbcBankListTransactionDetailArgs{}
+}
+
+func (p *BankIcbcBankListTransactionDetailArgs) InitDefault() {
+	*p = BankIcbcBankListTransactionDetailArgs{}
+}
+
+func (p *BankIcbcBankListTransactionDetailArgs) GetBeginDate() (v string) {
+	return p.BeginDate
+}
+
+func (p *BankIcbcBankListTransactionDetailArgs) GetEndDate() (v string) {
+	return p.EndDate
+}
+
+func (p *BankIcbcBankListTransactionDetailArgs) GetOrganizationId() (v int64) {
+	return p.OrganizationId
+}
+func (p *BankIcbcBankListTransactionDetailArgs) SetBeginDate(val string) {
+	p.BeginDate = val
+}
+func (p *BankIcbcBankListTransactionDetailArgs) SetEndDate(val string) {
+	p.EndDate = val
+}
+func (p *BankIcbcBankListTransactionDetailArgs) SetOrganizationId(val int64) {
+	p.OrganizationId = val
+}
+
+var fieldIDToName_BankIcbcBankListTransactionDetailArgs = map[int16]string{
+	1: "beginDate",
+	2: "endDate",
+	3: "organizationId",
+}
+
+func (p *BankIcbcBankListTransactionDetailArgs) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+
+		switch fieldId {
+		case 1:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField1(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				if err = iprot.Skip(fieldTypeId); err != nil {
+					goto SkipFieldError
+				}
+			}
+		case 2:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField2(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				if err = iprot.Skip(fieldTypeId); err != nil {
+					goto SkipFieldError
+				}
+			}
+		case 3:
+			if fieldTypeId == thrift.I64 {
+				if err = p.ReadField3(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				if err = iprot.Skip(fieldTypeId); err != nil {
+					goto SkipFieldError
+				}
+			}
+		default:
+			if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		}
+
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_BankIcbcBankListTransactionDetailArgs[fieldId]), err)
+SkipFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *BankIcbcBankListTransactionDetailArgs) ReadField1(iprot thrift.TProtocol) error {
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		p.BeginDate = v
+	}
+	return nil
+}
+
+func (p *BankIcbcBankListTransactionDetailArgs) ReadField2(iprot thrift.TProtocol) error {
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		p.EndDate = v
+	}
+	return nil
+}
+
+func (p *BankIcbcBankListTransactionDetailArgs) ReadField3(iprot thrift.TProtocol) error {
+	if v, err := iprot.ReadI64(); err != nil {
+		return err
+	} else {
+		p.OrganizationId = v
+	}
+	return nil
+}
+
+func (p *BankIcbcBankListTransactionDetailArgs) Write(oprot thrift.TProtocol) (err error) {
+	var fieldId int16
+	if err = oprot.WriteStructBegin("icbcBankListTransactionDetail_args"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+		if err = p.writeField1(oprot); err != nil {
+			fieldId = 1
+			goto WriteFieldError
+		}
+		if err = p.writeField2(oprot); err != nil {
+			fieldId = 2
+			goto WriteFieldError
+		}
+		if err = p.writeField3(oprot); err != nil {
+			fieldId = 3
+			goto WriteFieldError
+		}
+
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *BankIcbcBankListTransactionDetailArgs) writeField1(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("beginDate", thrift.STRING, 1); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteString(p.BeginDate); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
+}
+
+func (p *BankIcbcBankListTransactionDetailArgs) writeField2(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("endDate", thrift.STRING, 2); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteString(p.EndDate); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 2 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 2 end error: ", p), err)
+}
+
+func (p *BankIcbcBankListTransactionDetailArgs) writeField3(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("organizationId", thrift.I64, 3); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteI64(p.OrganizationId); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 3 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 3 end error: ", p), err)
+}
+
+func (p *BankIcbcBankListTransactionDetailArgs) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("BankIcbcBankListTransactionDetailArgs(%+v)", *p)
+}
+
+func (p *BankIcbcBankListTransactionDetailArgs) DeepEqual(ano *BankIcbcBankListTransactionDetailArgs) bool {
+	if p == ano {
+		return true
+	} else if p == nil || ano == nil {
+		return false
+	}
+	if !p.Field1DeepEqual(ano.BeginDate) {
+		return false
+	}
+	if !p.Field2DeepEqual(ano.EndDate) {
+		return false
+	}
+	if !p.Field3DeepEqual(ano.OrganizationId) {
+		return false
+	}
+	return true
+}
+
+func (p *BankIcbcBankListTransactionDetailArgs) Field1DeepEqual(src string) bool {
+
+	if strings.Compare(p.BeginDate, src) != 0 {
+		return false
+	}
+	return true
+}
+func (p *BankIcbcBankListTransactionDetailArgs) Field2DeepEqual(src string) bool {
+
+	if strings.Compare(p.EndDate, src) != 0 {
+		return false
+	}
+	return true
+}
+func (p *BankIcbcBankListTransactionDetailArgs) Field3DeepEqual(src int64) bool {
+
+	if p.OrganizationId != src {
+		return false
+	}
+	return true
+}
+
+type BankIcbcBankListTransactionDetailResult struct {
+}
+
+func NewBankIcbcBankListTransactionDetailResult() *BankIcbcBankListTransactionDetailResult {
+	return &BankIcbcBankListTransactionDetailResult{}
+}
+
+func (p *BankIcbcBankListTransactionDetailResult) InitDefault() {
+	*p = BankIcbcBankListTransactionDetailResult{}
+}
+
+var fieldIDToName_BankIcbcBankListTransactionDetailResult = map[int16]string{}
+
+func (p *BankIcbcBankListTransactionDetailResult) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+		if err = iprot.Skip(fieldTypeId); err != nil {
+			goto SkipFieldTypeError
+		}
+
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+SkipFieldTypeError:
+	return thrift.PrependError(fmt.Sprintf("%T skip field type %d error", p, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *BankIcbcBankListTransactionDetailResult) Write(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteStructBegin("icbcBankListTransactionDetail_result"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *BankIcbcBankListTransactionDetailResult) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("BankIcbcBankListTransactionDetailResult(%+v)", *p)
+}
+
+func (p *BankIcbcBankListTransactionDetailResult) DeepEqual(ano *BankIcbcBankListTransactionDetailResult) bool {
+	if p == ano {
+		return true
+	} else if p == nil || ano == nil {
+		return false
+	}
+	return true
+}
+
+type BankIcbcBankTransactionReceiptDownArgs struct {
+	BeginDate      string `thrift:"beginDate,1" frugal:"1,default,string" json:"beginDate"`
+	EndDate        string `thrift:"endDate,2" frugal:"2,default,string" json:"endDate"`
+	OrganizationId int64  `thrift:"organizationId,3" frugal:"3,default,i64" json:"organizationId"`
+}
+
+func NewBankIcbcBankTransactionReceiptDownArgs() *BankIcbcBankTransactionReceiptDownArgs {
+	return &BankIcbcBankTransactionReceiptDownArgs{}
+}
+
+func (p *BankIcbcBankTransactionReceiptDownArgs) InitDefault() {
+	*p = BankIcbcBankTransactionReceiptDownArgs{}
+}
+
+func (p *BankIcbcBankTransactionReceiptDownArgs) GetBeginDate() (v string) {
+	return p.BeginDate
+}
+
+func (p *BankIcbcBankTransactionReceiptDownArgs) GetEndDate() (v string) {
+	return p.EndDate
+}
+
+func (p *BankIcbcBankTransactionReceiptDownArgs) GetOrganizationId() (v int64) {
+	return p.OrganizationId
+}
+func (p *BankIcbcBankTransactionReceiptDownArgs) SetBeginDate(val string) {
+	p.BeginDate = val
+}
+func (p *BankIcbcBankTransactionReceiptDownArgs) SetEndDate(val string) {
+	p.EndDate = val
+}
+func (p *BankIcbcBankTransactionReceiptDownArgs) SetOrganizationId(val int64) {
+	p.OrganizationId = val
+}
+
+var fieldIDToName_BankIcbcBankTransactionReceiptDownArgs = map[int16]string{
+	1: "beginDate",
+	2: "endDate",
+	3: "organizationId",
+}
+
+func (p *BankIcbcBankTransactionReceiptDownArgs) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+
+		switch fieldId {
+		case 1:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField1(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				if err = iprot.Skip(fieldTypeId); err != nil {
+					goto SkipFieldError
+				}
+			}
+		case 2:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField2(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				if err = iprot.Skip(fieldTypeId); err != nil {
+					goto SkipFieldError
+				}
+			}
+		case 3:
+			if fieldTypeId == thrift.I64 {
+				if err = p.ReadField3(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				if err = iprot.Skip(fieldTypeId); err != nil {
+					goto SkipFieldError
+				}
+			}
+		default:
+			if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		}
+
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_BankIcbcBankTransactionReceiptDownArgs[fieldId]), err)
+SkipFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *BankIcbcBankTransactionReceiptDownArgs) ReadField1(iprot thrift.TProtocol) error {
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		p.BeginDate = v
+	}
+	return nil
+}
+
+func (p *BankIcbcBankTransactionReceiptDownArgs) ReadField2(iprot thrift.TProtocol) error {
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		p.EndDate = v
+	}
+	return nil
+}
+
+func (p *BankIcbcBankTransactionReceiptDownArgs) ReadField3(iprot thrift.TProtocol) error {
+	if v, err := iprot.ReadI64(); err != nil {
+		return err
+	} else {
+		p.OrganizationId = v
+	}
+	return nil
+}
+
+func (p *BankIcbcBankTransactionReceiptDownArgs) Write(oprot thrift.TProtocol) (err error) {
+	var fieldId int16
+	if err = oprot.WriteStructBegin("icbcBankTransactionReceiptDown_args"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+		if err = p.writeField1(oprot); err != nil {
+			fieldId = 1
+			goto WriteFieldError
+		}
+		if err = p.writeField2(oprot); err != nil {
+			fieldId = 2
+			goto WriteFieldError
+		}
+		if err = p.writeField3(oprot); err != nil {
+			fieldId = 3
+			goto WriteFieldError
+		}
+
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *BankIcbcBankTransactionReceiptDownArgs) writeField1(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("beginDate", thrift.STRING, 1); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteString(p.BeginDate); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
+}
+
+func (p *BankIcbcBankTransactionReceiptDownArgs) writeField2(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("endDate", thrift.STRING, 2); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteString(p.EndDate); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 2 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 2 end error: ", p), err)
+}
+
+func (p *BankIcbcBankTransactionReceiptDownArgs) writeField3(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("organizationId", thrift.I64, 3); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteI64(p.OrganizationId); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 3 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 3 end error: ", p), err)
+}
+
+func (p *BankIcbcBankTransactionReceiptDownArgs) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("BankIcbcBankTransactionReceiptDownArgs(%+v)", *p)
+}
+
+func (p *BankIcbcBankTransactionReceiptDownArgs) DeepEqual(ano *BankIcbcBankTransactionReceiptDownArgs) bool {
+	if p == ano {
+		return true
+	} else if p == nil || ano == nil {
+		return false
+	}
+	if !p.Field1DeepEqual(ano.BeginDate) {
+		return false
+	}
+	if !p.Field2DeepEqual(ano.EndDate) {
+		return false
+	}
+	if !p.Field3DeepEqual(ano.OrganizationId) {
+		return false
+	}
+	return true
+}
+
+func (p *BankIcbcBankTransactionReceiptDownArgs) Field1DeepEqual(src string) bool {
+
+	if strings.Compare(p.BeginDate, src) != 0 {
+		return false
+	}
+	return true
+}
+func (p *BankIcbcBankTransactionReceiptDownArgs) Field2DeepEqual(src string) bool {
+
+	if strings.Compare(p.EndDate, src) != 0 {
+		return false
+	}
+	return true
+}
+func (p *BankIcbcBankTransactionReceiptDownArgs) Field3DeepEqual(src int64) bool {
+
+	if p.OrganizationId != src {
+		return false
+	}
+	return true
+}
+
+type BankIcbcBankTransactionReceiptDownResult struct {
+}
+
+func NewBankIcbcBankTransactionReceiptDownResult() *BankIcbcBankTransactionReceiptDownResult {
+	return &BankIcbcBankTransactionReceiptDownResult{}
+}
+
+func (p *BankIcbcBankTransactionReceiptDownResult) InitDefault() {
+	*p = BankIcbcBankTransactionReceiptDownResult{}
+}
+
+var fieldIDToName_BankIcbcBankTransactionReceiptDownResult = map[int16]string{}
+
+func (p *BankIcbcBankTransactionReceiptDownResult) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+		if err = iprot.Skip(fieldTypeId); err != nil {
+			goto SkipFieldTypeError
+		}
+
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+SkipFieldTypeError:
+	return thrift.PrependError(fmt.Sprintf("%T skip field type %d error", p, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *BankIcbcBankTransactionReceiptDownResult) Write(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteStructBegin("icbcBankTransactionReceiptDown_result"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *BankIcbcBankTransactionReceiptDownResult) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("BankIcbcBankTransactionReceiptDownResult(%+v)", *p)
+}
+
+func (p *BankIcbcBankTransactionReceiptDownResult) DeepEqual(ano *BankIcbcBankTransactionReceiptDownResult) bool {
+	if p == ano {
+		return true
+	} else if p == nil || ano == nil {
+		return false
+	}
+	return true
+}
+
+type BankSyncBankTransactionReceiptArgs struct {
+	BeginDate      string `thrift:"beginDate,1" frugal:"1,default,string" json:"beginDate"`
+	EndDate        string `thrift:"endDate,2" frugal:"2,default,string" json:"endDate"`
+	OrganizationId int64  `thrift:"organizationId,3" frugal:"3,default,i64" json:"organizationId"`
+}
+
+func NewBankSyncBankTransactionReceiptArgs() *BankSyncBankTransactionReceiptArgs {
+	return &BankSyncBankTransactionReceiptArgs{}
+}
+
+func (p *BankSyncBankTransactionReceiptArgs) InitDefault() {
+	*p = BankSyncBankTransactionReceiptArgs{}
+}
+
+func (p *BankSyncBankTransactionReceiptArgs) GetBeginDate() (v string) {
+	return p.BeginDate
+}
+
+func (p *BankSyncBankTransactionReceiptArgs) GetEndDate() (v string) {
+	return p.EndDate
+}
+
+func (p *BankSyncBankTransactionReceiptArgs) GetOrganizationId() (v int64) {
+	return p.OrganizationId
+}
+func (p *BankSyncBankTransactionReceiptArgs) SetBeginDate(val string) {
+	p.BeginDate = val
+}
+func (p *BankSyncBankTransactionReceiptArgs) SetEndDate(val string) {
+	p.EndDate = val
+}
+func (p *BankSyncBankTransactionReceiptArgs) SetOrganizationId(val int64) {
+	p.OrganizationId = val
+}
+
+var fieldIDToName_BankSyncBankTransactionReceiptArgs = map[int16]string{
+	1: "beginDate",
+	2: "endDate",
+	3: "organizationId",
+}
+
+func (p *BankSyncBankTransactionReceiptArgs) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+
+		switch fieldId {
+		case 1:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField1(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				if err = iprot.Skip(fieldTypeId); err != nil {
+					goto SkipFieldError
+				}
+			}
+		case 2:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField2(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				if err = iprot.Skip(fieldTypeId); err != nil {
+					goto SkipFieldError
+				}
+			}
+		case 3:
+			if fieldTypeId == thrift.I64 {
+				if err = p.ReadField3(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				if err = iprot.Skip(fieldTypeId); err != nil {
+					goto SkipFieldError
+				}
+			}
+		default:
+			if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		}
+
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_BankSyncBankTransactionReceiptArgs[fieldId]), err)
+SkipFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *BankSyncBankTransactionReceiptArgs) ReadField1(iprot thrift.TProtocol) error {
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		p.BeginDate = v
+	}
+	return nil
+}
+
+func (p *BankSyncBankTransactionReceiptArgs) ReadField2(iprot thrift.TProtocol) error {
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		p.EndDate = v
+	}
+	return nil
+}
+
+func (p *BankSyncBankTransactionReceiptArgs) ReadField3(iprot thrift.TProtocol) error {
+	if v, err := iprot.ReadI64(); err != nil {
+		return err
+	} else {
+		p.OrganizationId = v
+	}
+	return nil
+}
+
+func (p *BankSyncBankTransactionReceiptArgs) Write(oprot thrift.TProtocol) (err error) {
+	var fieldId int16
+	if err = oprot.WriteStructBegin("syncBankTransactionReceipt_args"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+		if err = p.writeField1(oprot); err != nil {
+			fieldId = 1
+			goto WriteFieldError
+		}
+		if err = p.writeField2(oprot); err != nil {
+			fieldId = 2
+			goto WriteFieldError
+		}
+		if err = p.writeField3(oprot); err != nil {
+			fieldId = 3
+			goto WriteFieldError
+		}
+
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *BankSyncBankTransactionReceiptArgs) writeField1(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("beginDate", thrift.STRING, 1); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteString(p.BeginDate); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
+}
+
+func (p *BankSyncBankTransactionReceiptArgs) writeField2(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("endDate", thrift.STRING, 2); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteString(p.EndDate); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 2 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 2 end error: ", p), err)
+}
+
+func (p *BankSyncBankTransactionReceiptArgs) writeField3(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("organizationId", thrift.I64, 3); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteI64(p.OrganizationId); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 3 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 3 end error: ", p), err)
+}
+
+func (p *BankSyncBankTransactionReceiptArgs) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("BankSyncBankTransactionReceiptArgs(%+v)", *p)
+}
+
+func (p *BankSyncBankTransactionReceiptArgs) DeepEqual(ano *BankSyncBankTransactionReceiptArgs) bool {
+	if p == ano {
+		return true
+	} else if p == nil || ano == nil {
+		return false
+	}
+	if !p.Field1DeepEqual(ano.BeginDate) {
+		return false
+	}
+	if !p.Field2DeepEqual(ano.EndDate) {
+		return false
+	}
+	if !p.Field3DeepEqual(ano.OrganizationId) {
+		return false
+	}
+	return true
+}
+
+func (p *BankSyncBankTransactionReceiptArgs) Field1DeepEqual(src string) bool {
+
+	if strings.Compare(p.BeginDate, src) != 0 {
+		return false
+	}
+	return true
+}
+func (p *BankSyncBankTransactionReceiptArgs) Field2DeepEqual(src string) bool {
+
+	if strings.Compare(p.EndDate, src) != 0 {
+		return false
+	}
+	return true
+}
+func (p *BankSyncBankTransactionReceiptArgs) Field3DeepEqual(src int64) bool {
+
+	if p.OrganizationId != src {
+		return false
+	}
+	return true
+}
+
+type BankSyncBankTransactionReceiptResult struct {
+}
+
+func NewBankSyncBankTransactionReceiptResult() *BankSyncBankTransactionReceiptResult {
+	return &BankSyncBankTransactionReceiptResult{}
+}
+
+func (p *BankSyncBankTransactionReceiptResult) InitDefault() {
+	*p = BankSyncBankTransactionReceiptResult{}
+}
+
+var fieldIDToName_BankSyncBankTransactionReceiptResult = map[int16]string{}
+
+func (p *BankSyncBankTransactionReceiptResult) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+		if err = iprot.Skip(fieldTypeId); err != nil {
+			goto SkipFieldTypeError
+		}
+
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+SkipFieldTypeError:
+	return thrift.PrependError(fmt.Sprintf("%T skip field type %d error", p, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *BankSyncBankTransactionReceiptResult) Write(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteStructBegin("syncBankTransactionReceipt_result"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *BankSyncBankTransactionReceiptResult) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("BankSyncBankTransactionReceiptResult(%+v)", *p)
+}
+
+func (p *BankSyncBankTransactionReceiptResult) DeepEqual(ano *BankSyncBankTransactionReceiptResult) bool {
+	if p == ano {
+		return true
+	} else if p == nil || ano == nil {
 		return false
 	}
 	return true

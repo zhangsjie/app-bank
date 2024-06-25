@@ -2,36 +2,140 @@ package sdk
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	czip "github.com/dablelv/cyan/zip"
 	"github.com/pkg/errors"
 	"gitlab.yoyiit.com/youyi/app-bank/internal/enum"
 	"gitlab.yoyiit.com/youyi/app-bank/internal/sdk/stru"
 	"gitlab.yoyiit.com/youyi/go-core/config"
 	"gitlab.yoyiit.com/youyi/go-core/util"
 	"go.uber.org/zap"
-	"strconv"
+	"io"
+	"os"
+	"path"
+	"strings"
+	"sync"
 	"time"
 )
 
 type IcbcBankSDK interface {
-	QueryAgreeNo(ctx context.Context, zuId, account string) (string, error)
-	ListTransactionDetail(ctx context.Context, account string, beginDate string, endDate string, accCompNo string) ([]stru.IcbcAccDetailItem, error)
-	IcbcUserAcctSignatureApply(ctx context.Context, accountNo string, phone string, remark string, accCompNo string) (*stru.IcbcSignConfirmResponse, error)
-	IcbcUserAcctSignatureQuery(ctx context.Context, accountNo string, accCompNo string) (*stru.IcbcSignatureQueryResponse, error)
+	QueryAgreeNo(ctx context.Context, zuId, account string) (*stru.Agreement, error)
+	ListTransactionDetail(ctx context.Context, account string, beginDate string, endDate string, agreeNo string) ([]stru.IcbcAccDetailItem, error)
+	IcbcReceiptNoQuery(ctx context.Context, accountNo, agreeNo, serialNo string) (*stru.IcbcReceiptNoQueryResponse, error)
+	IcbcReceiptFileDownload(ctx context.Context) (string, error)
 }
 
 type icbcBankSDK struct {
 }
 
-func (i *icbcBankSDK) QueryAgreeNo(ctx context.Context, zuId, account string) (string, error) {
+func (i *icbcBankSDK) IcbcReceiptFileDownload(ctx context.Context) (string, error) {
+	client := stru.SftpClient()
+	defer client.Close()
+	remotePath := "/Ebillsend/download"
+	downloadDir, err := client.ReadDir(remotePath)
+	if err != nil {
+		return "", err
+	}
+	if downloadDir == nil || len(downloadDir) == 0 {
+		zap.L().Info(fmt.Sprintf("IcbcReceiptFileDownload当前文件夹为空"))
+		return "", nil
+	}
+	//下载.删除所有文件,然后重新从文件服务器上下载
+	filePathDir, _ := util.Mkdir("tempFile/icbc")
+	err = os.RemoveAll("filePathDir")
+	if err != nil {
+		return "", err
+	}
+
+	if _, err = os.Stat(filePathDir); os.IsNotExist(err) {
+		os.MkdirAll(filePathDir, 0755)
+	}
+	var wg sync.WaitGroup
+	//下载zip包到本地临时路径并且解压缩
+	for _, v := range downloadDir {
+		wg.Add(1)
+		fileName := v.Name()
+		remoteFilePath := path.Join(remotePath, fileName)
+		localFilePath := path.Join(filePathDir, fileName)
+		if !strings.HasSuffix(fileName, ".zip") {
+			continue
+		}
+		//创建本地文件
+		localFile, err := os.Create(localFilePath)
+		if err != nil {
+			zap.L().Info(fmt.Sprintf("IcbcReceiptFileDownload创建本地文件失败： %s", err))
+			continue
+		}
+
+		//打开远程文件
+		remoteFile, err := client.Open(remoteFilePath)
+		if err != nil {
+			zap.L().Info(fmt.Sprintf("IcbcReceiptFileDownload打开远程文件失败： %s", err))
+			continue
+		}
+		//复制远程文件到本地
+		_, err = io.Copy(localFile, remoteFile)
+		if err != nil {
+			zap.L().Info(fmt.Sprintf("IcbcReceiptFileDownload复制文件内容失败： %s", err))
+			continue
+		}
+
+		localFile.Close()
+		remoteFile.Close()
+		go func() {
+			err = czip.Unzip(localFilePath, filePathDir)
+			if err != nil {
+				zap.L().Info(fmt.Sprintf("IcbcReceiptFileDownload解压zip包失败： %s", err))
+			}
+		}()
+	}
+	wg.Wait()
+	return "", err
+}
+
+func (i *icbcBankSDK) IcbcReceiptNoQuery(ctx context.Context, accountNo, agreeNo, serialNo string) (*stru.IcbcReceiptNoQueryResponse, error) {
+	request := stru.NewIcbcGlobalRequest()
+	serl := []string{serialNo}
+	cond := stru.IcbcReceiptNoQueryCond{
+		SeqList: serl,
+	}
+	fseqNo, _ := util.SonyflakeID()
+	request.BizContent = &stru.IcbcReceiptNoQueryRequest{
+		FseqNo:    fseqNo,
+		CorpNo:    config.GetString(enum.IcbcCorpNo, ""),
+		AccCompNo: config.GetString(enum.IcbcAccCompNo, ""),
+		AgreeNo:   agreeNo,
+		Account:   accountNo,
+		CurrType:  "001",
+		QryType:   "2",
+		QryCond:   cond,
+	}
+	var result stru.IcbcReceiptNoQueryResponse
+	resultInterface, err := stru.ICBCPostHttpResult(enum.IcbcAdsReceiptAryURL, *request)
+	if err != nil {
+		return nil, err
+	}
+	jsonString, _ := json.Marshal(resultInterface)
+	err = json.Unmarshal(jsonString, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	if result.RetCode != "9008100" {
+		return nil, errors.New(result.RetMsg)
+	}
+	return &result, nil
+}
+func (i *icbcBankSDK) QueryAgreeNo(ctx context.Context, zuId, account string) (*stru.Agreement, error) {
 	//IcbcAdsAgreementGryURL
 	request := stru.NewIcbcGlobalRequest()
 	inqwork := stru.Inqwork{
-		BegNum: 0,
-		FetNum: 10,
+		BegNum: "0",
+		FetNum: "10",
 	}
 	cond := stru.Cond{
-		QryType:   1,
+		QryType:   "1",
 		AccCompNo: zuId,
 		Account:   account,
 		CurrType:  "",
@@ -43,107 +147,26 @@ func (i *icbcBankSDK) QueryAgreeNo(ctx context.Context, zuId, account string) (s
 		Cond:    cond,
 	}
 	var result stru.QueryAgreeNoResponse
-	err := stru.ICBCPostHttpResult(enum.IcbcAdsAgreementGryURL, *request, &result)
+	resultInterface, err := stru.ICBCPostHttpResult(enum.IcbcAdsAgreementGryURL, *request)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	if result.RetCode != "9008100" {
-		return "", errors.New(result.RetMsg)
-	}
-	agreeNo := result.AgrList[0].AgreeNo
-	return agreeNo, nil
-}
-
-func (i *icbcBankSDK) IcbcUserAcctSignatureQuery(ctx context.Context, accountNo string, accCompNo string) (*stru.IcbcSignatureQueryResponse, error) {
-	url := enum.IcbcAdsPartNerGryURL
-	request := stru.NewIcbcGlobalRequest()
-	corpNo, _ := strconv.ParseInt(config.GetString(enum.IcbcCorpNo, ""), 10, 64)
-	request.BizContent = &stru.IcbcSignatureQueryRequest{
-		StartIndex:  "0",
-		QrySize:     "10",
-		CorpNo:      corpNo,
-		AccCompNo:   accCompNo,
-		AccCompName: "",
-	}
-	var result stru.IcbcSignatureQueryResponse
-	err := stru.ICBCPostHttpResult(url, *request, &result)
+	jsonString, _ := json.Marshal(resultInterface)
+	err = json.Unmarshal(jsonString, &result)
 	if err != nil {
 		return nil, err
 	}
 	if result.RetCode != "9008100" {
 		return nil, errors.New(result.RetMsg)
 	}
-	return &result, nil
+	if len(result.AgrList) == 0 {
+		return nil, errors.New("未能查询到账号协议信息[" + "zuId]")
+	}
+	agreement := result.AgrList[0]
+	return &agreement, nil
 }
 
-func (i *icbcBankSDK) IcbcUserAcctSignatureApply(ctx context.Context, accountNo string, phone string, remark string, accCompNo string) (*stru.IcbcSignConfirmResponse, error) {
-	appId := config.GetString(enum.IcbcAppId, "")
-	corpNo := config.GetString(enum.IcbcCorpNo, "")
-	coMode := "1"
-	request := stru.NewIcbcGlobalRequest()
-	acclist := make([]*stru.AccListItem, 0)
-	acclist = append(acclist, &stru.AccListItem{
-		Account:       accountNo,
-		CurrType:      "1",
-		AccFlag:       "1",
-		CnTioFlag:     "1",
-		IsMainAcc:     "1",
-		ReceiptFlag:   "1",
-		StatementFlag: "1",
-	})
-	request.BizContent = &stru.IcbcSignRequest{
-		AppID:      appId,
-		ApiName:    "ADSSIGN",
-		ApiVersion: "001.001.001.001",
-		CorpNo:     corpNo,
-		CoMode:     coMode,
-		AccCompNo:  accCompNo,
-		Account:    accountNo,
-		CurrType:   "1",
-		AccFlag:    "1",
-		CnTioFlag:  "1",
-		Phone:      phone,
-		EpType:     "1",
-		EpTimes:    "12",
-		Remark:     remark,
-		AccList:    acclist,
-		PayAccName: "",
-		PayAccNo:   "",
-		PayBegDate: "",
-		PayCurr:    "",
-		PayLimit:   "",
-	}
-	resu := stru.ICBCPostHttpUIResult(*request)
-	zap.L().Info(fmt.Sprintf("==ICBCPostHttpUIResult%v", resu))
-	//申请签约之后把待确认信息同步到工行,
-	confirmRequest := stru.NewIcbcGlobalRequest()
-	confirmList := make([]*stru.ConfirmListItem, 0)
-	confirmList = append(confirmList, &stru.ConfirmListItem{
-		AccCompNo: accCompNo,
-		AcCount:   accountNo,
-		CurrType:  "1",
-		CHANNEL:   "2",
-	})
-	confirmRequest.BizContent = &stru.IcbcSignConfirmRequest{
-		AppID:       appId,
-		CorpNo:      corpNo,
-		CoMode:      coMode,
-		ConfirmList: confirmList,
-	}
-	confirmResu := stru.IcbcSignConfirmResponse{}
-	err := stru.ICBCPostHttpResult(enum.IcbcAdsAgrConfirmSynURL, *confirmRequest, &confirmResu)
-	if err != nil {
-		return nil, err
-	}
-
-	return &confirmResu, nil
-}
-
-func (i *icbcBankSDK) ListTransactionDetail(ctx context.Context, account string, beginDate string, endDate string, accCompNo string) ([]stru.IcbcAccDetailItem, error) {
-	accDetailUrlPath := config.GetString(enum.IcbcAccDetailURL, "")
-	request := stru.NewIcbcGlobalRequest()
-	seq, _ := util.SonyflakeID()
-
+func (i *icbcBankSDK) ListTransactionDetail(ctx context.Context, account string, beginDate string, endDate string, agreeNo string) ([]stru.IcbcAccDetailItem, error) {
 	begin, _ := time.Parse("20060102", beginDate)
 	beginD := begin.Format("2006-01-02")
 
@@ -151,41 +174,42 @@ func (i *icbcBankSDK) ListTransactionDetail(ctx context.Context, account string,
 
 	endD := end.Format("2006-01-02")
 	serialNo := ""
-	accDetailRequest := &stru.AccDetailRequest{
-		FSeqNo:    seq,
-		Account:   account,
-		CurrType:  1,
-		StartDate: beginD,
-		EndDate:   endD,
-		SerialNo:  serialNo,
-		CorpNo:    config.GetString(enum.IcbcCorpNo, ""),
-		AccCompNo: config.GetString(enum.IcbcCorpNo, ""),
-		AgreeNo:   "",
-	}
-	request.BizContent = accDetailRequest
-	var result stru.AccDetailResponse
-	err := stru.ICBCPostHttpResult(accDetailUrlPath, *request, &result)
-	if err != nil {
-		return nil, err
-	}
-	hasNext := false
-	var resultDetail []stru.IcbcAccDetailItem
-	resultDetail = append(resultDetail, result.DtlList...)
-	if result.NextPage == "1" {
-		hasNext = true
-		serialNo = result.DtlList[len(result.DtlList)-1].SerialNo
-	}
+
+	hasNext := true
+	var resultDetails []stru.IcbcAccDetailItem
 	for hasNext {
-		accDetailRequest.SerialNo = serialNo
-		err := stru.ICBCPostHttpResult(accDetailUrlPath, *request, &result)
+		request := stru.NewIcbcGlobalRequest()
+		seq, _ := util.SonyflakeID()
+		accDetailRequest := &stru.AccDetailRequest{
+			FSeqNo:    seq,
+			Account:   account,
+			CurrType:  "1",
+			StartDate: beginD,
+			EndDate:   endD,
+			SerialNo:  serialNo,
+			CorpNo:    config.GetString(enum.IcbcCorpNo, ""),
+			AccCompNo: config.GetString(enum.IcbcAccCompNo, ""),
+			AgreeNo:   agreeNo,
+		}
+		request.BizContent = accDetailRequest
+		var result stru.AccDetailResponse
+		resultInterface, err := stru.ICBCPostHttpResult(enum.IcbcAccDetailURL, *request)
 		if err != nil {
 			return nil, err
 		}
-		resultDetail = append(resultDetail, result.DtlList...)
+		jsonString, _ := json.Marshal(resultInterface)
+		err = json.Unmarshal(jsonString, &result)
+		if err != nil {
+			return nil, err
+		}
+		resultDetails = append(resultDetails, result.DtlList...)
+
 		if result.NextPage == "1" {
 			hasNext = true
-			serialNo = result.DtlList[len(result.DtlList)-1].SerialNo
+			serialNo = result.SerialNo
+		} else {
+			hasNext = false
 		}
 	}
-	return resultDetail, nil
+	return resultDetails, nil
 }

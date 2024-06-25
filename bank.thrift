@@ -602,14 +602,15 @@ service bank {
     pinganUserAcctSignatureApplyResponse pinganBankAccountSignatureQuery(1:pinganBankAccountSignatureApplyRequest req)
     void systemRefusePaymentReceipt(1: i64 id)
     void systemApprovePaymentReceipt(1: i64 id)
-    string icbcBankAccountSignatureApply(1:icbcBankAccountSignatureRequest req)
     IcbcBankAccountSignatureQueryResponse icbcBankAccountSignatureQuery(1:icbcBankAccountSignatureRequest req)
+    void icbcBankListTransactionDetail(1: string beginDate, 2: string endDate, 3: i64 organizationId)
+    void icbcBankTransactionReceiptDown(1: string beginDate, 2: string endDate, 3: i64 organizationId)
+    void syncIcbcBankTransactionReceipt(1: string beginDate, 2: string endDate, 3: i64 organizationId)
 }
 struct IcbcBankAccountSignatureQueryResponse {
 1:string signatureapplystatus
 2:string zuId
 3:string remark
-4:string agreeNo
 }
 
 struct icbcAcctSignatureResponse {
