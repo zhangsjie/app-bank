@@ -10,6 +10,7 @@ import (
 	"gitlab.yoyiit.com/youyi/go-core/util"
 	"go.uber.org/zap"
 	"strings"
+	"time"
 )
 
 type SPDBankSDK interface {
@@ -299,6 +300,8 @@ func (s *spdBankSDK) RequestTransactionDetailElectronicReceipt(ctx context.Conte
 //
 func (s *spdBankSDK) DownloadTransactionDetailElectronicReceipt(ctx context.Context, accountNo, beginDate, endDate, backhostGyno, subpoenaSeqNo, host, sighHost, fileHost, bankCustomerId, bankUserId string) ([]byte, error) {
 	receipt, err := s.RequestTransactionDetailElectronicReceipt(ctx, accountNo, beginDate, endDate, backhostGyno, subpoenaSeqNo, host, sighHost, bankCustomerId, bankUserId)
+	//银行建议发起请求1分钟后再开启回单下载申请,生成回单需要时间
+	time.Sleep(time.Second * 30)
 	// todo 测试写死
 	//receipt, err := s.RequestTransactionDetailElectronicReceipt(ctx, accountNo, "20210101", "20210131", "999709310001", "1", host, sighHost, bankCustomerId, bankUserId)
 	if err != nil {
