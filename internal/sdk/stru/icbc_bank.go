@@ -320,9 +320,12 @@ type IcbcReceiptNoQueryRequest struct {
 	QryCond   IcbcReceiptNoQueryCond `json:"qrycond"`   // 查询条件
 }
 type IcbcReceiptNoQueryCond struct {
-	StartDate string   `json:"startDate" ` // 提交起始日期，qrytype为1时必输
-	EndDate   string   `json:"endDate"`    // 提交结束日期，qrytype为1时必输
-	SeqList   []string `json:"seqlist"`    // 回单编号列表，qrytype为2时必输，最多50条
+	StartDate string                    `json:"startDate" ` // 提交起始日期，qrytype为1时必输
+	EndDate   string                    `json:"endDate"`    // 提交结束日期，qrytype为1时必输
+	SeqList   []IcbcReceiptNoQuerySeqNo `json:"seqlist"`    // 回单编号列表，qrytype为2时必输，最多50条
+}
+type IcbcReceiptNoQuerySeqNo struct {
+	SerialNo string `json:"serialno" ` // 提交起始日期，qrytype为1时必输
 }
 type IcbcReceiptNoQueryResponse struct {
 	RetCode string `json:"retcode" ` // 9008100-处理成功 9008101-处理失败 9008200-参数错误
