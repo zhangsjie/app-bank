@@ -144,7 +144,7 @@ func (s *bankService) SyncIcbcBankTransactionReceipt(ctx context.Context, beginD
 	zap.L().Info(fmt.Sprintf("sSyncIcbcBankTransactionReceipt开始查询icbc没有回单的流水"))
 	bankAccounts, err := s.baseClient.ListOrganizationBankAccount(ctx, &baseApi.ListOrganizationBankAccountRequest{
 		OrganizationId:       organizationId,
-		Type:                 "3",
+		Type:                 enum.IcbcBankType,
 		SignatureApplyStatus: "0",
 	})
 	if err != nil {
