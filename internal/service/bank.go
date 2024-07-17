@@ -136,6 +136,7 @@ type bankService struct {
 }
 
 func (s *bankService) SyncIcbcBankTransactionReceipt(ctx context.Context, beginDate string, endDate string, organizationId int64) error {
+	//先更新本地回单
 	_, err := s.icbcBank.IcbcReceiptFileDownload(ctx)
 	if err != nil {
 		return handler.HandleError(err)
@@ -143,7 +144,7 @@ func (s *bankService) SyncIcbcBankTransactionReceipt(ctx context.Context, beginD
 	zap.L().Info(fmt.Sprintf("sSyncIcbcBankTransactionReceipt开始查询icbc没有回单的流水"))
 	bankAccounts, err := s.baseClient.ListOrganizationBankAccount(ctx, &baseApi.ListOrganizationBankAccountRequest{
 		OrganizationId:       organizationId,
-		Type:                 "3",
+		Type:                 enum.IcbcBankType,
 		SignatureApplyStatus: "0",
 	})
 	if err != nil {
@@ -173,14 +174,14 @@ func (s *bankService) SyncIcbcBankTransactionReceipt(ctx context.Context, beginD
 		if *datas != nil {
 			for _, data := range *datas {
 				//在临时回单文件中寻找匹配的回单文件,
-				dir, err := ioutil.ReadDir("tempFile/icbc")
+				dir, err := ioutil.ReadDir(bankEnum.IcbcTempFilePath)
 				if err != nil {
 					return handler.HandleError(err)
 				}
 				for _, fileInfo := range dir {
 					fileName := fileInfo.Name()
 					if strings.Contains(fileName, bankAccount.Account) && strings.Contains(fileName, data.HostFlowNo) && strings.HasSuffix(fileName, ".pdf") {
-						f, err := os.ReadFile(path.Join("tempFile/icbc", fileName))
+						f, err := os.ReadFile(path.Join(bankEnum.IcbcTempFilePath, fileName))
 						if err != nil {
 							zap.L().Error(fmt.Sprintf("SyncIcbcBankTransactionReceipt读取icbc回单失败: %v\n", err.Error()))
 						}
@@ -196,7 +197,6 @@ func (s *bankService) SyncIcbcBankTransactionReceipt(ctx context.Context, beginD
 						}
 						//todo 更新单据的明细回单
 						break
-
 					}
 				}
 
@@ -220,15 +220,45 @@ func (s *bankService) GetIcbcBankTransactionReceipt(ctx context.Context, bankTra
 		return handler.HandleError(err)
 	}
 	if account.Type == enum.IcbcBankType {
-		//s.icbcBank.IcbcReceiptFileDownload(ctx, account.Account, account.ZuId, bankTransactionDetail.HostFlowNo)
-		query, err := s.icbcBank.IcbcReceiptNoQuery(ctx, account.Account, account.ZuId, bankTransactionDetail.HostFlowNo)
-		if err != nil {
-			return handler.HandleError(err)
-		}
-		if query.RetCode != "0" {
-			return handler.HandleError(errors.New(query.RetMsg))
-		}
-		zap.L().Info(fmt.Sprintf("==GetBankTransactionReceipt%s", query.OrderId))
+		go func() {
+			query, err := s.icbcBank.IcbcReceiptNoQuery(ctx, account.Account, account.ZuId, bankTransactionDetail.HostFlowNo, "")
+			if err != nil {
+				zap.L().Info(fmt.Sprintf("==GetIcbcBankTransactionReceipt查询回单orderid失败%s,err=%+v", query.OrderId, err))
+			}
+			zap.L().Info(fmt.Sprintf("==GetBankTransactionReceipt%s", query.OrderId))
+			//等待20分钟之后继续执行
+			time.Sleep(20 * time.Minute)
+
+			err = s.icbcBank.IcbcReceiptFileDownloadByOrderId(ctx, query.OrderId)
+			if err != nil {
+				zap.L().Info(fmt.Sprintf("==GetIcbcBankTransactionReceipt下载回单orderid失败%s,err=%+v", query.OrderId, err))
+			}
+			//寻找对应hostflow
+			//在临时回单文件中寻找匹配的回单文件,
+			dir, _ := ioutil.ReadDir(bankEnum.IcbcTempFilePath)
+			for _, fileInfo := range dir {
+				fileName := fileInfo.Name()
+				if strings.Contains(fileName, bankTransactionDetail.HostFlowNo) && strings.HasSuffix(fileName, ".pdf") {
+					f, err := os.ReadFile(path.Join(bankEnum.IcbcTempFilePath, fileName))
+					if err != nil {
+						zap.L().Error(fmt.Sprintf("SyncIcbcBankTransactionReceipt读取icbc回单失败: %v\n", err.Error()))
+					}
+					electronicReceiptFile, err := store.UploadOSSFileBytes("pdf", ".pdf", f, s.ossConfig, false)
+					if err != nil {
+						zap.L().Error(fmt.Sprintf("SyncIcbcBankTransactionReceipt上传icbc电子凭证到OSS失败: %v\n", err.Error()))
+					}
+					err = s.bankTransactionDetailRepo.UpdateById(ctx, bankTransactionDetailId, &repo.BankTransactionDetailDBData{
+						ElectronicReceiptFile: electronicReceiptFile,
+					})
+					if err != nil {
+						zap.L().Error(fmt.Sprintf("GetIcbcBankTransactionReceipt更新icbc电子凭证失败: %v\n", err.Error()))
+					}
+					//todo 更新单据的明细回单
+					break
+				}
+			}
+
+		}()
 
 	}
 	return nil
@@ -2323,6 +2353,18 @@ func (s *bankService) HandlePinganBankSyncTransferReceipt(ctx context.Context, b
 	//查询所有未完成的付款单据
 	zap.L().Info("HandlePinganBankSyncTransferReceipt 查询平安所有未完成的付款单据") //因为平安中间审审核环节可以最长10天,所以对于未完成的付款单据不能按照时间范围来选择
 	excludeOrderStates := []string{enum.GuilinBankTransferSuccessResult, enum.GuilinBankTransferFailResult, enum.GuilinBankTransferRevokeResult, enum.GuilinBankTransferDeleteResult, enum.GuilinBankTransferRejectResult}
+	var createTimeParam []string
+	if beginDate != "" && beginDate != "" {
+		begin, err := util.ParseDate(beginDate)
+		if err != nil {
+			return handler.HandleError(err)
+		}
+		end, err := util.ParseDate(endDate)
+		if err != nil {
+			return handler.HandleError(err)
+		}
+		createTimeParam = append(createTimeParam, util.FormatTimeyyyyMMddBar(begin), util.FormatTimeyyyyMMddBar(end))
+	}
 	transferReceiptList, _, err := s.bankTransferReceiptRepo.List(ctx, "", 0, 0, &repo.BankTransferReceiptDBDataParam{
 		ExcludeOrderStates: excludeOrderStates,
 		BankTransferReceiptDBData: repo.BankTransferReceiptDBData{
@@ -2331,6 +2373,7 @@ func (s *bankService) HandlePinganBankSyncTransferReceipt(ctx context.Context, b
 			},
 			ProcessStatus: enum.ProcessInstanceTotalStatusRunning,
 		},
+		CreateTime:     createTimeParam,
 		PayAccountType: bankType,
 	})
 	if err != nil {
@@ -2964,7 +3007,7 @@ func (s *bankService) HandleTransactionDetailReceipt(ctx context.Context, beginD
 
 	s.HandleSPDTransactionDetailReceipt(ctx, enum.SPDBankType, beginDate, endDate, organizationId)
 
-	s.HandlePinganTransactionDetailReceipt(ctx)
+	s.HandlePinganTransactionDetailReceipt(ctx, beginDate, endDate, organizationId)
 	return nil
 }
 
@@ -3000,7 +3043,7 @@ func (s *bankService) HandleSPDTransactionDetailReceipt(ctx context.Context, ban
 		},
 		IsElectronicReceiptFileNull: true,
 		IsAccountNoNull:             false,
-		//TransferTimeArray:           []string{beginDate, endDate},
+		TransferTimeArray:           []string{beginDate, endDate},
 	})
 	if err != nil || dbDatas == nil {
 		return handler.HandleError(err)
@@ -3063,13 +3106,14 @@ func (s *bankService) HandleSPDTransactionDetailReceipt(ctx context.Context, ban
 	return nil
 }
 
-func (s *bankService) HandlePinganTransactionDetailReceipt(ctx context.Context) error {
+func (s *bankService) HandlePinganTransactionDetailReceipt(ctx context.Context, beginDate string, endDate string, organizationId int64) error {
 
 	dbDatas, count, err := s.bankTransactionDetailRepo.List(ctx, "", 0, 0, &repo.BankTransactionDetailDBDataParam{
 		BankTransactionDetailDBData: repo.BankTransactionDetailDBData{
 			PayAccountType: enum.PinganBankType,
 		},
 		IsElectronicReceiptFileNull: true,
+		TransferTimeArray:           []string{beginDate, endDate},
 	})
 	if err != nil || dbDatas == nil {
 		return handler.HandleError(err)

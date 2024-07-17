@@ -1,10 +1,10 @@
 package sdk
 
 import (
+	"archive/zip"
 	"context"
 	"encoding/json"
 	"fmt"
-	czip "github.com/dablelv/cyan/zip"
 	"github.com/pkg/errors"
 	"gitlab.yoyiit.com/youyi/app-bank/internal/enum"
 	"gitlab.yoyiit.com/youyi/app-bank/internal/sdk/stru"
@@ -14,25 +14,27 @@ import (
 	"io"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
-	"sync"
 	"time"
 )
 
 type IcbcBankSDK interface {
 	QueryAgreeNo(ctx context.Context, zuId, account string) (*stru.Agreement, error)
 	ListTransactionDetail(ctx context.Context, account string, beginDate string, endDate string, agreeNo string) ([]stru.IcbcAccDetailItem, error)
-	IcbcReceiptNoQuery(ctx context.Context, accountNo, agreeNo, serialNo string) (*stru.IcbcReceiptNoQueryResponse, error)
+	IcbcReceiptNoQuery(ctx context.Context, accountNo, agreeNo, serialNo, beginDate string) (*stru.IcbcReceiptNoQueryResponse, error)
 	IcbcReceiptFileDownload(ctx context.Context) (string, error)
+	IcbcReceiptFileDownloadByOrderId(ctx context.Context, orderId string) error
 }
 
 type icbcBankSDK struct {
 }
 
 func (i *icbcBankSDK) IcbcReceiptFileDownload(ctx context.Context) (string, error) {
+	zap.L().Info(fmt.Sprintf("IcbcReceiptFileDownload开始执行下载回单文件并解压任务"))
 	client := stru.SftpClient()
 	defer client.Close()
-	remotePath := "/Ebillsend/download"
+	remotePath := "/EleReceiptDownload/download"
 	downloadDir, err := client.ReadDir(remotePath)
 	if err != nil {
 		return "", err
@@ -42,8 +44,8 @@ func (i *icbcBankSDK) IcbcReceiptFileDownload(ctx context.Context) (string, erro
 		return "", nil
 	}
 	//下载.删除所有文件,然后重新从文件服务器上下载
-	filePathDir, _ := util.Mkdir("tempFile/icbc")
-	err = os.RemoveAll("filePathDir")
+	filePathDir, _ := util.Mkdir(enum.IcbcTempFilePath)
+	err = os.RemoveAll(filePathDir)
 	if err != nil {
 		return "", err
 	}
@@ -51,16 +53,15 @@ func (i *icbcBankSDK) IcbcReceiptFileDownload(ctx context.Context) (string, erro
 	if _, err = os.Stat(filePathDir); os.IsNotExist(err) {
 		os.MkdirAll(filePathDir, 0755)
 	}
-	var wg sync.WaitGroup
 	//下载zip包到本地临时路径并且解压缩
 	for _, v := range downloadDir {
-		wg.Add(1)
 		fileName := v.Name()
-		remoteFilePath := path.Join(remotePath, fileName)
-		localFilePath := path.Join(filePathDir, fileName)
-		if !strings.HasSuffix(fileName, ".zip") {
+		if !strings.HasSuffix(fileName, ".zip") || !strings.HasPrefix(fileName, "00000") {
 			continue
 		}
+		remoteFilePath := path.Join(remotePath, fileName)
+		localFilePath := path.Join(filePathDir, fileName)
+
 		//创建本地文件
 		localFile, err := os.Create(localFilePath)
 		if err != nil {
@@ -83,22 +84,120 @@ func (i *icbcBankSDK) IcbcReceiptFileDownload(ctx context.Context) (string, erro
 
 		localFile.Close()
 		remoteFile.Close()
-		go func() {
-			err = czip.Unzip(localFilePath, filePathDir)
-			if err != nil {
-				zap.L().Info(fmt.Sprintf("IcbcReceiptFileDownload解压zip包失败： %s", err))
-			}
-		}()
+		err = unzip(localFilePath, filePathDir)
+		if err != nil {
+			zap.L().Info(fmt.Sprintf("IcbcReceiptFileDownload解压zip包失败： %s", err))
+		}
 	}
-	wg.Wait()
-	return "", err
+	zap.L().Info(fmt.Sprintf("IcbcReceiptFileDownload解压zip执行完毕=="))
+	return "", nil
 }
+func (i *icbcBankSDK) IcbcReceiptFileDownloadByOrderId(ctx context.Context, orderId string) error {
+	client := stru.SftpClient()
+	defer client.Close()
+	remotePath := "/EleReceiptDownload/download"
+	downloadDir, err := client.ReadDir(remotePath)
+	if err != nil {
+		return err
+	}
+	if downloadDir == nil || len(downloadDir) == 0 {
+		zap.L().Info(fmt.Sprintf("IcbcReceiptFileDownloadByOrderId当前文件夹为空"))
+		return nil
+	}
+	//下载
+	filePathDir, _ := util.Mkdir(enum.IcbcTempFilePath)
 
-func (i *icbcBankSDK) IcbcReceiptNoQuery(ctx context.Context, accountNo, agreeNo, serialNo string) (*stru.IcbcReceiptNoQueryResponse, error) {
+	if _, err = os.Stat(filePathDir); os.IsNotExist(err) {
+		os.MkdirAll(filePathDir, 0755)
+	}
+	//下载对应orderId的包到本地临时路径并且解压缩
+	for _, v := range downloadDir {
+		fileName := v.Name()
+		if !strings.HasSuffix(fileName, ".zip") && !strings.HasPrefix(fileName, orderId) {
+			continue
+		}
+		remoteFilePath := path.Join(remotePath, fileName)
+		localFilePath := path.Join(filePathDir, fileName)
+
+		//创建本地文件
+		localFile, err := os.Create(localFilePath)
+		if err != nil {
+			zap.L().Info(fmt.Sprintf("IcbcReceiptFileDownloadByOrderId创建本地文件失败： %s", err))
+			continue
+		}
+		//打开远程文件
+		remoteFile, err := client.Open(remoteFilePath)
+		if err != nil {
+			zap.L().Info(fmt.Sprintf("IcbcReceiptFileDownloadByOrderId打开远程文件失败： %s", err))
+			continue
+		}
+		//复制远程文件到本地
+		_, err = io.Copy(localFile, remoteFile)
+		if err != nil {
+			zap.L().Info(fmt.Sprintf("IcbcReceiptFileDownloadByOrderId复制文件内容失败： %s", err))
+			continue
+		}
+		localFile.Close()
+		remoteFile.Close()
+		err = unzip(localFilePath, filePathDir)
+		if err != nil {
+			zap.L().Info(fmt.Sprintf("IcbcReceiptFileDownloadByOrderId解压zip包失败： %s", err))
+		}
+		break
+	}
+	return err
+}
+func unzip(zipFilePath string, destDir string) error {
+	reader, err := zip.OpenReader(zipFilePath)
+	if err != nil {
+		return err
+	}
+	defer reader.Close()
+
+	for _, file := range reader.File {
+		path := filepath.Join(destDir, file.Name)
+
+		if file.FileInfo().IsDir() {
+			os.MkdirAll(path, os.ModePerm)
+		} else {
+			if err = os.MkdirAll(filepath.Dir(path), os.ModePerm); err != nil {
+				return err
+			}
+
+			outFile, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
+			if err != nil {
+				return err
+			}
+
+			rc, err := file.Open()
+			if err != nil {
+				return err
+			}
+
+			_, err = io.Copy(outFile, rc)
+
+			outFile.Close()
+			rc.Close()
+
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+func (i *icbcBankSDK) IcbcReceiptNoQuery(ctx context.Context, accountNo, agreeNo, serialNo, beginDate string) (*stru.IcbcReceiptNoQueryResponse, error) {
 	request := stru.NewIcbcGlobalRequest()
-	serl := []string{serialNo}
+
+	serlNo := stru.IcbcReceiptNoQuerySeqNo{
+		SerialNo: serialNo,
+	}
+	serlNoS := make([]stru.IcbcReceiptNoQuerySeqNo, 0)
 	cond := stru.IcbcReceiptNoQueryCond{
-		SeqList: serl,
+		StartDate: beginDate,
+		EndDate:   beginDate,
+		SeqList:   append(serlNoS, serlNo),
 	}
 	fseqNo, _ := util.SonyflakeID()
 	request.BizContent = &stru.IcbcReceiptNoQueryRequest{
@@ -121,8 +220,7 @@ func (i *icbcBankSDK) IcbcReceiptNoQuery(ctx context.Context, accountNo, agreeNo
 	if err != nil {
 		return nil, err
 	}
-
-	if result.RetCode != "9008100" {
+	if result.RetCode != "0" {
 		return nil, errors.New(result.RetMsg)
 	}
 	return &result, nil

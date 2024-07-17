@@ -604,8 +604,8 @@ service bank {
     void systemApprovePaymentReceipt(1: i64 id)
     IcbcBankAccountSignatureQueryResponse icbcBankAccountSignatureQuery(1:icbcBankAccountSignatureRequest req)
     void icbcBankListTransactionDetail(1: string beginDate, 2: string endDate, 3: i64 organizationId)
-    void icbcBankTransactionReceiptDown(1: string beginDate, 2: string endDate, 3: i64 organizationId)
     void syncIcbcBankTransactionReceipt(1: string beginDate, 2: string endDate, 3: i64 organizationId)
+    void getBankTransactionReceipt(1:i64 id)
 }
 struct IcbcBankAccountSignatureQueryResponse {
 1:string signatureapplystatus

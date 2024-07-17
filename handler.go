@@ -329,13 +329,7 @@ func (s *BankImpl) GetBankTransactionReceipt(ctx context.Context, id int64) (err
 	return s.bankService.GetIcbcBankTransactionReceipt(ctx, id)
 }
 
-// IcbcBankTransactionReceiptDown implements the BankImpl interface.
-func (s *BankImpl) IcbcBankTransactionReceiptDown(ctx context.Context, beginDate string, endDate string, organizationId int64) (err error) {
-	// TODO: Your code here...
-	return
-}
-
-// SyncBankTransactionReceipt implements the BankImpl interface.
-func (s *BankImpl) SyncBankTransactionReceipt(ctx context.Context, beginDate string, endDate string, organizationId int64) (err error) {
+// SyncIcbcBankTransactionReceipt implements the BankImpl interface.
+func (s *BankImpl) SyncIcbcBankTransactionReceipt(ctx context.Context, beginDate string, endDate string, organizationId int64) (err error) {
 	return s.bankService.SyncIcbcBankTransactionReceipt(ctx, beginDate, endDate, organizationId)
 }
