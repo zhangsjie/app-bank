@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	czip "github.com/dablelv/cyan/zip"
 	"github.com/pkg/errors"
 	"gitlab.yoyiit.com/youyi/app-bank/internal/enum"
 	"gitlab.yoyiit.com/youyi/app-bank/internal/sdk/stru"
@@ -17,7 +16,6 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -33,6 +31,7 @@ type icbcBankSDK struct {
 }
 
 func (i *icbcBankSDK) IcbcReceiptFileDownload(ctx context.Context) (string, error) {
+	zap.L().Info(fmt.Sprintf("IcbcReceiptFileDownload开始执行下载回单文件并解压任务"))
 	client := stru.SftpClient()
 	defer client.Close()
 	remotePath := "/EleReceiptDownload/download"
@@ -54,12 +53,10 @@ func (i *icbcBankSDK) IcbcReceiptFileDownload(ctx context.Context) (string, erro
 	if _, err = os.Stat(filePathDir); os.IsNotExist(err) {
 		os.MkdirAll(filePathDir, 0755)
 	}
-	var wg sync.WaitGroup
 	//下载zip包到本地临时路径并且解压缩
 	for _, v := range downloadDir {
-		wg.Add(1)
 		fileName := v.Name()
-		if !strings.HasSuffix(fileName, ".zip") && !strings.HasPrefix(fileName, "00000") {
+		if !strings.HasSuffix(fileName, ".zip") || !strings.HasPrefix(fileName, "00000") {
 			continue
 		}
 		remoteFilePath := path.Join(remotePath, fileName)
@@ -87,15 +84,13 @@ func (i *icbcBankSDK) IcbcReceiptFileDownload(ctx context.Context) (string, erro
 
 		localFile.Close()
 		remoteFile.Close()
-		go func() {
-			err = czip.Unzip(localFilePath, filePathDir)
-			if err != nil {
-				zap.L().Info(fmt.Sprintf("IcbcReceiptFileDownload解压zip包失败： %s", err))
-			}
-		}()
+		err = unzip(localFilePath, filePathDir)
+		if err != nil {
+			zap.L().Info(fmt.Sprintf("IcbcReceiptFileDownload解压zip包失败： %s", err))
+		}
 	}
-	wg.Wait()
-	return "", err
+	zap.L().Info(fmt.Sprintf("IcbcReceiptFileDownload解压zip执行完毕=="))
+	return "", nil
 }
 func (i *icbcBankSDK) IcbcReceiptFileDownloadByOrderId(ctx context.Context, orderId string) error {
 	client := stru.SftpClient()
