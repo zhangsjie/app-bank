@@ -5,20 +5,19 @@ go 1.18
 require (
 	github.com/apache/thrift v0.13.0
 	github.com/cloudwego/kitex v0.5.2
-	github.com/dablelv/cyan v0.0.54
 	github.com/gen2brain/go-fitz v1.20.2
 	github.com/google/wire v0.5.0
 	github.com/pkg/errors v0.9.1
 	github.com/pkg/sftp v1.13.6
 	github.com/satori/go.uuid v1.2.0
-	gitlab.yoyiit.com/youyi/app-base v0.0.0-20240320122254-2aa8a55a4ad5
+	gitlab.yoyiit.com/youyi/app-base v0.0.0-20240723015025-8d209dba3a18
 	gitlab.yoyiit.com/youyi/app-dingtalk v0.0.0-20230712070347-478fa7abbcbb
 	gitlab.yoyiit.com/youyi/app-finance v0.0.0-20240528160030-4d17ced1597e
-	gitlab.yoyiit.com/youyi/app-invoice v0.0.0-20240108074559-b028901a7781
+	gitlab.yoyiit.com/youyi/app-invoice v0.0.0-20240719034449-a06318f8fe67
 	gitlab.yoyiit.com/youyi/app-oa v0.0.0-20240131092823-402146d9c44a
 	gitlab.yoyiit.com/youyi/app-soms v0.0.0-20230725111904-77cace21e85e
-	gitlab.yoyiit.com/youyi/go-common v0.0.0-20240624093707-f6776d27a63e
-	gitlab.yoyiit.com/youyi/go-core v0.0.0-20240405163909-34d581f7005e
+	gitlab.yoyiit.com/youyi/go-common v0.0.0-20240722063008-81e85fb51169
+	gitlab.yoyiit.com/youyi/go-core v0.0.0-20240715020617-c24e2492d4af
 	go.uber.org/zap v1.24.0
 	golang.org/x/crypto v0.23.0
 	gorm.io/gorm v1.24.5
