@@ -23,18 +23,20 @@ import (
 
 var ProviderSet = wire.NewSet(NewBankService, store.NewKafkaProducer, rpc_dingtalk.NewDingtalkClient, store.NewOSSConfig,
 	rpc_base.NewBaseClient, NewPaymentReceiptService, rpc_oa.NewOAClient, NewPdfToImageService, process.NewProcessAuthRepo,
-	rpc_soms.NewSomsClient, rpc_finance.NewFinanceClient, rpc_invoice.NewInvoiceClient)
+	rpc_soms.NewSomsClient, rpc_finance.NewFinanceClient, rpc_invoice.NewInvoiceClient, store.NewRedisClient)
 
 func NewBankService(baseClient base.Client, guilinBankSDK sdk.GuilinBankSDK, spdBankSDK sdk.SPDBankSDK, pinganBankSDK sdk.PinganBankSDK,
 	bankTransferReceiptRepo repo.BankTransferReceiptRepo, kafkaProducer *store.KafkaProducer, dingtalkClient dingtalk.Client,
 	bankTransactionDetailRepo repo.BankTransactionDetailRepo, bankTransactionDetailProcessInstanceRepo repo.BankTransactionDetailProcessInstanceRepo,
 	ossConfig *store.OSSConfig, bankCode repo.BankCodeRepo, businessPayrollRepo repo.BankBusinessPayrollRepo,
-	businessPayrollDetailRepo repo.BankBusinessPayrollDetailRepo, oaClient oa.Client, paymentReceiptRepo repo.PaymentReceiptRepo, pdfToImageService PdfToImageService, financeClient finance.Client, icbcbankSDK sdk.IcbcBankSDK) BankService {
+	businessPayrollDetailRepo repo.BankBusinessPayrollDetailRepo, oaClient oa.Client, paymentReceiptRepo repo.PaymentReceiptRepo, pdfToImageService PdfToImageService, financeClient finance.Client,
+	icbcbankSDK sdk.IcbcBankSDK, redisClient *store.RedisClient) BankService {
 	return &bankService{baseClient, guilinBankSDK, spdBankSDK, pinganBankSDK,
 		bankTransferReceiptRepo, kafkaProducer, dingtalkClient,
 		bankTransactionDetailRepo, bankTransactionDetailProcessInstanceRepo,
 		ossConfig, bankCode, businessPayrollRepo,
-		businessPayrollDetailRepo, oaClient, paymentReceiptRepo, pdfToImageService, financeClient, icbcbankSDK}
+		businessPayrollDetailRepo, oaClient, paymentReceiptRepo,
+		pdfToImageService, financeClient, icbcbankSDK, redisClient}
 }
 
 func NewPaymentReceiptService(paymentReceiptSubProcess *sub_process.PaymentReceiptSubProcess, baseClient base.Client,

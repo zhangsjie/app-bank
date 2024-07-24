@@ -22,3 +22,4 @@ const IcbcAdsAgreementGryURL = "/api/mybank/account/accountdetailservice/adsagre
 const IcbcAdsReceiptAryURL = "/api/mybank/account/accountdetailservice/adsreceiptqry/V1"     //准实时回单查询
 
 const IcbcTempFilePath = "tempFile/icbc"
+const GetBankTransactionReceipt = "getBankTransactionReceipt:"
