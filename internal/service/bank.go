@@ -133,6 +133,7 @@ type bankService struct {
 	pdfToImageService                        PdfToImageService
 	financeClient                            finance.Client
 	icbcBank                                 sdk.IcbcBankSDK
+	redisClient                              *store.RedisClient
 }
 
 func (s *bankService) SyncIcbcBankTransactionReceipt(ctx context.Context, beginDate string, endDate string, organizationId int64) error {
@@ -207,6 +208,19 @@ func (s *bankService) SyncIcbcBankTransactionReceipt(ctx context.Context, beginD
 }
 
 func (s *bankService) GetIcbcBankTransactionReceipt(ctx context.Context, bankTransactionDetailId int64) error {
+	//将该id放入redis中,
+	zap.L().Info(fmt.Sprintf("==GetIcbcBankTransactionReceipt开始执行回单下载任务::id=%d", bankTransactionDetailId))
+	key := bankEnum.GetBankTransactionReceipt + strconv.FormatInt(bankTransactionDetailId, 10)
+	value := s.redisClient.Get(ctx, key)
+	if value.Val() == "1" {
+		zap.L().Info(fmt.Sprintf("==GetIcbcBankTransactionReceipt申请回单重复,此任务不在执行::id=%d", bankTransactionDetailId))
+		return nil
+	}
+	// 设置过期时间为30分钟
+	err := s.redisClient.Set(ctx, key, "1", time.Minute*30).Err()
+	if err != nil {
+		zap.L().Error("设置redisKey失败", zap.Error(err))
+	}
 	bankTransactionDetail, _ := s.bankTransactionDetailRepo.Get(ctx, &repo.BankTransactionDetailDBData{
 		BaseDBData: repository.BaseDBData{
 			BaseCommonDBData: repository.BaseCommonDBData{Id: bankTransactionDetailId},
@@ -227,8 +241,8 @@ func (s *bankService) GetIcbcBankTransactionReceipt(ctx context.Context, bankTra
 			}
 			zap.L().Info(fmt.Sprintf("==GetBankTransactionReceipt%s", query.OrderId))
 			//等待20分钟之后继续执行
-			time.Sleep(20 * time.Minute)
-
+			time.Sleep(30 * time.Minute)
+			zap.L().Info(fmt.Sprintf("==GetBankTransactionReceipt开始执行回单下载任务%s", query.OrderId))
 			err = s.icbcBank.IcbcReceiptFileDownloadByOrderId(ctx, query.OrderId)
 			if err != nil {
 				zap.L().Info(fmt.Sprintf("==GetIcbcBankTransactionReceipt下载回单orderid失败%s,err=%+v", query.OrderId, err))
@@ -253,7 +267,8 @@ func (s *bankService) GetIcbcBankTransactionReceipt(ctx context.Context, bankTra
 					if err != nil {
 						zap.L().Error(fmt.Sprintf("GetIcbcBankTransactionReceipt更新icbc电子凭证失败: %v\n", err.Error()))
 					}
-					//todo 更新单据的明细回单
+					//删除redis
+					s.redisClient.Del(ctx, key)
 					break
 				}
 			}
