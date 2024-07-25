@@ -214,11 +214,13 @@ func (s *bankService) GetIcbcBankTransactionReceipt(ctx context.Context, bankTra
 	value := s.redisClient.Get(ctx, key)
 	if value.Val() == "1" {
 		zap.L().Info(fmt.Sprintf("==GetIcbcBankTransactionReceipt申请回单重复,此任务不在执行::id=%d", bankTransactionDetailId))
-		return nil
+		ttl, _ := s.redisClient.TTL(ctx, key).Result()
+		sc := int(ttl.Seconds())
+		return errors.New(fmt.Sprintf("该流水已申请电子回单,请等待%d分钟%d秒后刷新页面查看结果", sc/60, sc%60))
 	}
 
-	// 设置过期时间为30分钟
-	err := s.redisClient.Set(ctx, key, "1", time.Minute*30).Err()
+	// 设置过期时间为20分钟
+	err := s.redisClient.Set(ctx, key, "1", time.Minute*20).Err()
 	if err != nil {
 		zap.L().Error("设置redisKey失败", zap.Error(err))
 	}
