@@ -113,37 +113,37 @@ func (i *icbcBankSDK) IcbcReceiptFileDownloadByOrderId(ctx context.Context, orde
 	//下载对应orderId的包到本地临时路径并且解压缩
 	for _, v := range downloadDir {
 		fileName := v.Name()
-		if !strings.HasSuffix(fileName, ".zip") && !strings.HasPrefix(fileName, orderId) {
-			continue
-		}
-		remoteFilePath := path.Join(remotePath, fileName)
-		localFilePath := path.Join(filePathDir, fileName)
+		if strings.HasSuffix(fileName, ".zip") && strings.HasPrefix(fileName, orderId) {
+			remoteFilePath := path.Join(remotePath, fileName)
+			localFilePath := path.Join(filePathDir, fileName)
 
-		//创建本地文件
-		localFile, err := os.Create(localFilePath)
-		if err != nil {
-			zap.L().Info(fmt.Sprintf("IcbcReceiptFileDownloadByOrderId创建本地文件失败： %s", err))
-			continue
+			//创建本地文件
+			localFile, err := os.Create(localFilePath)
+			if err != nil {
+				zap.L().Info(fmt.Sprintf("IcbcReceiptFileDownloadByOrderId创建本地文件失败： %s", err))
+				continue
+			}
+			//打开远程文件
+			remoteFile, err := client.Open(remoteFilePath)
+			if err != nil {
+				zap.L().Info(fmt.Sprintf("IcbcReceiptFileDownloadByOrderId打开远程文件失败： %s", err))
+				continue
+			}
+			//复制远程文件到本地
+			_, err = io.Copy(localFile, remoteFile)
+			if err != nil {
+				zap.L().Info(fmt.Sprintf("IcbcReceiptFileDownloadByOrderId复制文件内容失败： %s", err))
+				continue
+			}
+			localFile.Close()
+			remoteFile.Close()
+			err = unzip(localFilePath, filePathDir)
+			if err != nil {
+				zap.L().Info(fmt.Sprintf("IcbcReceiptFileDownloadByOrderId解压zip包失败： %s", err))
+			}
+			break
 		}
-		//打开远程文件
-		remoteFile, err := client.Open(remoteFilePath)
-		if err != nil {
-			zap.L().Info(fmt.Sprintf("IcbcReceiptFileDownloadByOrderId打开远程文件失败： %s", err))
-			continue
-		}
-		//复制远程文件到本地
-		_, err = io.Copy(localFile, remoteFile)
-		if err != nil {
-			zap.L().Info(fmt.Sprintf("IcbcReceiptFileDownloadByOrderId复制文件内容失败： %s", err))
-			continue
-		}
-		localFile.Close()
-		remoteFile.Close()
-		err = unzip(localFilePath, filePathDir)
-		if err != nil {
-			zap.L().Info(fmt.Sprintf("IcbcReceiptFileDownloadByOrderId解压zip包失败： %s", err))
-		}
-		break
+
 	}
 	return err
 }

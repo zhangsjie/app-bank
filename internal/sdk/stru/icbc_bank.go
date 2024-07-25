@@ -93,9 +93,11 @@ func SftpClient() *sftp.Client {
 	userName := config.GetString("bankConfig.icbc.userName", "")
 	ip := host + ":" + port
 	// 读取私钥文件
+	//sftPrivateKey := config.GetString("bankConfig.icbc.sftPrivateKey", "")
 	keyBytes, err := ioutil.ReadFile("id_rsa.txt")
+	zap.L().Info(fmt.Sprintf("==SftpClient读取的私钥文件内容%s", keyBytes))
 	if err != nil {
-		fmt.Errorf("failed to decode Base64 encoded private key: %w", err)
+		fmt.Errorf("读取文件失败failed to decode Base64 encoded private key: %w", err)
 	}
 	signer, err := ssh.ParsePrivateKey(keyBytes)
 	if err != nil {
