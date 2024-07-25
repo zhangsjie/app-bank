@@ -211,11 +211,12 @@ func (s *bankService) GetIcbcBankTransactionReceipt(ctx context.Context, bankTra
 	//将该id放入redis中,
 	zap.L().Info(fmt.Sprintf("==GetIcbcBankTransactionReceipt开始执行回单下载任务::id=%d", bankTransactionDetailId))
 	key := bankEnum.GetBankTransactionReceipt + strconv.FormatInt(bankTransactionDetailId, 10)
-	value := s.redisClient.Get(ctx, key)
+	/*value := s.redisClient.Get(ctx, key)
 	if value.Val() == "1" {
 		zap.L().Info(fmt.Sprintf("==GetIcbcBankTransactionReceipt申请回单重复,此任务不在执行::id=%d", bankTransactionDetailId))
 		return nil
-	}
+	}*/
+
 	// 设置过期时间为30分钟
 	err := s.redisClient.Set(ctx, key, "1", time.Minute*30).Err()
 	if err != nil {
@@ -235,17 +236,17 @@ func (s *bankService) GetIcbcBankTransactionReceipt(ctx context.Context, bankTra
 	}
 	if account.Type == enum.IcbcBankType {
 		go func() {
-			query, err := s.icbcBank.IcbcReceiptNoQuery(ctx, account.Account, account.ZuId, bankTransactionDetail.HostFlowNo, "")
+			/*query, err := s.icbcBank.IcbcReceiptNoQuery(ctx, account.Account, account.ZuId, bankTransactionDetail.HostFlowNo, "")
 			if err != nil {
 				zap.L().Info(fmt.Sprintf("==GetIcbcBankTransactionReceipt查询回单orderid失败%s,err=%+v", query.OrderId, err))
 			}
-			zap.L().Info(fmt.Sprintf("==GetBankTransactionReceipt%s", query.OrderId))
+			zap.L().Info(fmt.Sprintf("==GetBankTransactionReceipt%s", query.OrderId))*/
 			//等待20分钟之后继续执行
-			time.Sleep(30 * time.Minute)
-			zap.L().Info(fmt.Sprintf("==GetBankTransactionReceipt开始执行回单下载任务%s", query.OrderId))
-			err = s.icbcBank.IcbcReceiptFileDownloadByOrderId(ctx, query.OrderId)
+			//time.Sleep(30 * time.Minute)
+			zap.L().Info(fmt.Sprintf("==GetBankTransactionReceipt开始执行回单下载任务%s", "//202407231722050884980198243"))
+			err = s.icbcBank.IcbcReceiptFileDownloadByOrderId(ctx, "202407231722050884980198243")
 			if err != nil {
-				zap.L().Info(fmt.Sprintf("==GetIcbcBankTransactionReceipt下载回单orderid失败%s,err=%+v", query.OrderId, err))
+				zap.L().Info(fmt.Sprintf("==GetIcbcBankTransactionReceipt下载回单orderid失败%s,err=%+v", "202407231722050884980198243", err))
 			}
 			//寻找对应hostflow
 			//在临时回单文件中寻找匹配的回单文件,

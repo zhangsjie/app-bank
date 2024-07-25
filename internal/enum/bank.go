@@ -17,6 +17,7 @@ const IcbcCorpNo = "bankConfig.icbc.corpNo"       //一级合作方编号
 const IcbcAccCompNo = "bankConfig.icbc.acccompno" //二级合作方编号
 const IcbcAccountNo = "bankConfig.icbc.accountNo" //主账号
 const IcbcPrivateKey = "bankConfig.icbc.privateKey"
+const IcbcSftPrivateKey = "bankConfig.icbc.sftPrivateKey"
 const IcbcAccDetailURL = "/api/mybank/account/accountdetailservice/adsaccountdtlqry/V1"      //工行单账户流水提取url
 const IcbcAdsAgreementGryURL = "/api/mybank/account/accountdetailservice/adsagreementqry/V1" //协议批量查询
 const IcbcAdsReceiptAryURL = "/api/mybank/account/accountdetailservice/adsreceiptqry/V1"     //准实时回单查询
