@@ -17,7 +17,7 @@ require (
 	gitlab.yoyiit.com/youyi/app-oa v0.0.0-20240131092823-402146d9c44a
 	gitlab.yoyiit.com/youyi/app-soms v0.0.0-20230725111904-77cace21e85e
 	gitlab.yoyiit.com/youyi/go-common v0.0.0-20240722063008-81e85fb51169
-	gitlab.yoyiit.com/youyi/go-core v0.0.0-20240715020617-c24e2492d4af
+	gitlab.yoyiit.com/youyi/go-core v0.0.0-20240807023746-01dacf888bb8
 	go.uber.org/zap v1.24.0
 	golang.org/x/crypto v0.23.0
 	gorm.io/gorm v1.24.5
