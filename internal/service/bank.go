@@ -3372,13 +3372,7 @@ func (s *bankService) QueryVirtualAccountBalance(ctx context.Context, organizati
 	} else if bankType == enum.PinganBankType {
 		bankTypeStr = "平安银行"
 	}
-	organizationBankConfig, err := s.baseClient.GetOrganizationBankConfig(ctx, &baseApi.OrganizationBankConfigData{
-		OrganizationId: organizationId,
-		Type:           bankType,
-	})
-	if err != nil {
-		return nil, handler.HandleError(errors.New(fmt.Sprintf("获取组织配置异常: %d", organizationId)))
-	}
+
 	virtualAccount, err := s.baseClient.SimpleGetOrganizationBankVirtualAccount(ctx, &baseApi.OrganizationBankVirtualAccountData{
 		OrganizationId: organizationId,
 		Type:           bankType,
@@ -3402,6 +3396,14 @@ func (s *bankService) QueryVirtualAccountBalance(ctx context.Context, organizati
 		if virtualAccount == nil {
 			zap.L().Error(fmt.Sprintf("本地数据库->主账户: %s 未查询到虚账户: %s 的数据\n", virtualAccountParentNo, virtualAccount.VirtualAccountNo))
 			return nil, nil
+		}
+
+		organizationBankConfig, err := s.baseClient.GetOrganizationBankConfig(ctx, &baseApi.OrganizationBankConfigData{
+			OrganizationId: organizationId,
+			Type:           bankType,
+		})
+		if err != nil {
+			return nil, handler.HandleError(errors.New(fmt.Sprintf("获取组织配置异常: %d", organizationId)))
 		}
 		//virtualAccountParentNo = "63160078801600000054"
 		//virtualAccountParentName = "广西呦亿灵动科技有限公司"
