@@ -3403,7 +3403,7 @@ func (s *bankService) QueryVirtualAccountBalance(ctx context.Context, organizati
 			Type:           bankType,
 		})
 		if err != nil {
-			return nil, handler.HandleError(errors.New(fmt.Sprintf("获取组织配置异常: %d,银行类型: %s", organizationId, bankTypeStr)))
+			return nil, handler.HandleError(errors.New(fmt.Sprintf("查询虚账户余额获取组织配置异常: %d,银行类型: %s", organizationId, bankTypeStr)))
 		}
 		//virtualAccountParentNo = "63160078801600000054"
 		//virtualAccountParentName = "广西呦亿灵动科技有限公司"
