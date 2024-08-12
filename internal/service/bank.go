@@ -111,7 +111,7 @@ type BankService interface {
 	IcbcBankAccountSignatureQuery(ctx context.Context, req *api.IcbcBankAccountSignatureRequest) (*api.IcbcBankAccountSignatureQueryResponse, error)
 	IcbcBankListTransactionDetail(ctx context.Context, beginDate string, endDate string, organizationId int64) error
 	SyncIcbcBankTransactionReceipt(ctx context.Context, beginDate string, endDate string, organizationId int64) error
-	GetIcbcBankTransactionReceipt(ctx context.Context, bankTransactionDetailId int64) error
+	GetBankTransactionReceipt(ctx context.Context, bankTransactionDetailId int64) error
 }
 
 type bankService struct {
@@ -207,78 +207,109 @@ func (s *bankService) SyncIcbcBankTransactionReceipt(ctx context.Context, beginD
 	return nil
 }
 
-func (s *bankService) GetIcbcBankTransactionReceipt(ctx context.Context, bankTransactionDetailId int64) error {
+func (s *bankService) GetBankTransactionReceipt(ctx context.Context, bankTransactionDetailId int64) error {
 	//将该id放入redis中,
-	zap.L().Info(fmt.Sprintf("==GetIcbcBankTransactionReceipt开始执行回单下载任务::id=%d", bankTransactionDetailId))
-	key := bankEnum.GetBankTransactionReceipt + strconv.FormatInt(bankTransactionDetailId, 10)
-	value := s.redisClient.Get(ctx, key)
-	if value.Val() == "1" {
-		zap.L().Info(fmt.Sprintf("==GetIcbcBankTransactionReceipt申请回单重复,此任务不在执行::id=%d", bankTransactionDetailId))
-		ttl, _ := s.redisClient.TTL(ctx, key).Result()
+	zap.L().Info(fmt.Sprintf("==GetBankTransactionReceipt开始执行回单下载任务::id=%d", bankTransactionDetailId))
+	lockKey := bankEnum.GetBankTransactionReceipt + strconv.FormatInt(bankTransactionDetailId, 10)
+	// 设置过期时间为20分钟
+	lock, err := s.redisClient.SetNX(ctx, lockKey, time.Now(), 30*time.Minute).Result()
+	if err != nil {
+		zap.L().Info(fmt.Sprintf("==GetIBankTransactionReceipt设置redis锁失败: %+v", err))
+		return errors.New(err.Error())
+	}
+	if lock {
+		bankTransactionDetail, _ := s.bankTransactionDetailRepo.Get(ctx, &repo.BankTransactionDetailDBData{
+			BaseDBData: repository.BaseDBData{
+				BaseCommonDBData: repository.BaseCommonDBData{Id: bankTransactionDetailId},
+			},
+		})
+		account, err := s.baseClient.GetOrganizationBankAccount(ctx, &baseApi.OrganizationBankAccountData{
+			OrganizationId: bankTransactionDetail.OrganizationId,
+			Type:           bankTransactionDetail.PayAccountType,
+		})
+		if err != nil {
+			return handler.HandleError(err)
+		}
+		if account.Type == enum.IcbcBankType {
+			go func() {
+				query, err := s.icbcBank.IcbcReceiptNoQuery(ctx, account.Account, account.ZuId, bankTransactionDetail.HostFlowNo, "")
+				if err != nil {
+					zap.L().Info(fmt.Sprintf("==GetBankTransactionReceipt查询回单orderid失败%s,err=%+v", query.OrderId, err))
+				}
+				zap.L().Info(fmt.Sprintf("==GetBankTransactionReceipt%s", query.OrderId))
+				//等待20分钟之后继续执行
+				time.Sleep(30 * time.Minute)
+				zap.L().Info(fmt.Sprintf("==GetBankTransactionReceipt开始执行回单下载任务%s", query.OrderId))
+				err = s.icbcBank.IcbcReceiptFileDownloadByOrderId(ctx, query.OrderId)
+				if err != nil {
+					zap.L().Info(fmt.Sprintf("==GetBankTransactionReceipt下载回单orderid失败%s,err=%+v", query.OrderId, err))
+				}
+				//寻找对应hostflow
+				//在临时回单文件中寻找匹配的回单文件,
+				dir, _ := ioutil.ReadDir(bankEnum.IcbcTempFilePath)
+				for _, fileInfo := range dir {
+					fileName := fileInfo.Name()
+					if strings.Contains(fileName, bankTransactionDetail.HostFlowNo) && strings.HasSuffix(fileName, ".pdf") {
+						f, err := os.ReadFile(path.Join(bankEnum.IcbcTempFilePath, fileName))
+						if err != nil {
+							zap.L().Error(fmt.Sprintf("SyncIcbcBankTransactionReceipt读取icbc回单失败: %v\n", err.Error()))
+						}
+						electronicReceiptFile, err := store.UploadOSSFileBytes("pdf", ".pdf", f, s.ossConfig, false)
+						if err != nil {
+							zap.L().Error(fmt.Sprintf("SyncIcbcBankTransactionReceipt上传icbc电子凭证到OSS失败: %v\n", err.Error()))
+						}
+						err = s.bankTransactionDetailRepo.UpdateById(ctx, bankTransactionDetailId, &repo.BankTransactionDetailDBData{
+							ElectronicReceiptFile: electronicReceiptFile,
+						})
+						if err != nil {
+							zap.L().Error(fmt.Sprintf("GetIcbcBankTransactionReceipt更新icbc电子凭证失败: %v\n", err.Error()))
+						}
+						break
+					}
+				}
+
+			}()
+
+		} else if account.Type == enum.SPDBankType {
+			organizationBankConfig, err := s.baseClient.GetOrganizationBankConfig(ctx, &baseApi.OrganizationBankConfigData{
+				OrganizationId: bankTransactionDetail.OrganizationId,
+				Type:           enum.SPDBankType,
+			})
+			if err != nil {
+				return handler.HandleError(err)
+			}
+			f, err := s.spdBankSDK.DownloadTransactionDetailElectronicReceipt(ctx, account.Account, bankTransactionDetail.TransferDate, bankTransactionDetail.TransferDate,
+				bankTransactionDetail.OrderFlowNo, bankTransactionDetail.ExtField1, organizationBankConfig.Host, organizationBankConfig.SignHost,
+				organizationBankConfig.FileHost, organizationBankConfig.BankCustomerId, organizationBankConfig.BankUserId)
+			if err != nil {
+				zap.L().Info(fmt.Sprintf("s.bankService.GetBankTransactionReceipt 下载浦发电子凭证失败: %v\n", err.Error()))
+			}
+			var electronicReceiptFile string
+			if f != nil && len(f) > 0 {
+				electronicReceiptFile, err = store.UploadOSSFileBytes("pdf", ".pdf", f, s.ossConfig, false)
+				if err != nil {
+					zap.L().Error(fmt.Sprintf("上传浦发电子凭证到OSS失败: %v\n", err.Error()))
+				}
+				err := s.bankTransactionDetailRepo.UpdateById(ctx, bankTransactionDetail.Id, &repo.BankTransactionDetailDBData{
+					ElectronicReceiptFile: electronicReceiptFile,
+				})
+				if err != nil {
+					zap.L().Error(fmt.Sprintf("更新浦发电子凭证失败: %v\n", err.Error()))
+				}
+				//更新单据的明细ID
+				if err = s.updateRelevanceElectronicDocument(ctx, bankTransactionDetail.Summary, bankTransactionDetail.HostFlowNo, electronicReceiptFile, enum.SPDBankType); err != nil {
+					zap.L().Error(fmt.Sprintf("更新浦发更新单据的回单失败: %v\n", err.Error()))
+				}
+				zap.L().Info("GetBankTransactionReceipt 处理浦发电子凭证成功")
+			}
+		}
+	} else {
+		zap.L().Info(fmt.Sprintf("==GetIBankTransactionReceipt申请回单重复,此任务不在执行::id=%d", bankTransactionDetailId))
+		ttl, _ := s.redisClient.TTL(ctx, lockKey).Result()
 		sc := int(ttl.Seconds())
 		return errors.New(fmt.Sprintf("该流水已申请电子回单,请等待%d分钟%d秒后刷新页面查看结果", sc/60, sc%60))
 	}
 
-	// 设置过期时间为20分钟
-	err := s.redisClient.Set(ctx, key, "1", time.Minute*20).Err()
-	if err != nil {
-		zap.L().Error("设置redisKey失败", zap.Error(err))
-	}
-	bankTransactionDetail, _ := s.bankTransactionDetailRepo.Get(ctx, &repo.BankTransactionDetailDBData{
-		BaseDBData: repository.BaseDBData{
-			BaseCommonDBData: repository.BaseCommonDBData{Id: bankTransactionDetailId},
-		},
-	})
-	account, err := s.baseClient.GetOrganizationBankAccount(ctx, &baseApi.OrganizationBankAccountData{
-		OrganizationId: bankTransactionDetail.OrganizationId,
-		Type:           bankTransactionDetail.PayAccountType,
-	})
-	if err != nil {
-		return handler.HandleError(err)
-	}
-	if account.Type == enum.IcbcBankType {
-		go func() {
-			query, err := s.icbcBank.IcbcReceiptNoQuery(ctx, account.Account, account.ZuId, bankTransactionDetail.HostFlowNo, "")
-			if err != nil {
-				zap.L().Info(fmt.Sprintf("==GetIcbcBankTransactionReceipt查询回单orderid失败%s,err=%+v", query.OrderId, err))
-			}
-			zap.L().Info(fmt.Sprintf("==GetBankTransactionReceipt%s", query.OrderId))
-			//等待20分钟之后继续执行
-			time.Sleep(30 * time.Minute)
-			zap.L().Info(fmt.Sprintf("==GetBankTransactionReceipt开始执行回单下载任务%s", query.OrderId))
-			err = s.icbcBank.IcbcReceiptFileDownloadByOrderId(ctx, query.OrderId)
-			if err != nil {
-				zap.L().Info(fmt.Sprintf("==GetIcbcBankTransactionReceipt下载回单orderid失败%s,err=%+v", query.OrderId, err))
-			}
-			//寻找对应hostflow
-			//在临时回单文件中寻找匹配的回单文件,
-			dir, _ := ioutil.ReadDir(bankEnum.IcbcTempFilePath)
-			for _, fileInfo := range dir {
-				fileName := fileInfo.Name()
-				if strings.Contains(fileName, bankTransactionDetail.HostFlowNo) && strings.HasSuffix(fileName, ".pdf") {
-					f, err := os.ReadFile(path.Join(bankEnum.IcbcTempFilePath, fileName))
-					if err != nil {
-						zap.L().Error(fmt.Sprintf("SyncIcbcBankTransactionReceipt读取icbc回单失败: %v\n", err.Error()))
-					}
-					electronicReceiptFile, err := store.UploadOSSFileBytes("pdf", ".pdf", f, s.ossConfig, false)
-					if err != nil {
-						zap.L().Error(fmt.Sprintf("SyncIcbcBankTransactionReceipt上传icbc电子凭证到OSS失败: %v\n", err.Error()))
-					}
-					err = s.bankTransactionDetailRepo.UpdateById(ctx, bankTransactionDetailId, &repo.BankTransactionDetailDBData{
-						ElectronicReceiptFile: electronicReceiptFile,
-					})
-					if err != nil {
-						zap.L().Error(fmt.Sprintf("GetIcbcBankTransactionReceipt更新icbc电子凭证失败: %v\n", err.Error()))
-					}
-					//删除redis
-					s.redisClient.Del(ctx, key)
-					break
-				}
-			}
-
-		}()
-
-	}
 	return nil
 }
 
