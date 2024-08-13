@@ -276,21 +276,7 @@ func (p *PaymentReceiptSubProcess) PcUrl(ctx context.Context, id int64) string {
 	if err != nil {
 		return ""
 	}
-	if paymentReceipt.Type == "1" {
-		paymentApplication, err := p.oaClient.GetPaymentApplicationByProcessInstanceId(ctx, id)
-		if err != nil {
-			return ""
-		}
-		return fmt.Sprintf("https://apply.%s/oa/payment-application/%d", config.GetString("dingtalk.pc.domain", ""), paymentApplication.Id)
-	}
-	if paymentReceipt.Type == "2" {
-		reimburseApplication, err := p.oaClient.GetReimburseApplicationByProcessInstanceId(ctx, id)
-		if err != nil {
-			return ""
-		}
-		return fmt.Sprintf("https://apply.%s/oa/reimburse-application/%d", config.GetString("dingtalk.pc.domain", ""), reimburseApplication.Id)
-	}
-	return ""
+	return fmt.Sprintf("https://apply.%s/transaction/payment-receipt/%d", config.GetString("dingtalk.pc.domain", ""), paymentReceipt.Id)
 }
 
 func (p *PaymentReceiptSubProcess) TodoFields(ctx context.Context, id int64) [][]string {
