@@ -276,7 +276,7 @@ func (p *PaymentReceiptSubProcess) PcUrl(ctx context.Context, id int64) string {
 	if err != nil {
 		return ""
 	}
-	return fmt.Sprintf("https://apply.%s/transaction/payment-receipt/%d", config.GetString("dingtalk.pc.domain", ""), paymentReceipt.Id)
+	return fmt.Sprintf("https://bank.%s/transaction/payment-receipt/%d", config.GetString("dingtalk.pc.domain", ""), paymentReceipt.Id)
 }
 
 func (p *PaymentReceiptSubProcess) TodoFields(ctx context.Context, id int64) [][]string {
