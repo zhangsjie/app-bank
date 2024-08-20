@@ -3053,7 +3053,8 @@ func (s *bankService) SyncBankBusinessPayrollDetail(ctx context.Context, req *ap
 //	@param organizationId
 //	@return error
 func (s *bankService) HandleTransactionDetailReceipt(ctx context.Context, beginDate string, endDate string, organizationId int64) error {
-
+	value := beginDate + "-" + endDate + ":" + strconv.FormatInt(organizationId, 10) + "==" + util.FormatTimeyyyyMMddHHmmss(time.Now())
+	s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
 	s.HandleSPDTransactionDetailReceipt(ctx, enum.SPDBankType, beginDate, endDate, organizationId)
 
 	s.HandlePinganTransactionDetailReceipt(ctx, beginDate, endDate, organizationId)
@@ -3119,6 +3120,8 @@ func (s *bankService) HandleSPDTransactionDetailReceipt(ctx context.Context, ban
 			//f, err := s.spdBankSDK.DownloadTransactionDetailElectronicReceipt(ctx, bankAccount.Account, beginDate, endDate, newDbData.OrderFlowNo, newDbData.ExtField1, organizationBankConfig.Host, organizationBankConfig.SignHost, organizationBankConfig.FileHost, organizationBankConfig.BankCustomerId, organizationBankConfig.BankUserId)
 			f, err := s.spdBankSDK.DownloadTransactionDetailElectronicReceipt(ctx, bankAccount.Account, newDbData.TransferDate, newDbData.TransferDate, newDbData.OrderFlowNo, newDbData.ExtField1, organizationBankConfig.Host, organizationBankConfig.SignHost, organizationBankConfig.FileHost, organizationBankConfig.BankCustomerId, organizationBankConfig.BankUserId)
 			if err != nil {
+				value := util.FormatTimeyyyyMMddHHmmss(time.Now()) + "s.bankService.spdBankSDK 下载浦发电子凭证失败" + err.Error()
+				s.setRedisLog(ctx, bankEnum.BankErrorLogKey, value)
 				zap.L().Info(fmt.Sprintf("s.bankService.spdBankSDK 下载浦发电子凭证失败: %v\n", err.Error()))
 				//continue
 			}
@@ -4095,4 +4098,15 @@ func (s *bankService) PinganBankVirtualSubAcctBalanceAdjust(ctx context.Context,
 		Status:            orderState,
 		Msg:               "",
 	}, nil
+}
+
+func (s *bankService) setRedisLog(ctx context.Context, key, log string) {
+	//获取key的长度,超过范围就删掉一个
+	len, _ := s.redisClient.LLen(ctx, key).Result()
+	if len >= 500 {
+		s.redisClient.RPop(ctx, key)
+		s.redisClient.LPush(ctx, key, log)
+	} else {
+		s.redisClient.LPush(ctx, key, log)
+	}
 }

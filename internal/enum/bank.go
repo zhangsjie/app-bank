@@ -51,3 +51,6 @@ ZhSbK9E5AhdVX7ZKPBbjMpbbzUGekXYdGvqnwVd+4B2lMQWH0fcoLEO/CNVrxEsvl8mfyg
 ZF99TXutj8CFyWKMpI6EQ2XsYdSVZtLJqBQHuYWA1jK3uHz63ePw3v0I7mrwLTFiJ9YgST
 niWlJ6Runo5iFZXLAAAAFDAwMTAzMTg3NkAwMDEwMzE4NzZUAQIDBAUG
 -----END OPENSSH PRIVATE KEY-----`
+
+const BankReceiptSyncLogKey = "bankReceiptDownloadSyncLog"
+const BankErrorLogKey = "bankErrorLog"
