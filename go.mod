@@ -10,11 +10,11 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/pkg/sftp v1.13.6
 	github.com/satori/go.uuid v1.2.0
-	gitlab.yoyiit.com/youyi/app-base v0.0.0-20240813065459-4d0f94a4d248
+	gitlab.yoyiit.com/youyi/app-base v0.0.0-20240823093021-2f97d4ec755b
 	gitlab.yoyiit.com/youyi/app-dingtalk v0.0.0-20230712070347-478fa7abbcbb
 	gitlab.yoyiit.com/youyi/app-finance v0.0.0-20240807024820-8eea2c4da16d
-	gitlab.yoyiit.com/youyi/app-invoice v0.0.0-20240808093051-fa4c0bc9ce27
-	gitlab.yoyiit.com/youyi/app-oa v0.0.0-20240813034038-69eabdf3492c
+	gitlab.yoyiit.com/youyi/app-invoice v0.0.0-20240815074051-f06a78a0c466
+	gitlab.yoyiit.com/youyi/app-oa v0.0.0-20240823093117-29f627a7f397
 	gitlab.yoyiit.com/youyi/app-soms v0.0.0-20240730063532-bfd8f6ee3e56
 	gitlab.yoyiit.com/youyi/go-common v0.0.0-20240726025706-0f686156cc88
 	gitlab.yoyiit.com/youyi/go-core v0.0.0-20240807023746-01dacf888bb8

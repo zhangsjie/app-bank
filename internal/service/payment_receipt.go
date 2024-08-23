@@ -577,6 +577,11 @@ func (s *paymentReceiptService) sendMessage(ctx context.Context, paymentReceiptD
 		paymentId = reimburseApplication.Id
 	}
 
+	err = s.SavaProcessAuth(ctx, processInstance.Id)
+	if err != nil {
+		return handler.HandleError(err)
+	}
+
 	//发送给抄送人
 	ccopyUsersOrganization, err := s.baseClient.ListCcopyUserOrganizationByProcessInstanceId(ctx, &baseApi.UserOrganizationData{
 		OrganizationId:    organization.Id,
