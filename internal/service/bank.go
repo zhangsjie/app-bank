@@ -3136,7 +3136,7 @@ func (s *bankService) HandleSPDTransactionDetailReceipt(ctx context.Context, ban
 				value = fmt.Sprintf("%sid=%d下载浦发电子凭证失败:%+v", util.FormatDateTime(time.Now()), dbData.Id, err)
 				s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
 				zap.L().Info(fmt.Sprintf("s.bankService.spdBankSDK 下载浦发电子凭证失败: %v\n", err.Error()))
-				//continue
+				return
 			}
 			value = fmt.Sprintf("%sid=%d 下载浦发电子凭证成功,OrderFlowNo=%s", util.FormatDateTime(time.Now()), newDbData.Id, newDbData.OrderFlowNo)
 			s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
@@ -3148,6 +3148,7 @@ func (s *bankService) HandleSPDTransactionDetailReceipt(ctx context.Context, ban
 					value = fmt.Sprintf("%sid=%d上传浦发电子凭证失败:%+v", util.FormatDateTime(time.Now()), newDbData.Id, err)
 					s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
 					zap.L().Error(fmt.Sprintf("上传浦发电子凭证到OSS失败: %v\n", err.Error()))
+					return
 				} else {
 					value = fmt.Sprintf("%sid=%d上传浦发电子凭证成功:%s", util.FormatDateTime(time.Now()), newDbData.Id, electronicReceiptFile)
 					s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
@@ -3159,6 +3160,7 @@ func (s *bankService) HandleSPDTransactionDetailReceipt(ctx context.Context, ban
 					value = fmt.Sprintf("%sid=%d更新浦发电子凭证失败:%+v", util.FormatDateTime(time.Now()), newDbData.Id, err)
 					s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
 					zap.L().Error(fmt.Sprintf("更新浦发电子凭证失败: %v\n", err.Error()))
+					return
 				} else {
 					value = fmt.Sprintf("%sid=%d更新浦发电子凭证成功", util.FormatDateTime(time.Now()), newDbData.Id)
 					s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
