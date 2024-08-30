@@ -3138,6 +3138,8 @@ func (s *bankService) HandleSPDTransactionDetailReceipt(ctx context.Context, ban
 				zap.L().Info(fmt.Sprintf("s.bankService.spdBankSDK 下载浦发电子凭证失败: %v\n", err.Error()))
 				//continue
 			}
+			value = fmt.Sprintf("%s 下载浦发电子凭证成功OrderFlowNo=:%s", util.FormatDateTime(time.Now()), newDbData.OrderFlowNo)
+			s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
 			/*			// todo 临时测试
 						id, _ := util.SonyflakeID()
 						fileName := "/Users/liuhailong/Downloads/tempDownload/spd_test/aaa_" + id + ".pdf"
