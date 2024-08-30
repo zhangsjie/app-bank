@@ -3109,11 +3109,11 @@ func (s *bankService) HandleSPDTransactionDetailReceipt(ctx context.Context, ban
 		return handler.HandleError(err)
 	}
 	zap.L().Info(fmt.Sprintf("s.bankService.HandleSPDTransactionDetailReceipt_count:%v", count))
-	value = fmt.Sprintf("%s=当前spd需要处理的数据量:%d条数据", util.FormatDateTime(time.Now()), count)
+	value = fmt.Sprintf("%s=当前spd需要处理:%d条数据", util.FormatDateTime(time.Now()), count)
 	s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
 	for _, dbData := range *dbDatas {
 		go func() {
-			value = fmt.Sprintf("%s=当前处理的交易明细量:%+v", util.FormatDateTime(time.Now()), dbData)
+			value = fmt.Sprintf("%s id=%d当前处理的交易明细量:%+v", util.FormatDateTime(time.Now()), dbData.Id, dbData)
 			s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
 			newDbData := dbData
 			// 更新凭证地址
@@ -3133,41 +3133,40 @@ func (s *bankService) HandleSPDTransactionDetailReceipt(ctx context.Context, ban
 			//f, err := s.spdBankSDK.DownloadTransactionDetailElectronicReceipt(ctx, bankAccount.Account, beginDate, endDate, newDbData.OrderFlowNo, newDbData.ExtField1, organizationBankConfig.Host, organizationBankConfig.SignHost, organizationBankConfig.FileHost, organizationBankConfig.BankCustomerId, organizationBankConfig.BankUserId)
 			f, err := s.spdBankSDK.DownloadTransactionDetailElectronicReceipt(ctx, bankAccount.Account, newDbData.TransferDate, newDbData.TransferDate, newDbData.OrderFlowNo, newDbData.ExtField1, organizationBankConfig.Host, organizationBankConfig.SignHost, organizationBankConfig.FileHost, organizationBankConfig.BankCustomerId, organizationBankConfig.BankUserId)
 			if err != nil {
-				value = fmt.Sprintf("%s=下载浦发电子凭证失败:%+v", util.FormatDateTime(time.Now()), err)
+				value = fmt.Sprintf("%sid=%d下载浦发电子凭证失败:%+v", util.FormatDateTime(time.Now()), dbData.Id, err)
 				s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
 				zap.L().Info(fmt.Sprintf("s.bankService.spdBankSDK 下载浦发电子凭证失败: %v\n", err.Error()))
 				//continue
 			}
-			value = fmt.Sprintf("%s 下载浦发电子凭证成功OrderFlowNo=:%s", util.FormatDateTime(time.Now()), newDbData.OrderFlowNo)
+			value = fmt.Sprintf("%sid=%d 下载浦发电子凭证成功,OrderFlowNo=%s", util.FormatDateTime(time.Now()), newDbData.Id, newDbData.OrderFlowNo)
 			s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
-			/*			// todo 临时测试
-						id, _ := util.SonyflakeID()
-						fileName := "/Users/liuhailong/Downloads/tempDownload/spd_test/aaa_" + id + ".pdf"
-						err = ioutil.WriteFile(fileName, f, 0644)
-						if err != nil {
-							zap.L().Error(fmt.Sprintf("ioutil 写入文件失败: %v\n", err.Error()))
-						}*/
 
 			var electronicReceiptFile string
 			if f != nil && len(f) > 0 {
 				electronicReceiptFile, err = store.UploadOSSFileBytes("pdf", ".pdf", f, s.ossConfig, false)
 				if err != nil {
-					value = fmt.Sprintf("%s=上传浦发电子凭证失败:%+v", util.FormatDateTime(time.Now()), err)
+					value = fmt.Sprintf("%sid=%d上传浦发电子凭证失败:%+v", util.FormatDateTime(time.Now()), newDbData.Id, err)
 					s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
 					zap.L().Error(fmt.Sprintf("上传浦发电子凭证到OSS失败: %v\n", err.Error()))
+				} else {
+					value = fmt.Sprintf("%sid=%d上传浦发电子凭证成功:%s", util.FormatDateTime(time.Now()), newDbData.Id, electronicReceiptFile)
+					s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
 				}
 				err := s.bankTransactionDetailRepo.UpdateById(ctx, newDbData.Id, &repo.BankTransactionDetailDBData{
 					ElectronicReceiptFile: electronicReceiptFile,
 				})
 				if err != nil {
-					value = fmt.Sprintf("%s=更新浦发电子凭证失败:%+v", util.FormatDateTime(time.Now()), err)
+					value = fmt.Sprintf("%sid=%d更新浦发电子凭证失败:%+v", util.FormatDateTime(time.Now()), newDbData.Id, err)
 					s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
 					zap.L().Error(fmt.Sprintf("更新浦发电子凭证失败: %v\n", err.Error()))
+				} else {
+					value = fmt.Sprintf("%sid=%d更新浦发电子凭证成功", util.FormatDateTime(time.Now()), newDbData.Id)
+					s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
 				}
 
 				//更新单据的明细ID
 				if err = s.updateRelevanceElectronicDocument(ctx, newDbData.Summary, newDbData.HostFlowNo, electronicReceiptFile, enum.SPDBankType); err != nil {
-					value = fmt.Sprintf("%s=更新浦发单据电子凭证失败:%+v", util.FormatDateTime(time.Now()), err)
+					value = fmt.Sprintf("%s更新浦发单据电子凭证失败:%+v", util.FormatDateTime(time.Now()), err)
 					s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
 					zap.L().Error(fmt.Sprintf("更新浦发更新单据的回单失败: %v\n", err.Error()))
 				}
