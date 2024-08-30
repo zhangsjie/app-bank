@@ -3053,7 +3053,7 @@ func (s *bankService) SyncBankBusinessPayrollDetail(ctx context.Context, req *ap
 //	@param organizationId
 //	@return error
 func (s *bankService) HandleTransactionDetailReceipt(ctx context.Context, beginDate string, endDate string, organizationId int64) error {
-	value := beginDate + "-" + endDate + ":" + strconv.FormatInt(organizationId, 10) + "==" + util.FormatTimeyyyyMMddHHmmss(time.Now())
+	value := beginDate + "-" + endDate + ":" + strconv.FormatInt(organizationId, 10) + "==" + util.FormatDateTime(time.Now())
 	s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
 	s.HandleSPDTransactionDetailReceipt(ctx, enum.SPDBankType, beginDate, endDate, organizationId)
 
@@ -3063,28 +3063,36 @@ func (s *bankService) HandleTransactionDetailReceipt(ctx context.Context, beginD
 
 func (s *bankService) HandleSPDTransactionDetailReceipt(ctx context.Context, bankType, beginDate string, endDate string, organizationId int64) error {
 	// 查找所有 bank_transaction_detail 表 pay_account_type 是浦发 且 electronic_receipt_file 字段为空的数据
+	value := util.FormatDateTime(time.Now()) + "开始处理数据"
+	s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
 	bankAccount, err := s.baseClient.GetOrganizationBankAccount(ctx, &baseApi.OrganizationBankAccountData{
 		OrganizationId: organizationId,
 		Type:           bankType,
-		PaymentMode:    "1",
 	})
 	fmt.Println("bankAccount: " + bankAccount.Account)
 	fmt.Println("bankAccount: " + bankAccount.AccountName)
+	value = fmt.Sprintf("%s=当前spd-GetOrganizationBankAccount方法查询结果:%+v", util.FormatDateTime(time.Now()), bankAccount)
+	s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
 	if err != nil {
+		value = fmt.Sprintf("%s=当前spd-GetOrganizationBankAccount方法出错:%+v", util.FormatDateTime(time.Now()), err)
+		s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
 		return handler.HandleError(err)
 	}
 	if bankAccount == nil {
+		value = fmt.Sprintf("%s=当前spd-GetOrganizationBankAccount方法bankAccount为空", util.FormatDateTime(time.Now()))
+		s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
 		return nil
 	}
 	organizationBankConfig, err := s.baseClient.GetOrganizationBankConfig(ctx, &baseApi.OrganizationBankConfigData{
 		OrganizationId: organizationId,
 		Type:           bankType,
 	})
+	value = fmt.Sprintf("%s=当前spd-GetOrganizationBankConfig方法查询结果:%+v", util.FormatDateTime(time.Now()), organizationBankConfig)
+	s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
 	if err != nil {
+		value = fmt.Sprintf("%s=当前spd-GetOrganizationBankConfig方法出错:%+v", util.FormatDateTime(time.Now()), err)
+		s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
 		return handler.HandleError(err)
-	}
-	if err != nil {
-		return err
 	}
 	dbDatas, count, err := s.bankTransactionDetailRepo.List(ctx, "", 0, 0, &repo.BankTransactionDetailDBDataParam{
 		BankTransactionDetailDBData: repo.BankTransactionDetailDBData{
@@ -3096,12 +3104,17 @@ func (s *bankService) HandleSPDTransactionDetailReceipt(ctx context.Context, ban
 		TransferTimeArray:           []string{beginDate, endDate},
 	})
 	if err != nil || dbDatas == nil {
+		value = fmt.Sprintf("%s=当前spd-s.bankTransactionDetailRepo.List方法出错或查询结果为空-err=%+v,count=%d", util.FormatDateTime(time.Now()), err, count)
+		s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
 		return handler.HandleError(err)
 	}
 	zap.L().Info(fmt.Sprintf("s.bankService.HandleSPDTransactionDetailReceipt_count:%v", count))
-
+	value = fmt.Sprintf("%s=当前spd需要处理的数据量:%d条数据", util.FormatDateTime(time.Now()), count)
+	s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
 	for _, dbData := range *dbDatas {
 		go func() {
+			value = fmt.Sprintf("%s=当前处理的交易明细量:%+v", util.FormatDateTime(time.Now()), dbData)
+			s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
 			newDbData := dbData
 			// 更新凭证地址
 			// dbData.OrderFlowNo 是 浦发的柜员流水号: 对应交易明细的 tellerJnlNo
@@ -3120,8 +3133,8 @@ func (s *bankService) HandleSPDTransactionDetailReceipt(ctx context.Context, ban
 			//f, err := s.spdBankSDK.DownloadTransactionDetailElectronicReceipt(ctx, bankAccount.Account, beginDate, endDate, newDbData.OrderFlowNo, newDbData.ExtField1, organizationBankConfig.Host, organizationBankConfig.SignHost, organizationBankConfig.FileHost, organizationBankConfig.BankCustomerId, organizationBankConfig.BankUserId)
 			f, err := s.spdBankSDK.DownloadTransactionDetailElectronicReceipt(ctx, bankAccount.Account, newDbData.TransferDate, newDbData.TransferDate, newDbData.OrderFlowNo, newDbData.ExtField1, organizationBankConfig.Host, organizationBankConfig.SignHost, organizationBankConfig.FileHost, organizationBankConfig.BankCustomerId, organizationBankConfig.BankUserId)
 			if err != nil {
-				value := util.FormatTimeyyyyMMddHHmmss(time.Now()) + "s.bankService.spdBankSDK 下载浦发电子凭证失败" + err.Error()
-				s.setRedisLog(ctx, bankEnum.BankErrorLogKey, value)
+				value = fmt.Sprintf("%s=下载浦发电子凭证失败:%+v", util.FormatDateTime(time.Now()), err)
+				s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
 				zap.L().Info(fmt.Sprintf("s.bankService.spdBankSDK 下载浦发电子凭证失败: %v\n", err.Error()))
 				//continue
 			}
@@ -3137,17 +3150,23 @@ func (s *bankService) HandleSPDTransactionDetailReceipt(ctx context.Context, ban
 			if f != nil && len(f) > 0 {
 				electronicReceiptFile, err = store.UploadOSSFileBytes("pdf", ".pdf", f, s.ossConfig, false)
 				if err != nil {
+					value = fmt.Sprintf("%s=上传浦发电子凭证失败:%+v", util.FormatDateTime(time.Now()), err)
+					s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
 					zap.L().Error(fmt.Sprintf("上传浦发电子凭证到OSS失败: %v\n", err.Error()))
 				}
 				err := s.bankTransactionDetailRepo.UpdateById(ctx, newDbData.Id, &repo.BankTransactionDetailDBData{
 					ElectronicReceiptFile: electronicReceiptFile,
 				})
 				if err != nil {
+					value = fmt.Sprintf("%s=更新浦发电子凭证失败:%+v", util.FormatDateTime(time.Now()), err)
+					s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
 					zap.L().Error(fmt.Sprintf("更新浦发电子凭证失败: %v\n", err.Error()))
 				}
 
 				//更新单据的明细ID
 				if err = s.updateRelevanceElectronicDocument(ctx, newDbData.Summary, newDbData.HostFlowNo, electronicReceiptFile, enum.SPDBankType); err != nil {
+					value = fmt.Sprintf("%s=更新浦发单据电子凭证失败:%+v", util.FormatDateTime(time.Now()), err)
+					s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
 					zap.L().Error(fmt.Sprintf("更新浦发更新单据的回单失败: %v\n", err.Error()))
 				}
 
