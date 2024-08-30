@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/xml"
 	"fmt"
+	"github.com/pkg/errors"
 	"gitlab.yoyiit.com/youyi/app-bank/internal/sdk/stru"
 	"gitlab.yoyiit.com/youyi/go-common/enum"
 	"gitlab.yoyiit.com/youyi/go-core/handler"
@@ -245,7 +246,7 @@ func (s *spdBankSDK) RequestTransactionDetailElectronicReceipt(ctx context.Conte
 	}
 	serialNo, sfErr := util.SonyflakeID()
 	if sfErr != nil {
-		return nil, handler.HandleError(sfErr)
+		return nil, sfErr
 	}
 	// 拿到sign 作为入参再次调用接口
 	head := stru.NewSPDHeadData(enum.SPDBankTransferDetailElectronicReceiptDownloadRequestServiceCode, enum.SPDNeedSign, bankCustomerId, "", serialNo)
@@ -257,11 +258,12 @@ func (s *spdBankSDK) RequestTransactionDetailElectronicReceipt(ctx context.Conte
 	var responseSignData stru.SPDResponseSignData
 	err := util.PostSPDXmlHttpResult(ctx, host, "application/xml;charset=UTF-8", &responseSignData, request)
 	if err != nil {
-		return nil, handler.HandleError(err)
+		return nil, err
 	}
 	if responseSignData.Body.ReturnCode != "" && responseSignData.Body.ReturnMsg != "" {
-		zap.L().Info(fmt.Sprintf("浦发服务: %s 文件下载验签异常code: %s msg:%s\n", enum.SPDBankTransferDetailElectronicReceiptDownloadRequestServiceCode, responseSignData.Body.ReturnCode, responseSignData.Body.ReturnMsg))
-		return nil, nil
+		errStr := fmt.Sprintf("浦发服务: %s 文件下载验签异常code: %s msg:%s\n", enum.SPDBankTransferDetailElectronicReceiptDownloadRequestServiceCode, responseSignData.Body.ReturnCode, responseSignData.Body.ReturnMsg)
+		zap.L().Info(errStr)
+		return nil, errors.New(errStr)
 	}
 	// 最终返回的对象
 	var receiptResponseData stru.SPDBankTransferDetailElectronicReceiptResponseData
@@ -271,12 +273,12 @@ func (s *spdBankSDK) RequestTransactionDetailElectronicReceipt(ctx context.Conte
 	// 拿到返回的sign, 在解析作为返参
 	responseSign := responseSignData.Body.Sign
 	if responseSign == "" {
-		return nil, nil
+		return nil, errors.New("RequestTransactionDetailElectronicReceipt返回responseSign为空")
 	}
 	responseData := spdVerifySign(ctx, responseSign, sighHost)
 	err = xml.Unmarshal([]byte(responseData), &receiptResponseData)
 	if err != nil {
-		return nil, handler.HandleError(err)
+		return nil, err
 	}
 	// 取第一个
 	if &receiptResponseData != nil && len(receiptResponseData.Items) > 0 {
@@ -299,16 +301,17 @@ func (s *spdBankSDK) RequestTransactionDetailElectronicReceipt(ctx context.Conte
 //  @return error
 //
 func (s *spdBankSDK) DownloadTransactionDetailElectronicReceipt(ctx context.Context, accountNo, beginDate, endDate, backhostGyno, subpoenaSeqNo, host, sighHost, fileHost, bankCustomerId, bankUserId string) ([]byte, error) {
+
 	receipt, err := s.RequestTransactionDetailElectronicReceipt(ctx, accountNo, beginDate, endDate, backhostGyno, subpoenaSeqNo, host, sighHost, bankCustomerId, bankUserId)
 	//银行建议发起请求1分钟后再开启回单下载申请,生成回单需要时间
 	time.Sleep(time.Second * 30)
 	// todo 测试写死
 	//receipt, err := s.RequestTransactionDetailElectronicReceipt(ctx, accountNo, "20210101", "20210131", "999709310001", "1", host, sighHost, bankCustomerId, bankUserId)
 	if err != nil {
-		return nil, handler.HandleError(err)
+		return nil, err
 	}
 	if receipt == nil {
-		return nil, nil
+		return nil, errors.New("receipt is nil")
 	}
 	//receipt.AcceptNo = "20221010000010520003"
 	//accountNo = "952A9997220008092"
@@ -326,7 +329,7 @@ func (s *spdBankSDK) DownloadTransactionDetailElectronicReceipt(ctx context.Cont
 	}
 	serialNo, sfErr := util.SonyflakeID()
 	if sfErr != nil {
-		return nil, handler.HandleError(sfErr)
+		return nil, sfErr
 	}
 	// 拿到sign 作为入参再次调用接口
 	head := stru.NewSPDHeadData(enum.SPDBankTransferDetailElectronicReceiptDownloadServiceCode, enum.SPDNeedSign, bankCustomerId, "", serialNo)
@@ -336,7 +339,7 @@ func (s *spdBankSDK) DownloadTransactionDetailElectronicReceipt(ctx context.Cont
 	}
 	resultBytes, err := util.PostSPDXmlHttpBytesResult(ctx, fileHost, "application/xml;charset=UTF-8", request)
 	if err != nil {
-		return nil, handler.HandleError(err)
+		return nil, err
 	}
 	responseStr := string(resultBytes)
 	fileBinaryStr := responseStr[strings.Index(responseStr, "</packet>")+9:]
