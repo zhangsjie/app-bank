@@ -579,7 +579,13 @@ func (s *paymentReceiptService) sendMessage(ctx context.Context, paymentReceiptD
 
 	// 成功才发送抄送消息和权限
 	if result == 1 {
+		// 单据添加权限
 		err = s.SavaProcessAuth(ctx, processInstance.Id, "2")
+		if err != nil {
+			return handler.HandleError(err)
+		}
+		// 申请添加权限
+		err = s.oaClient.AddOrderProcessAuth(ctx, processInstance.Id)
 		if err != nil {
 			return handler.HandleError(err)
 		}

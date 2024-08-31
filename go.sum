@@ -684,10 +684,10 @@ gitlab.yoyiit.com/youyi/app-finance v0.0.0-20240807024820-8eea2c4da16d h1:rUI/XL
 gitlab.yoyiit.com/youyi/app-finance v0.0.0-20240807024820-8eea2c4da16d/go.mod h1:LSlZcJYVWdeak6pNTjobk2T2FRfRUe4FjizRunTR3As=
 gitlab.yoyiit.com/youyi/app-invoice v0.0.0-20240815074051-f06a78a0c466 h1:p24pdep4p+0qb04uVV1H97x7bAO9HmswtjpDzulCEOU=
 gitlab.yoyiit.com/youyi/app-invoice v0.0.0-20240815074051-f06a78a0c466/go.mod h1:0lbzWydPTHMUQBngQbAbl/l2hhjzvAs57XBSKY73dQg=
-gitlab.yoyiit.com/youyi/app-oa v0.0.0-20240823093117-29f627a7f397 h1:OAZE7KoUDYneUBCikzSnojk597U4TqpHMQw1ExG/e+g=
-gitlab.yoyiit.com/youyi/app-oa v0.0.0-20240823093117-29f627a7f397/go.mod h1:1/IQiw0yobuM6isTT0X1cAB+Fx4A3lB5UxVEFfbz+9w=
-gitlab.yoyiit.com/youyi/app-soms v0.0.0-20240730063532-bfd8f6ee3e56 h1:T+ad0vSc8CxTZzsyChcpSHZtVb0ihmy4W7f5IXEBgy8=
-gitlab.yoyiit.com/youyi/app-soms v0.0.0-20240730063532-bfd8f6ee3e56/go.mod h1:gqsz3aw87Jj8yRKkGL1AOn6GI+S1yvUujNhNOdU480I=
+gitlab.yoyiit.com/youyi/app-oa v0.0.0-20240831020336-0332afd8752c h1:5d5NMMz2gFqAZZyG3EbLCCms4K9dE0vCNEfSpSPiU24=
+gitlab.yoyiit.com/youyi/app-oa v0.0.0-20240831020336-0332afd8752c/go.mod h1:jf/1KNP3AdbYjIphlqqDWAf1H8N/1l75Z74OeJL1/DQ=
+gitlab.yoyiit.com/youyi/app-soms v0.0.0-20240828072453-218c752e74c8 h1:zwcVyzMcE2l5NSE/dn4VNnvYeW8YJ5QkRWPdJGXYjxo=
+gitlab.yoyiit.com/youyi/app-soms v0.0.0-20240828072453-218c752e74c8/go.mod h1:MviWU4jGEitJ9bWT8gjqsYUVRXVD1oFvM82uIwhybZs=
 gitlab.yoyiit.com/youyi/go-common v0.0.0-20240726025706-0f686156cc88 h1:y5m9DMzp3w2Uy6k51AsTcV4eRP8mJ1lSD+wMw7SmGT8=
 gitlab.yoyiit.com/youyi/go-common v0.0.0-20240726025706-0f686156cc88/go.mod h1:zyEgqlhTnfPXc13MhWOt8G7UC3Tzaf2gggvkuOUpQDs=
 gitlab.yoyiit.com/youyi/go-core v0.0.0-20240807023746-01dacf888bb8 h1:MwFG8uc/0L4njjf6zreOvbV143OtDnEr56TeftLKt7Y=
