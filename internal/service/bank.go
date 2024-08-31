@@ -3133,7 +3133,9 @@ func (s *bankService) HandleSPDTransactionDetailReceipt(ctx context.Context, ban
 			//f, err := s.spdBankSDK.DownloadTransactionDetailElectronicReceipt(ctx, bankAccount.Account, beginDate, endDate, newDbData.OrderFlowNo, newDbData.ExtField1, organizationBankConfig.Host, organizationBankConfig.SignHost, organizationBankConfig.FileHost, organizationBankConfig.BankCustomerId, organizationBankConfig.BankUserId)
 			f, err := s.spdBankSDK.DownloadTransactionDetailElectronicReceipt(ctx, bankAccount.Account, newDbData.TransferDate, newDbData.TransferDate, newDbData.OrderFlowNo, newDbData.ExtField1, organizationBankConfig.Host, organizationBankConfig.SignHost, organizationBankConfig.FileHost, organizationBankConfig.BankCustomerId, organizationBankConfig.BankUserId)
 			if err != nil {
-				value = fmt.Sprintf("%sid=%d下载浦发电子凭证失败:%+v", util.FormatDateTime(time.Now()), dbData.Id, err)
+				str := fmt.Sprintf("bankAccount.Account=%s,newDbData.TransferDate=%s,newDbData.TransferDate=%s,newDbData.OrderFlowNo=%s,newDbData.ExtField1=%s,organizationBankConfig.Host=%s,organizationBankConfig.SignHost=%s,organizationBankConfig.FileHost=%s,organizationBankConfig.BankCustomerId=%s,organizationBankConfig.BankUserId=%s",
+					bankAccount.Account, newDbData.TransferDate, newDbData.TransferDate, newDbData.OrderFlowNo, newDbData.ExtField1, organizationBankConfig.Host, organizationBankConfig.SignHost, organizationBankConfig.FileHost, organizationBankConfig.BankCustomerId, organizationBankConfig.BankUserId)
+				value = fmt.Sprintf("%sid=%d下载浦发电子凭证失败:%+v,参数=%s", util.FormatDateTime(time.Now()), dbData.Id, err, str)
 				s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
 				zap.L().Info(fmt.Sprintf("s.bankService.spdBankSDK 下载浦发电子凭证失败: %v\n", err.Error()))
 				return
