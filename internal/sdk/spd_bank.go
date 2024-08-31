@@ -308,10 +308,10 @@ func (s *spdBankSDK) DownloadTransactionDetailElectronicReceipt(ctx context.Cont
 	// todo 测试写死
 	//receipt, err := s.RequestTransactionDetailElectronicReceipt(ctx, accountNo, "20210101", "20210131", "999709310001", "1", host, sighHost, bankCustomerId, bankUserId)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithMessage(err, "RequestTransactionDetailElectronicReceipt申请回单请求失败")
 	}
 	if receipt == nil {
-		return nil, errors.New("receipt is nil")
+		return nil, errors.New("RequestTransactionDetailElectronicReceipt申请回单receipt is nil")
 	}
 	//receipt.AcceptNo = "20221010000010520003"
 	//accountNo = "952A9997220008092"
@@ -339,7 +339,7 @@ func (s *spdBankSDK) DownloadTransactionDetailElectronicReceipt(ctx context.Cont
 	}
 	resultBytes, err := util.PostSPDXmlHttpBytesResult(ctx, fileHost, "application/xml;charset=UTF-8", request)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithMessage(err, "下载回单请求失败")
 	}
 	responseStr := string(resultBytes)
 	fileBinaryStr := responseStr[strings.Index(responseStr, "</packet>")+9:]
