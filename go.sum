@@ -676,8 +676,8 @@ github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9dec
 github.com/yuin/goldmark v1.3.5/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
 github.com/yuin/goldmark v1.4.1/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
-gitlab.yoyiit.com/youyi/app-base v0.0.0-20240823093021-2f97d4ec755b h1:0kxzxu9a6U2hiHjL2vvS3Efl4BKME82szOy86yRq5Dw=
-gitlab.yoyiit.com/youyi/app-base v0.0.0-20240823093021-2f97d4ec755b/go.mod h1:UolzfVcJgVZxY64hPafNdNNTliui6DNIdaGR0TposFo=
+gitlab.yoyiit.com/youyi/app-base v0.0.0-20240831014315-3d6e1cca73f3 h1:TR7dZ1OwrzcvF8sUQdkW4xnDYfvBwJe8P31IVYCDWx4=
+gitlab.yoyiit.com/youyi/app-base v0.0.0-20240831014315-3d6e1cca73f3/go.mod h1:UolzfVcJgVZxY64hPafNdNNTliui6DNIdaGR0TposFo=
 gitlab.yoyiit.com/youyi/app-dingtalk v0.0.0-20230712070347-478fa7abbcbb h1:K+VdHSSgoxXI+EMwfIJQjJ0w9qCcNi7W5qi/5zqS44Q=
 gitlab.yoyiit.com/youyi/app-dingtalk v0.0.0-20230712070347-478fa7abbcbb/go.mod h1:NG1u63/uT6jJKKoP0LAEwL5GNzu424HRguX+a+j1EvM=
 gitlab.yoyiit.com/youyi/app-finance v0.0.0-20240807024820-8eea2c4da16d h1:rUI/XLESVosDfqROEZC9D4OcY0Hsh9ZDb8P7x6n9T6w=

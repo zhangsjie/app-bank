@@ -577,30 +577,33 @@ func (s *paymentReceiptService) sendMessage(ctx context.Context, paymentReceiptD
 		paymentId = reimburseApplication.Id
 	}
 
-	err = s.SavaProcessAuth(ctx, processInstance.Id)
-	if err != nil {
-		return handler.HandleError(err)
-	}
-
-	//发送给抄送人
-	ccopyUsersOrganization, err := s.baseClient.ListCcopyUserOrganizationByProcessInstanceId(ctx, &baseApi.UserOrganizationData{
-		OrganizationId:    organization.Id,
-		ProcessInstanceId: processInstance.Id,
-	})
-	if err != nil || ccopyUsersOrganization == nil {
-		return handler.HandleError(err)
-	}
-
-	for _, cc := range ccopyUsersOrganization {
-		orderType := "付款申请"
-		if paymentReceiptDBData.Type == "2" {
-			orderType = "报销申请"
-		}
-		err := s.send(ctx, processInstance, paymentReceiptDBData, cc, organization, statusBg, resultStr, orderType, paymentId)
+	// 成功才发送抄送消息和权限
+	if result == 1 {
+		err = s.SavaProcessAuth(ctx, processInstance.Id, "2")
 		if err != nil {
-			errStr := fmt.Sprintf("%s=发送消息给抄送人userId=%d,nickName=%s 失败,原因如下", orderType, cc.UserId, cc.Nickname)
-			println(errStr)
-			println(err.Error())
+			return handler.HandleError(err)
+		}
+
+		//发送给抄送人
+		ccopyUsersOrganization, err := s.baseClient.ListCcopyUserOrganizationByProcessInstanceId(ctx, &baseApi.UserOrganizationData{
+			OrganizationId:    organization.Id,
+			ProcessInstanceId: processInstance.Id,
+		})
+		if err != nil || ccopyUsersOrganization == nil {
+			return handler.HandleError(err)
+		}
+
+		for _, cc := range ccopyUsersOrganization {
+			orderType := "付款申请"
+			if paymentReceiptDBData.Type == "2" {
+				orderType = "报销申请"
+			}
+			err := s.send(ctx, processInstance, paymentReceiptDBData, cc, organization, statusBg, resultStr, orderType, paymentId)
+			if err != nil {
+				errStr := fmt.Sprintf("%s=发送消息给抄送人userId=%d,nickName=%s 失败,原因如下", orderType, cc.UserId, cc.Nickname)
+				println(errStr)
+				println(err.Error())
+			}
 		}
 	}
 	return nil
