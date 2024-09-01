@@ -283,6 +283,13 @@ func (s *bankService) GetBankTransactionReceipt(ctx context.Context, bankTransac
 				organizationBankConfig.FileHost, organizationBankConfig.BankCustomerId, organizationBankConfig.BankUserId)
 			if err != nil {
 				zap.L().Info(fmt.Sprintf("s.bankService.GetBankTransactionReceipt 下载浦发电子凭证失败: %v\n", err.Error()))
+			} else {
+				str := fmt.Sprintf("bankAccount.Account=%s,newDbData.TransferDate=%s,newDbData.TransferDate=%s,newDbData.OrderFlowNo=%s,newDbData.ExtField1=%s,organizationBankConfig.Host=%s,organizationBankConfig.SignHost=%s,organizationBankConfig.FileHost=%s,organizationBankConfig.BankCustomerId=%s,organizationBankConfig.BankUserId=%s",
+					account.Account, bankTransactionDetail.TransferDate, bankTransactionDetail.TransferDate,
+					bankTransactionDetail.OrderFlowNo, bankTransactionDetail.ExtField1, organizationBankConfig.Host, organizationBankConfig.SignHost,
+					organizationBankConfig.FileHost, organizationBankConfig.BankCustomerId, organizationBankConfig.BankUserId)
+				value := fmt.Sprintf("%sid=%d单独下载浦发电子凭证成功参数=%s", util.FormatDateTime(time.Now()), bankTransactionDetail.Id, str)
+				s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
 			}
 			var electronicReceiptFile string
 			if f != nil && len(f) > 0 {
