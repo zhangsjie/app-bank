@@ -3072,35 +3072,7 @@ func (s *bankService) HandleSPDTransactionDetailReceipt(ctx context.Context, ban
 	// 查找所有 bank_transaction_detail 表 pay_account_type 是浦发 且 electronic_receipt_file 字段为空的数据
 	value := util.FormatDateTime(time.Now()) + "开始处理数据"
 	s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
-	bankAccount, err := s.baseClient.GetOrganizationBankAccount(ctx, &baseApi.OrganizationBankAccountData{
-		OrganizationId: organizationId,
-		Type:           bankType,
-	})
-	fmt.Println("bankAccount: " + bankAccount.Account)
-	fmt.Println("bankAccount: " + bankAccount.AccountName)
-	value = fmt.Sprintf("%s=当前spd-GetOrganizationBankAccount方法查询结果:%+v", util.FormatDateTime(time.Now()), bankAccount)
-	s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
-	if err != nil {
-		value = fmt.Sprintf("%s=当前spd-GetOrganizationBankAccount方法出错:%+v", util.FormatDateTime(time.Now()), err)
-		s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
-		return handler.HandleError(err)
-	}
-	if bankAccount == nil {
-		value = fmt.Sprintf("%s=当前spd-GetOrganizationBankAccount方法bankAccount为空", util.FormatDateTime(time.Now()))
-		s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
-		return nil
-	}
-	organizationBankConfig, err := s.baseClient.GetOrganizationBankConfig(ctx, &baseApi.OrganizationBankConfigData{
-		OrganizationId: organizationId,
-		Type:           bankType,
-	})
-	value = fmt.Sprintf("%s=当前spd-GetOrganizationBankConfig方法查询结果:%+v", util.FormatDateTime(time.Now()), organizationBankConfig)
-	s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
-	if err != nil {
-		value = fmt.Sprintf("%s=当前spd-GetOrganizationBankConfig方法出错:%+v", util.FormatDateTime(time.Now()), err)
-		s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
-		return handler.HandleError(err)
-	}
+
 	dbDatas, count, err := s.bankTransactionDetailRepo.List(ctx, "", 0, 0, &repo.BankTransactionDetailDBDataParam{
 		BankTransactionDetailDBData: repo.BankTransactionDetailDBData{
 			PayAccountType: bankType,
@@ -3120,23 +3092,41 @@ func (s *bankService) HandleSPDTransactionDetailReceipt(ctx context.Context, ban
 	s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
 	for _, dbData := range *dbDatas {
 		go func() {
+			newDbData := dbData
 			value = fmt.Sprintf("%s id=%d当前处理的交易明细量:%+v", util.FormatDateTime(time.Now()), dbData.Id, dbData)
 			s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
-			newDbData := dbData
+			//查询银行账号
+			bankAccount, err := s.baseClient.SimpleGetOrganizationBankAccount(ctx, &baseApi.OrganizationBankAccountData{
+				Id: newDbData.MerchantAccountId,
+			})
+			value = fmt.Sprintf("%s=当前spd-SimpleGetOrganizationBankAccount方法查询结果:%+v", util.FormatDateTime(time.Now()), bankAccount)
+			s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
+			if err != nil {
+				value = fmt.Sprintf("%s=当前spd-SimpleGetOrganizationBankAccount方法出错:%+v", util.FormatDateTime(time.Now()), err)
+				s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
+				return
+			}
+			if bankAccount == nil {
+				value = fmt.Sprintf("%s=当前spd-SimpleGetOrganizationBankAccount方法bankAccount为空", util.FormatDateTime(time.Now()))
+				s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
+				return
+			}
+			organizationBankConfig, err := s.baseClient.GetOrganizationBankConfig(ctx, &baseApi.OrganizationBankConfigData{
+				OrganizationId: organizationId,
+				Type:           bankType,
+			})
+			value = fmt.Sprintf("%s=当前spd-GetOrganizationBankConfig方法查询结果:%+v", util.FormatDateTime(time.Now()), organizationBankConfig)
+			s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
+			if err != nil {
+				value = fmt.Sprintf("%s=当前spd-GetOrganizationBankConfig方法出错:%+v", util.FormatDateTime(time.Now()), err)
+				s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
+				return
+			}
+
 			// 更新凭证地址
 			// dbData.OrderFlowNo 是 浦发的柜员流水号: 对应交易明细的 tellerJnlNo
 			// dbData.ExtField1 是 浦发的传票组内序号: 对应交易明细的 summonsNumber
-			fmt.Println("bankAccount.Account: " + bankAccount.Account)
-			fmt.Println("beginDate: " + beginDate)
-			fmt.Println("endDate: " + endDate)
-			fmt.Println("newDbData.OrderFlowNo: " + newDbData.OrderFlowNo)
-			fmt.Println("newDbData.ExtField1: " + newDbData.ExtField1)
-			fmt.Println("newDbData.TransferDate: " + newDbData.TransferDate)
-			fmt.Println("organizationBankConfig.Host: " + organizationBankConfig.Host)
-			fmt.Println("organizationBankConfig.SignHost: " + organizationBankConfig.SignHost)
-			fmt.Println("organizationBankConfig.FileHost: " + organizationBankConfig.FileHost)
-			fmt.Println("organizationBankConfig.BankCustomerId: " + organizationBankConfig.BankCustomerId)
-			fmt.Println("organizationBankConfig.BankUserId: " + organizationBankConfig.BankUserId)
+
 			//f, err := s.spdBankSDK.DownloadTransactionDetailElectronicReceipt(ctx, bankAccount.Account, beginDate, endDate, newDbData.OrderFlowNo, newDbData.ExtField1, organizationBankConfig.Host, organizationBankConfig.SignHost, organizationBankConfig.FileHost, organizationBankConfig.BankCustomerId, organizationBankConfig.BankUserId)
 			f, err := s.spdBankSDK.DownloadTransactionDetailElectronicReceipt(ctx, bankAccount.Account, newDbData.TransferDate, newDbData.TransferDate, newDbData.OrderFlowNo, newDbData.ExtField1, organizationBankConfig.Host, organizationBankConfig.SignHost, organizationBankConfig.FileHost, organizationBankConfig.BankCustomerId, organizationBankConfig.BankUserId)
 			if err != nil {
