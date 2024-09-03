@@ -3096,8 +3096,9 @@ func (s *bankService) HandleSPDTransactionDetailReceipt(ctx context.Context, ban
 			value = fmt.Sprintf("%s id=%d当前处理的交易明细量:%+v", util.FormatDateTime(time.Now()), dbData.Id, dbData)
 			s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
 			//查询银行账号
-			bankAccount, err := s.baseClient.SimpleGetOrganizationBankAccount(ctx, &baseApi.OrganizationBankAccountData{
-				Id: newDbData.MerchantAccountId,
+			bankAccount, err := s.baseClient.GetOrganizationBankAccount(ctx, &baseApi.OrganizationBankAccountData{
+				OrganizationId: newDbData.OrganizationId,
+				Type:           enum.SPDBankType,
 			})
 			value = fmt.Sprintf("%s=当前spd-SimpleGetOrganizationBankAccount方法查询结果:%+v", util.FormatDateTime(time.Now()), bankAccount)
 			s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
