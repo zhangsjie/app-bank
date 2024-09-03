@@ -464,11 +464,7 @@ func (s *paymentReceiptService) guilinBankPayment(ctx context.Context, req *repo
 		bankTransferResponse.Head.RetCode, bankTransferResponse.Head.RetMessage, bankTransferResponse.Head.OrderFlowNo); err != nil {
 		return "", handler.HandleError(err)
 	}
-	//测试环境直接失败
-	serviceName := config.GetString("jaeger.serviceName", "")
-	if serviceName == "test-app-bank" {
-		return enum.GuilinBankTransferFailResult, err
-	}
+
 	return bankTransferResponse.Body.OrderState, nil
 }
 
