@@ -30,6 +30,10 @@ type PaymentReceiptSubProcess struct {
 	invoiceClient                            invoice.Client
 }
 
+func (p *PaymentReceiptSubProcess) SubmitAfter(ctx context.Context, id int64, param interface{}) error {
+	return nil
+}
+
 func (p *PaymentReceiptSubProcess) AddTag(ctx context.Context, id int64, param interface{}) error {
 	return nil
 }

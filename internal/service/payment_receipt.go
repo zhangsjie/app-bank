@@ -221,7 +221,7 @@ func (s *paymentReceiptService) PaymentReceiptRun(ctx context.Context, id int64)
 		return handler.HandleError(err)
 	}
 	if paymentReceipt == nil || paymentReceipt.Id == 0 {
-		return handler.HandleNewError("payment receipt not exists")
+		return nil
 	}
 	if paymentReceipt.OrderStatus != "" {
 		if paymentReceipt.OrderStatus == "0" {
