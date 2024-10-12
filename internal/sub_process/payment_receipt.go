@@ -30,7 +30,7 @@ type PaymentReceiptSubProcess struct {
 	invoiceClient                            invoice.Client
 }
 
-func (p *PaymentReceiptSubProcess) SubmitAfter(ctx context.Context, id int64, param interface{}) error {
+func (p *PaymentReceiptSubProcess) SubmitAfter(ctx context.Context, id int64, result interface{}, param interface{}) error {
 	return nil
 }
 
