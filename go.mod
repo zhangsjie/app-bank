@@ -10,12 +10,12 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/pkg/sftp v1.13.6
 	github.com/satori/go.uuid v1.2.0
-	gitlab.yoyiit.com/youyi/app-base v0.0.0-20241012084137-d38e82886336
+	gitlab.yoyiit.com/youyi/app-base v0.0.0-20241016053317-a99921fc6024
 	gitlab.yoyiit.com/youyi/app-dingtalk v0.0.0-20230712070347-478fa7abbcbb
 	gitlab.yoyiit.com/youyi/app-finance v0.0.0-20240807024820-8eea2c4da16d
 	gitlab.yoyiit.com/youyi/app-invoice v0.0.0-20240815074051-f06a78a0c466
-	gitlab.yoyiit.com/youyi/app-oa v0.0.0-20241011014953-43870bc16891
-	gitlab.yoyiit.com/youyi/app-soms v0.0.0-20241011015149-7e4647be33bf
+	gitlab.yoyiit.com/youyi/app-oa v0.0.0-20241016052630-9f317e8d6c89
+	gitlab.yoyiit.com/youyi/app-soms v0.0.0-20241014083832-a0a310858fa1
 	gitlab.yoyiit.com/youyi/go-common v0.0.0-20240726025706-0f686156cc88
 	gitlab.yoyiit.com/youyi/go-core v0.0.0-20240807023746-01dacf888bb8
 	go.uber.org/zap v1.24.0
