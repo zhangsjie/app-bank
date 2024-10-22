@@ -30,15 +30,13 @@ func NewBankService(baseClient base.Client, guilinBankSDK sdk.GuilinBankSDK, spd
 	bankTransactionDetailRepo repo.BankTransactionDetailRepo, bankTransactionDetailProcessInstanceRepo repo.BankTransactionDetailProcessInstanceRepo,
 	ossConfig *store.OSSConfig, bankCode repo.BankCodeRepo, businessPayrollRepo repo.BankBusinessPayrollRepo,
 	businessPayrollDetailRepo repo.BankBusinessPayrollDetailRepo, oaClient oa.Client, paymentReceiptRepo repo.PaymentReceiptRepo, pdfToImageService PdfToImageService, financeClient finance.Client,
-	icbcbankSDK sdk.IcbcBankSDK, redisClient *store.RedisClient) BankService {
-	businessPayrollDetailRepo repo.BankBusinessPayrollDetailRepo, oaClient oa.Client, paymentReceiptRepo repo.PaymentReceiptRepo, pdfToImageService PdfToImageService, financeClient finance.Client, icbcbankSDK sdk.IcbcBankSDK, minShengBank sdk.MinShengSDK) BankService {
+	icbcbankSDK sdk.IcbcBankSDK, redisClient *store.RedisClient, minShengBank sdk.MinShengSDK) BankService {
 	return &bankService{baseClient, guilinBankSDK, spdBankSDK, pinganBankSDK,
 		bankTransferReceiptRepo, kafkaProducer, dingtalkClient,
 		bankTransactionDetailRepo, bankTransactionDetailProcessInstanceRepo,
 		ossConfig, bankCode, businessPayrollRepo,
 		businessPayrollDetailRepo, oaClient, paymentReceiptRepo,
-		pdfToImageService, financeClient, icbcbankSDK, redisClient}
-		businessPayrollDetailRepo, oaClient, paymentReceiptRepo, pdfToImageService, financeClient, icbcbankSDK, minShengBank}
+		pdfToImageService, financeClient, icbcbankSDK, minShengBank, redisClient}
 }
 
 func NewPaymentReceiptService(paymentReceiptSubProcess *sub_process.PaymentReceiptSubProcess, baseClient base.Client,
