@@ -31,19 +31,21 @@ func NewBankService(baseClient base.Client, guilinBankSDK sdk.GuilinBankSDK, spd
 	ossConfig *store.OSSConfig, bankCode repo.BankCodeRepo, businessPayrollRepo repo.BankBusinessPayrollRepo,
 	businessPayrollDetailRepo repo.BankBusinessPayrollDetailRepo, oaClient oa.Client, paymentReceiptRepo repo.PaymentReceiptRepo, pdfToImageService PdfToImageService, financeClient finance.Client,
 	icbcbankSDK sdk.IcbcBankSDK, redisClient *store.RedisClient) BankService {
+	businessPayrollDetailRepo repo.BankBusinessPayrollDetailRepo, oaClient oa.Client, paymentReceiptRepo repo.PaymentReceiptRepo, pdfToImageService PdfToImageService, financeClient finance.Client, icbcbankSDK sdk.IcbcBankSDK, minShengBank sdk.MinShengSDK) BankService {
 	return &bankService{baseClient, guilinBankSDK, spdBankSDK, pinganBankSDK,
 		bankTransferReceiptRepo, kafkaProducer, dingtalkClient,
 		bankTransactionDetailRepo, bankTransactionDetailProcessInstanceRepo,
 		ossConfig, bankCode, businessPayrollRepo,
 		businessPayrollDetailRepo, oaClient, paymentReceiptRepo,
 		pdfToImageService, financeClient, icbcbankSDK, redisClient}
+		businessPayrollDetailRepo, oaClient, paymentReceiptRepo, pdfToImageService, financeClient, icbcbankSDK, minShengBank}
 }
 
 func NewPaymentReceiptService(paymentReceiptSubProcess *sub_process.PaymentReceiptSubProcess, baseClient base.Client,
 	paymentReceiptRepo repo.PaymentReceiptRepo, bankCodeRepo repo.BankCodeRepo, guilinBankSDK sdk.GuilinBankSDK,
 	spdBankSDK sdk.SPDBankSDK, pinganBankSDK sdk.PinganBankSDK, oaClient oa.Client, dingtalkClient dingtalk.Client,
 	processAuthRepo process.ProcessAuthRepo, somsClient soms.Client, paymentReceiptApplicationCustomFieldRepo repo.PaymentReceiptApplicationCustomFieldRepo,
-	invoiceClient invoice.Client) PaymentReceiptService {
+	invoiceClient invoice.Client, minShengBankSDK sdk.MinShengSDK) PaymentReceiptService {
 	return &paymentReceiptService{
 		process.Process{
 			SubProcess:      paymentReceiptSubProcess,
@@ -52,7 +54,7 @@ func NewPaymentReceiptService(paymentReceiptSubProcess *sub_process.PaymentRecei
 		},
 		paymentReceiptRepo, baseClient, bankCodeRepo, guilinBankSDK,
 		spdBankSDK, pinganBankSDK, oaClient, dingtalkClient, somsClient,
-		paymentReceiptApplicationCustomFieldRepo, invoiceClient,
+		paymentReceiptApplicationCustomFieldRepo, invoiceClient, minShengBankSDK,
 	}
 }
 

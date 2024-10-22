@@ -333,3 +333,15 @@ func (s *BankImpl) GetBankTransactionReceipt(ctx context.Context, id int64) (err
 func (s *BankImpl) SyncIcbcBankTransactionReceipt(ctx context.Context, beginDate string, endDate string, organizationId int64) (err error) {
 	return s.bankService.SyncIcbcBankTransactionReceipt(ctx, beginDate, endDate, organizationId)
 }
+
+// MinShengBankAccountSignatureApply implements the BankImpl interface.
+func (s *BankImpl) MinShengBankAccountSignatureApply(ctx context.Context, req *api.MinShengBankAccountSignatureRequest) (resp string, err error) {
+	// TODO: Your code here...
+	return s.bankService.MinShengBankAccountSignatureApply(ctx, req)
+}
+
+// MinShengBankAccountSignatureQuery implements the BankImpl interface.
+func (s *BankImpl) MinShengBankAccountSignatureQuery(ctx context.Context, req *api.MinShengBankAccountSignatureRequest) (resp *api.MinShengBankAccountSignatureQueryResponse, err error) {
+	// TODO: Your code here...
+	return s.bankService.MinShengBankAccountSignatureQuery(ctx, req)
+}

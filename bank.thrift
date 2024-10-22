@@ -603,6 +603,8 @@ service bank {
     void systemRefusePaymentReceipt(1: i64 id)
     void systemApprovePaymentReceipt(1: i64 id)
     IcbcBankAccountSignatureQueryResponse icbcBankAccountSignatureQuery(1:icbcBankAccountSignatureRequest req)
+    string MinShengBankAccountSignatureApply(1: minShengBankAccountSignatureRequest req)
+    MinShengBankAccountSignatureQueryResponse MinShengBankAccountSignatureQuery(1:minShengBankAccountSignatureRequest req)
     void icbcBankListTransactionDetail(1: string beginDate, 2: string endDate, 3: i64 organizationId)
     void syncIcbcBankTransactionReceipt(1: string beginDate, 2: string endDate, 3: i64 organizationId)
     void getBankTransactionReceipt(1:i64 id)
@@ -626,4 +628,19 @@ struct icbcBankAccountSignatureRequest {
 5: string accountName
 6: string phone
 7:string remark
+}
+
+struct minShengBankAccountSignatureRequest {
+1: i64 id
+2: i64 organizationId
+3: string type
+4: string account
+5: string accountName
+}
+
+struct MinShengBankAccountSignatureQueryResponse {
+1:string signatureapplystatus
+2:string zuId
+3:string startTime
+4:string endTime
 }

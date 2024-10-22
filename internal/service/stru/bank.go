@@ -467,3 +467,22 @@ type PdfToImageJsdkRequest struct {
 type PdfToImageJsdkResponse struct {
 	OssPath string `json:"ossPath"`
 }
+
+type MinShengTransactionDetailResponse struct {
+	TransSeqNo    string `json:"trans_seq_no"`
+	RecSeq        string `json:"rec_seq"`
+	AcctNo        string `json:"acct_no"`
+	AcctName      string `json:"acct_name"`
+	DcFlag        string `json:"dc_flag"`
+	EnterAcctDate string `json:"enter_acct_date"`
+	IntrDate      string `json:"intr_date"`
+	Amount        string `json:"amount"`
+	CpAcctNo      string `json:"cp_acct_no"`
+	CpAcctName    string `json:"cp_acct_name"`
+	CpBankName    string `json:"cp_bank_name"`
+	CpBankAddr    string `json:"cp_bank_addr"`
+	Explain       string `json:"explain"`
+	Balance       string `json:"balance"`
+	Currency      string `json:"currency"`
+	Timestamp     string `json:"timestamp"`
+}
