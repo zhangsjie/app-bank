@@ -1639,7 +1639,9 @@ func (s *bankService) HandleSPDBankTransactionDetail(ctx context.Context, bankTy
 			zap.L().Error(fmt.Sprintf("s.spdBankSDK.ListTransactionDetail__error_info%s", err.Error()))
 			return handler.HandleError(err)
 		}
-		zap.L().Info(fmt.Sprintf("s.spdBankSDK.ListTransactionDetail_info:%v", datas))
+		// 将对象转换为JSON
+		jsonData, _ := json.Marshal(datas)
+		zap.L().Info("s.spdBankSDK.ListTransactionDetail_info", zap.String("details", string(jsonData)))
 		if datas != nil {
 			var addDatas []repo.BankTransactionDetailDBData
 			for _, data := range datas {
