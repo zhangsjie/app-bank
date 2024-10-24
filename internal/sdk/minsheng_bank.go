@@ -3,7 +3,9 @@ package sdk
 import (
 	"context"
 	"fmt"
+	"gitlab.yoyiit.com/youyi/app-bank/internal/enum"
 	"gitlab.yoyiit.com/youyi/app-bank/internal/sdk/stru"
+	"gitlab.yoyiit.com/youyi/go-core/config"
 	"gitlab.yoyiit.com/youyi/go-core/handler"
 	"gitlab.yoyiit.com/youyi/go-core/util"
 	"go.uber.org/zap"
@@ -153,7 +155,8 @@ func (s *minShengSDK) QueryAuthStatus(ctx context.Context, srcReqSeq, reqSeq str
 
 func (s *minShengSDK) invokeMinSheng(ctx context.Context, method, version string, busiParamMap map[string]interface{}) (map[string]interface{}, error) {
 	var result map[string]interface{}
-	host := "http://localhost:8888/bank-web/cmbc/request"
+	host := config.GetString("app.jsdk.domain", "") + enum.BankMinShengRequestUrl
+	
 	zap.L().Info(fmt.Sprintf("调用民生接口请求，方法名：%s,版本：%s,参数：%+v", method, version, busiParamMap))
 	requestParamMap := make(map[string]interface{})
 	// 民生接口名称
