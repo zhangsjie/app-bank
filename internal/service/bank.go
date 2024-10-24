@@ -1661,15 +1661,9 @@ func (s *bankService) HandleSPDBankTransactionDetail(ctx context.Context, bankTy
 
 				// 保存交易明细
 				if count == 0 {
-					newTransTime := ""
+					transtime := fmt.Sprintf("%06s", data.TransTime)
 					// 日期8位 时间6位 脏数据校验
-					if len(data.TransDate) == 8 && len(data.TransTime) == 6 {
-						newTransTime = data.TransDate + data.TransTime[0:2] + ":" + data.TransTime[2:4] + ":" + data.TransTime[4:6]
-					} else {
-						str := fmt.Sprintf("%+v", data)
-						value := fmt.Sprintf("%s-->浦发流水明细参数[交易时间]异常=%s", util.FormatDateTime(time.Now()), str)
-						s.setRedisLog(ctx, bankEnum.BankReceiptSyncLogKey, value)
-					}
+					newTransTime := data.TransDate + transtime[0:2] + ":" + transtime[2:4] + ":" + transtime[4:6]
 
 					// 浦发借贷标记 0-借/收 1-贷/付
 					payAmount := 0.00
