@@ -24077,6 +24077,602 @@ func (p *IcbcBankAccountSignatureRequest) field7Length() int {
 	return l
 }
 
+func (p *MinShengBankAccountSignatureRequest) FastRead(buf []byte) (int, error) {
+	var err error
+	var offset int
+	var l int
+	var fieldTypeId thrift.TType
+	var fieldId int16
+	_, l, err = bthrift.Binary.ReadStructBegin(buf)
+	offset += l
+	if err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, l, err = bthrift.Binary.ReadFieldBegin(buf[offset:])
+		offset += l
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+		switch fieldId {
+		case 1:
+			if fieldTypeId == thrift.I64 {
+				l, err = p.FastReadField1(buf[offset:])
+				offset += l
+				if err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
+				offset += l
+				if err != nil {
+					goto SkipFieldError
+				}
+			}
+		case 2:
+			if fieldTypeId == thrift.I64 {
+				l, err = p.FastReadField2(buf[offset:])
+				offset += l
+				if err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
+				offset += l
+				if err != nil {
+					goto SkipFieldError
+				}
+			}
+		case 3:
+			if fieldTypeId == thrift.STRING {
+				l, err = p.FastReadField3(buf[offset:])
+				offset += l
+				if err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
+				offset += l
+				if err != nil {
+					goto SkipFieldError
+				}
+			}
+		case 4:
+			if fieldTypeId == thrift.STRING {
+				l, err = p.FastReadField4(buf[offset:])
+				offset += l
+				if err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
+				offset += l
+				if err != nil {
+					goto SkipFieldError
+				}
+			}
+		case 5:
+			if fieldTypeId == thrift.STRING {
+				l, err = p.FastReadField5(buf[offset:])
+				offset += l
+				if err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
+				offset += l
+				if err != nil {
+					goto SkipFieldError
+				}
+			}
+		default:
+			l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
+			offset += l
+			if err != nil {
+				goto SkipFieldError
+			}
+		}
+
+		l, err = bthrift.Binary.ReadFieldEnd(buf[offset:])
+		offset += l
+		if err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	l, err = bthrift.Binary.ReadStructEnd(buf[offset:])
+	offset += l
+	if err != nil {
+		goto ReadStructEndError
+	}
+
+	return offset, nil
+ReadStructBeginError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_MinShengBankAccountSignatureRequest[fieldId]), err)
+SkipFieldError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+ReadFieldEndError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *MinShengBankAccountSignatureRequest) FastReadField1(buf []byte) (int, error) {
+	offset := 0
+
+	if v, l, err := bthrift.Binary.ReadI64(buf[offset:]); err != nil {
+		return offset, err
+	} else {
+		offset += l
+
+		p.Id = v
+
+	}
+	return offset, nil
+}
+
+func (p *MinShengBankAccountSignatureRequest) FastReadField2(buf []byte) (int, error) {
+	offset := 0
+
+	if v, l, err := bthrift.Binary.ReadI64(buf[offset:]); err != nil {
+		return offset, err
+	} else {
+		offset += l
+
+		p.OrganizationId = v
+
+	}
+	return offset, nil
+}
+
+func (p *MinShengBankAccountSignatureRequest) FastReadField3(buf []byte) (int, error) {
+	offset := 0
+
+	if v, l, err := bthrift.Binary.ReadString(buf[offset:]); err != nil {
+		return offset, err
+	} else {
+		offset += l
+
+		p.Type = v
+
+	}
+	return offset, nil
+}
+
+func (p *MinShengBankAccountSignatureRequest) FastReadField4(buf []byte) (int, error) {
+	offset := 0
+
+	if v, l, err := bthrift.Binary.ReadString(buf[offset:]); err != nil {
+		return offset, err
+	} else {
+		offset += l
+
+		p.Account = v
+
+	}
+	return offset, nil
+}
+
+func (p *MinShengBankAccountSignatureRequest) FastReadField5(buf []byte) (int, error) {
+	offset := 0
+
+	if v, l, err := bthrift.Binary.ReadString(buf[offset:]); err != nil {
+		return offset, err
+	} else {
+		offset += l
+
+		p.AccountName = v
+
+	}
+	return offset, nil
+}
+
+// for compatibility
+func (p *MinShengBankAccountSignatureRequest) FastWrite(buf []byte) int {
+	return 0
+}
+
+func (p *MinShengBankAccountSignatureRequest) FastWriteNocopy(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+	offset := 0
+	offset += bthrift.Binary.WriteStructBegin(buf[offset:], "minShengBankAccountSignatureRequest")
+	if p != nil {
+		offset += p.fastWriteField1(buf[offset:], binaryWriter)
+		offset += p.fastWriteField2(buf[offset:], binaryWriter)
+		offset += p.fastWriteField3(buf[offset:], binaryWriter)
+		offset += p.fastWriteField4(buf[offset:], binaryWriter)
+		offset += p.fastWriteField5(buf[offset:], binaryWriter)
+	}
+	offset += bthrift.Binary.WriteFieldStop(buf[offset:])
+	offset += bthrift.Binary.WriteStructEnd(buf[offset:])
+	return offset
+}
+
+func (p *MinShengBankAccountSignatureRequest) BLength() int {
+	l := 0
+	l += bthrift.Binary.StructBeginLength("minShengBankAccountSignatureRequest")
+	if p != nil {
+		l += p.field1Length()
+		l += p.field2Length()
+		l += p.field3Length()
+		l += p.field4Length()
+		l += p.field5Length()
+	}
+	l += bthrift.Binary.FieldStopLength()
+	l += bthrift.Binary.StructEndLength()
+	return l
+}
+
+func (p *MinShengBankAccountSignatureRequest) fastWriteField1(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+	offset := 0
+	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "id", thrift.I64, 1)
+	offset += bthrift.Binary.WriteI64(buf[offset:], p.Id)
+
+	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
+	return offset
+}
+
+func (p *MinShengBankAccountSignatureRequest) fastWriteField2(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+	offset := 0
+	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "organizationId", thrift.I64, 2)
+	offset += bthrift.Binary.WriteI64(buf[offset:], p.OrganizationId)
+
+	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
+	return offset
+}
+
+func (p *MinShengBankAccountSignatureRequest) fastWriteField3(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+	offset := 0
+	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "type", thrift.STRING, 3)
+	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.Type)
+
+	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
+	return offset
+}
+
+func (p *MinShengBankAccountSignatureRequest) fastWriteField4(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+	offset := 0
+	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "account", thrift.STRING, 4)
+	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.Account)
+
+	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
+	return offset
+}
+
+func (p *MinShengBankAccountSignatureRequest) fastWriteField5(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+	offset := 0
+	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "accountName", thrift.STRING, 5)
+	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.AccountName)
+
+	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
+	return offset
+}
+
+func (p *MinShengBankAccountSignatureRequest) field1Length() int {
+	l := 0
+	l += bthrift.Binary.FieldBeginLength("id", thrift.I64, 1)
+	l += bthrift.Binary.I64Length(p.Id)
+
+	l += bthrift.Binary.FieldEndLength()
+	return l
+}
+
+func (p *MinShengBankAccountSignatureRequest) field2Length() int {
+	l := 0
+	l += bthrift.Binary.FieldBeginLength("organizationId", thrift.I64, 2)
+	l += bthrift.Binary.I64Length(p.OrganizationId)
+
+	l += bthrift.Binary.FieldEndLength()
+	return l
+}
+
+func (p *MinShengBankAccountSignatureRequest) field3Length() int {
+	l := 0
+	l += bthrift.Binary.FieldBeginLength("type", thrift.STRING, 3)
+	l += bthrift.Binary.StringLengthNocopy(p.Type)
+
+	l += bthrift.Binary.FieldEndLength()
+	return l
+}
+
+func (p *MinShengBankAccountSignatureRequest) field4Length() int {
+	l := 0
+	l += bthrift.Binary.FieldBeginLength("account", thrift.STRING, 4)
+	l += bthrift.Binary.StringLengthNocopy(p.Account)
+
+	l += bthrift.Binary.FieldEndLength()
+	return l
+}
+
+func (p *MinShengBankAccountSignatureRequest) field5Length() int {
+	l := 0
+	l += bthrift.Binary.FieldBeginLength("accountName", thrift.STRING, 5)
+	l += bthrift.Binary.StringLengthNocopy(p.AccountName)
+
+	l += bthrift.Binary.FieldEndLength()
+	return l
+}
+
+func (p *MinShengBankAccountSignatureQueryResponse) FastRead(buf []byte) (int, error) {
+	var err error
+	var offset int
+	var l int
+	var fieldTypeId thrift.TType
+	var fieldId int16
+	_, l, err = bthrift.Binary.ReadStructBegin(buf)
+	offset += l
+	if err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, l, err = bthrift.Binary.ReadFieldBegin(buf[offset:])
+		offset += l
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+		switch fieldId {
+		case 1:
+			if fieldTypeId == thrift.STRING {
+				l, err = p.FastReadField1(buf[offset:])
+				offset += l
+				if err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
+				offset += l
+				if err != nil {
+					goto SkipFieldError
+				}
+			}
+		case 2:
+			if fieldTypeId == thrift.STRING {
+				l, err = p.FastReadField2(buf[offset:])
+				offset += l
+				if err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
+				offset += l
+				if err != nil {
+					goto SkipFieldError
+				}
+			}
+		case 3:
+			if fieldTypeId == thrift.STRING {
+				l, err = p.FastReadField3(buf[offset:])
+				offset += l
+				if err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
+				offset += l
+				if err != nil {
+					goto SkipFieldError
+				}
+			}
+		case 4:
+			if fieldTypeId == thrift.STRING {
+				l, err = p.FastReadField4(buf[offset:])
+				offset += l
+				if err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
+				offset += l
+				if err != nil {
+					goto SkipFieldError
+				}
+			}
+		default:
+			l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
+			offset += l
+			if err != nil {
+				goto SkipFieldError
+			}
+		}
+
+		l, err = bthrift.Binary.ReadFieldEnd(buf[offset:])
+		offset += l
+		if err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	l, err = bthrift.Binary.ReadStructEnd(buf[offset:])
+	offset += l
+	if err != nil {
+		goto ReadStructEndError
+	}
+
+	return offset, nil
+ReadStructBeginError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_MinShengBankAccountSignatureQueryResponse[fieldId]), err)
+SkipFieldError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+ReadFieldEndError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *MinShengBankAccountSignatureQueryResponse) FastReadField1(buf []byte) (int, error) {
+	offset := 0
+
+	if v, l, err := bthrift.Binary.ReadString(buf[offset:]); err != nil {
+		return offset, err
+	} else {
+		offset += l
+
+		p.Signatureapplystatus = v
+
+	}
+	return offset, nil
+}
+
+func (p *MinShengBankAccountSignatureQueryResponse) FastReadField2(buf []byte) (int, error) {
+	offset := 0
+
+	if v, l, err := bthrift.Binary.ReadString(buf[offset:]); err != nil {
+		return offset, err
+	} else {
+		offset += l
+
+		p.ZuId = v
+
+	}
+	return offset, nil
+}
+
+func (p *MinShengBankAccountSignatureQueryResponse) FastReadField3(buf []byte) (int, error) {
+	offset := 0
+
+	if v, l, err := bthrift.Binary.ReadString(buf[offset:]); err != nil {
+		return offset, err
+	} else {
+		offset += l
+
+		p.StartTime = v
+
+	}
+	return offset, nil
+}
+
+func (p *MinShengBankAccountSignatureQueryResponse) FastReadField4(buf []byte) (int, error) {
+	offset := 0
+
+	if v, l, err := bthrift.Binary.ReadString(buf[offset:]); err != nil {
+		return offset, err
+	} else {
+		offset += l
+
+		p.EndTime = v
+
+	}
+	return offset, nil
+}
+
+// for compatibility
+func (p *MinShengBankAccountSignatureQueryResponse) FastWrite(buf []byte) int {
+	return 0
+}
+
+func (p *MinShengBankAccountSignatureQueryResponse) FastWriteNocopy(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+	offset := 0
+	offset += bthrift.Binary.WriteStructBegin(buf[offset:], "MinShengBankAccountSignatureQueryResponse")
+	if p != nil {
+		offset += p.fastWriteField1(buf[offset:], binaryWriter)
+		offset += p.fastWriteField2(buf[offset:], binaryWriter)
+		offset += p.fastWriteField3(buf[offset:], binaryWriter)
+		offset += p.fastWriteField4(buf[offset:], binaryWriter)
+	}
+	offset += bthrift.Binary.WriteFieldStop(buf[offset:])
+	offset += bthrift.Binary.WriteStructEnd(buf[offset:])
+	return offset
+}
+
+func (p *MinShengBankAccountSignatureQueryResponse) BLength() int {
+	l := 0
+	l += bthrift.Binary.StructBeginLength("MinShengBankAccountSignatureQueryResponse")
+	if p != nil {
+		l += p.field1Length()
+		l += p.field2Length()
+		l += p.field3Length()
+		l += p.field4Length()
+	}
+	l += bthrift.Binary.FieldStopLength()
+	l += bthrift.Binary.StructEndLength()
+	return l
+}
+
+func (p *MinShengBankAccountSignatureQueryResponse) fastWriteField1(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+	offset := 0
+	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "signatureapplystatus", thrift.STRING, 1)
+	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.Signatureapplystatus)
+
+	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
+	return offset
+}
+
+func (p *MinShengBankAccountSignatureQueryResponse) fastWriteField2(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+	offset := 0
+	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "zuId", thrift.STRING, 2)
+	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.ZuId)
+
+	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
+	return offset
+}
+
+func (p *MinShengBankAccountSignatureQueryResponse) fastWriteField3(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+	offset := 0
+	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "startTime", thrift.STRING, 3)
+	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.StartTime)
+
+	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
+	return offset
+}
+
+func (p *MinShengBankAccountSignatureQueryResponse) fastWriteField4(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+	offset := 0
+	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "endTime", thrift.STRING, 4)
+	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.EndTime)
+
+	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
+	return offset
+}
+
+func (p *MinShengBankAccountSignatureQueryResponse) field1Length() int {
+	l := 0
+	l += bthrift.Binary.FieldBeginLength("signatureapplystatus", thrift.STRING, 1)
+	l += bthrift.Binary.StringLengthNocopy(p.Signatureapplystatus)
+
+	l += bthrift.Binary.FieldEndLength()
+	return l
+}
+
+func (p *MinShengBankAccountSignatureQueryResponse) field2Length() int {
+	l := 0
+	l += bthrift.Binary.FieldBeginLength("zuId", thrift.STRING, 2)
+	l += bthrift.Binary.StringLengthNocopy(p.ZuId)
+
+	l += bthrift.Binary.FieldEndLength()
+	return l
+}
+
+func (p *MinShengBankAccountSignatureQueryResponse) field3Length() int {
+	l := 0
+	l += bthrift.Binary.FieldBeginLength("startTime", thrift.STRING, 3)
+	l += bthrift.Binary.StringLengthNocopy(p.StartTime)
+
+	l += bthrift.Binary.FieldEndLength()
+	return l
+}
+
+func (p *MinShengBankAccountSignatureQueryResponse) field4Length() int {
+	l := 0
+	l += bthrift.Binary.FieldBeginLength("endTime", thrift.STRING, 4)
+	l += bthrift.Binary.StringLengthNocopy(p.EndTime)
+
+	l += bthrift.Binary.FieldEndLength()
+	return l
+}
+
 func (p *BankListBankTransferReceiptArgs) FastRead(buf []byte) (int, error) {
 	var err error
 	var offset int
@@ -39189,6 +39785,524 @@ func (p *BankIcbcBankAccountSignatureQueryResult) field0Length() int {
 	return l
 }
 
+func (p *BankMinShengBankAccountSignatureApplyArgs) FastRead(buf []byte) (int, error) {
+	var err error
+	var offset int
+	var l int
+	var fieldTypeId thrift.TType
+	var fieldId int16
+	_, l, err = bthrift.Binary.ReadStructBegin(buf)
+	offset += l
+	if err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, l, err = bthrift.Binary.ReadFieldBegin(buf[offset:])
+		offset += l
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+		switch fieldId {
+		case 1:
+			if fieldTypeId == thrift.STRUCT {
+				l, err = p.FastReadField1(buf[offset:])
+				offset += l
+				if err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
+				offset += l
+				if err != nil {
+					goto SkipFieldError
+				}
+			}
+		default:
+			l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
+			offset += l
+			if err != nil {
+				goto SkipFieldError
+			}
+		}
+
+		l, err = bthrift.Binary.ReadFieldEnd(buf[offset:])
+		offset += l
+		if err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	l, err = bthrift.Binary.ReadStructEnd(buf[offset:])
+	offset += l
+	if err != nil {
+		goto ReadStructEndError
+	}
+
+	return offset, nil
+ReadStructBeginError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_BankMinShengBankAccountSignatureApplyArgs[fieldId]), err)
+SkipFieldError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+ReadFieldEndError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *BankMinShengBankAccountSignatureApplyArgs) FastReadField1(buf []byte) (int, error) {
+	offset := 0
+
+	tmp := NewMinShengBankAccountSignatureRequest()
+	if l, err := tmp.FastRead(buf[offset:]); err != nil {
+		return offset, err
+	} else {
+		offset += l
+	}
+	p.Req = tmp
+	return offset, nil
+}
+
+// for compatibility
+func (p *BankMinShengBankAccountSignatureApplyArgs) FastWrite(buf []byte) int {
+	return 0
+}
+
+func (p *BankMinShengBankAccountSignatureApplyArgs) FastWriteNocopy(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+	offset := 0
+	offset += bthrift.Binary.WriteStructBegin(buf[offset:], "MinShengBankAccountSignatureApply_args")
+	if p != nil {
+		offset += p.fastWriteField1(buf[offset:], binaryWriter)
+	}
+	offset += bthrift.Binary.WriteFieldStop(buf[offset:])
+	offset += bthrift.Binary.WriteStructEnd(buf[offset:])
+	return offset
+}
+
+func (p *BankMinShengBankAccountSignatureApplyArgs) BLength() int {
+	l := 0
+	l += bthrift.Binary.StructBeginLength("MinShengBankAccountSignatureApply_args")
+	if p != nil {
+		l += p.field1Length()
+	}
+	l += bthrift.Binary.FieldStopLength()
+	l += bthrift.Binary.StructEndLength()
+	return l
+}
+
+func (p *BankMinShengBankAccountSignatureApplyArgs) fastWriteField1(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+	offset := 0
+	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "req", thrift.STRUCT, 1)
+	offset += p.Req.FastWriteNocopy(buf[offset:], binaryWriter)
+	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
+	return offset
+}
+
+func (p *BankMinShengBankAccountSignatureApplyArgs) field1Length() int {
+	l := 0
+	l += bthrift.Binary.FieldBeginLength("req", thrift.STRUCT, 1)
+	l += p.Req.BLength()
+	l += bthrift.Binary.FieldEndLength()
+	return l
+}
+
+func (p *BankMinShengBankAccountSignatureApplyResult) FastRead(buf []byte) (int, error) {
+	var err error
+	var offset int
+	var l int
+	var fieldTypeId thrift.TType
+	var fieldId int16
+	_, l, err = bthrift.Binary.ReadStructBegin(buf)
+	offset += l
+	if err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, l, err = bthrift.Binary.ReadFieldBegin(buf[offset:])
+		offset += l
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+		switch fieldId {
+		case 0:
+			if fieldTypeId == thrift.STRING {
+				l, err = p.FastReadField0(buf[offset:])
+				offset += l
+				if err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
+				offset += l
+				if err != nil {
+					goto SkipFieldError
+				}
+			}
+		default:
+			l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
+			offset += l
+			if err != nil {
+				goto SkipFieldError
+			}
+		}
+
+		l, err = bthrift.Binary.ReadFieldEnd(buf[offset:])
+		offset += l
+		if err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	l, err = bthrift.Binary.ReadStructEnd(buf[offset:])
+	offset += l
+	if err != nil {
+		goto ReadStructEndError
+	}
+
+	return offset, nil
+ReadStructBeginError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_BankMinShengBankAccountSignatureApplyResult[fieldId]), err)
+SkipFieldError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+ReadFieldEndError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *BankMinShengBankAccountSignatureApplyResult) FastReadField0(buf []byte) (int, error) {
+	offset := 0
+
+	if v, l, err := bthrift.Binary.ReadString(buf[offset:]); err != nil {
+		return offset, err
+	} else {
+		offset += l
+		p.Success = &v
+
+	}
+	return offset, nil
+}
+
+// for compatibility
+func (p *BankMinShengBankAccountSignatureApplyResult) FastWrite(buf []byte) int {
+	return 0
+}
+
+func (p *BankMinShengBankAccountSignatureApplyResult) FastWriteNocopy(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+	offset := 0
+	offset += bthrift.Binary.WriteStructBegin(buf[offset:], "MinShengBankAccountSignatureApply_result")
+	if p != nil {
+		offset += p.fastWriteField0(buf[offset:], binaryWriter)
+	}
+	offset += bthrift.Binary.WriteFieldStop(buf[offset:])
+	offset += bthrift.Binary.WriteStructEnd(buf[offset:])
+	return offset
+}
+
+func (p *BankMinShengBankAccountSignatureApplyResult) BLength() int {
+	l := 0
+	l += bthrift.Binary.StructBeginLength("MinShengBankAccountSignatureApply_result")
+	if p != nil {
+		l += p.field0Length()
+	}
+	l += bthrift.Binary.FieldStopLength()
+	l += bthrift.Binary.StructEndLength()
+	return l
+}
+
+func (p *BankMinShengBankAccountSignatureApplyResult) fastWriteField0(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+	offset := 0
+	if p.IsSetSuccess() {
+		offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "success", thrift.STRING, 0)
+		offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, *p.Success)
+
+		offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
+	}
+	return offset
+}
+
+func (p *BankMinShengBankAccountSignatureApplyResult) field0Length() int {
+	l := 0
+	if p.IsSetSuccess() {
+		l += bthrift.Binary.FieldBeginLength("success", thrift.STRING, 0)
+		l += bthrift.Binary.StringLengthNocopy(*p.Success)
+
+		l += bthrift.Binary.FieldEndLength()
+	}
+	return l
+}
+
+func (p *BankMinShengBankAccountSignatureQueryArgs) FastRead(buf []byte) (int, error) {
+	var err error
+	var offset int
+	var l int
+	var fieldTypeId thrift.TType
+	var fieldId int16
+	_, l, err = bthrift.Binary.ReadStructBegin(buf)
+	offset += l
+	if err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, l, err = bthrift.Binary.ReadFieldBegin(buf[offset:])
+		offset += l
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+		switch fieldId {
+		case 1:
+			if fieldTypeId == thrift.STRUCT {
+				l, err = p.FastReadField1(buf[offset:])
+				offset += l
+				if err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
+				offset += l
+				if err != nil {
+					goto SkipFieldError
+				}
+			}
+		default:
+			l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
+			offset += l
+			if err != nil {
+				goto SkipFieldError
+			}
+		}
+
+		l, err = bthrift.Binary.ReadFieldEnd(buf[offset:])
+		offset += l
+		if err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	l, err = bthrift.Binary.ReadStructEnd(buf[offset:])
+	offset += l
+	if err != nil {
+		goto ReadStructEndError
+	}
+
+	return offset, nil
+ReadStructBeginError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_BankMinShengBankAccountSignatureQueryArgs[fieldId]), err)
+SkipFieldError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+ReadFieldEndError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *BankMinShengBankAccountSignatureQueryArgs) FastReadField1(buf []byte) (int, error) {
+	offset := 0
+
+	tmp := NewMinShengBankAccountSignatureRequest()
+	if l, err := tmp.FastRead(buf[offset:]); err != nil {
+		return offset, err
+	} else {
+		offset += l
+	}
+	p.Req = tmp
+	return offset, nil
+}
+
+// for compatibility
+func (p *BankMinShengBankAccountSignatureQueryArgs) FastWrite(buf []byte) int {
+	return 0
+}
+
+func (p *BankMinShengBankAccountSignatureQueryArgs) FastWriteNocopy(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+	offset := 0
+	offset += bthrift.Binary.WriteStructBegin(buf[offset:], "MinShengBankAccountSignatureQuery_args")
+	if p != nil {
+		offset += p.fastWriteField1(buf[offset:], binaryWriter)
+	}
+	offset += bthrift.Binary.WriteFieldStop(buf[offset:])
+	offset += bthrift.Binary.WriteStructEnd(buf[offset:])
+	return offset
+}
+
+func (p *BankMinShengBankAccountSignatureQueryArgs) BLength() int {
+	l := 0
+	l += bthrift.Binary.StructBeginLength("MinShengBankAccountSignatureQuery_args")
+	if p != nil {
+		l += p.field1Length()
+	}
+	l += bthrift.Binary.FieldStopLength()
+	l += bthrift.Binary.StructEndLength()
+	return l
+}
+
+func (p *BankMinShengBankAccountSignatureQueryArgs) fastWriteField1(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+	offset := 0
+	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "req", thrift.STRUCT, 1)
+	offset += p.Req.FastWriteNocopy(buf[offset:], binaryWriter)
+	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
+	return offset
+}
+
+func (p *BankMinShengBankAccountSignatureQueryArgs) field1Length() int {
+	l := 0
+	l += bthrift.Binary.FieldBeginLength("req", thrift.STRUCT, 1)
+	l += p.Req.BLength()
+	l += bthrift.Binary.FieldEndLength()
+	return l
+}
+
+func (p *BankMinShengBankAccountSignatureQueryResult) FastRead(buf []byte) (int, error) {
+	var err error
+	var offset int
+	var l int
+	var fieldTypeId thrift.TType
+	var fieldId int16
+	_, l, err = bthrift.Binary.ReadStructBegin(buf)
+	offset += l
+	if err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, l, err = bthrift.Binary.ReadFieldBegin(buf[offset:])
+		offset += l
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+		switch fieldId {
+		case 0:
+			if fieldTypeId == thrift.STRUCT {
+				l, err = p.FastReadField0(buf[offset:])
+				offset += l
+				if err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
+				offset += l
+				if err != nil {
+					goto SkipFieldError
+				}
+			}
+		default:
+			l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
+			offset += l
+			if err != nil {
+				goto SkipFieldError
+			}
+		}
+
+		l, err = bthrift.Binary.ReadFieldEnd(buf[offset:])
+		offset += l
+		if err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	l, err = bthrift.Binary.ReadStructEnd(buf[offset:])
+	offset += l
+	if err != nil {
+		goto ReadStructEndError
+	}
+
+	return offset, nil
+ReadStructBeginError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_BankMinShengBankAccountSignatureQueryResult[fieldId]), err)
+SkipFieldError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+ReadFieldEndError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *BankMinShengBankAccountSignatureQueryResult) FastReadField0(buf []byte) (int, error) {
+	offset := 0
+
+	tmp := NewMinShengBankAccountSignatureQueryResponse()
+	if l, err := tmp.FastRead(buf[offset:]); err != nil {
+		return offset, err
+	} else {
+		offset += l
+	}
+	p.Success = tmp
+	return offset, nil
+}
+
+// for compatibility
+func (p *BankMinShengBankAccountSignatureQueryResult) FastWrite(buf []byte) int {
+	return 0
+}
+
+func (p *BankMinShengBankAccountSignatureQueryResult) FastWriteNocopy(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+	offset := 0
+	offset += bthrift.Binary.WriteStructBegin(buf[offset:], "MinShengBankAccountSignatureQuery_result")
+	if p != nil {
+		offset += p.fastWriteField0(buf[offset:], binaryWriter)
+	}
+	offset += bthrift.Binary.WriteFieldStop(buf[offset:])
+	offset += bthrift.Binary.WriteStructEnd(buf[offset:])
+	return offset
+}
+
+func (p *BankMinShengBankAccountSignatureQueryResult) BLength() int {
+	l := 0
+	l += bthrift.Binary.StructBeginLength("MinShengBankAccountSignatureQuery_result")
+	if p != nil {
+		l += p.field0Length()
+	}
+	l += bthrift.Binary.FieldStopLength()
+	l += bthrift.Binary.StructEndLength()
+	return l
+}
+
+func (p *BankMinShengBankAccountSignatureQueryResult) fastWriteField0(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+	offset := 0
+	if p.IsSetSuccess() {
+		offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "success", thrift.STRUCT, 0)
+		offset += p.Success.FastWriteNocopy(buf[offset:], binaryWriter)
+		offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
+	}
+	return offset
+}
+
+func (p *BankMinShengBankAccountSignatureQueryResult) field0Length() int {
+	l := 0
+	if p.IsSetSuccess() {
+		l += bthrift.Binary.FieldBeginLength("success", thrift.STRUCT, 0)
+		l += p.Success.BLength()
+		l += bthrift.Binary.FieldEndLength()
+	}
+	return l
+}
+
 func (p *BankIcbcBankListTransactionDetailArgs) FastRead(buf []byte) (int, error) {
 	var err error
 	var offset int
@@ -39492,7 +40606,7 @@ func (p *BankIcbcBankListTransactionDetailResult) BLength() int {
 	return l
 }
 
-func (p *BankSyncIcbcBankTransactionReceiptArgs) FastRead(buf []byte) (int, error) {
+func (p *BankSyncBankTransactionReceiptArgs) FastRead(buf []byte) (int, error) {
 	var err error
 	var offset int
 	var l int
@@ -39556,6 +40670,20 @@ func (p *BankSyncIcbcBankTransactionReceiptArgs) FastRead(buf []byte) (int, erro
 					goto SkipFieldError
 				}
 			}
+		case 4:
+			if fieldTypeId == thrift.STRING {
+				l, err = p.FastReadField4(buf[offset:])
+				offset += l
+				if err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
+				offset += l
+				if err != nil {
+					goto SkipFieldError
+				}
+			}
 		default:
 			l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
 			offset += l
@@ -39582,7 +40710,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return offset, thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return offset, thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_BankSyncIcbcBankTransactionReceiptArgs[fieldId]), err)
+	return offset, thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_BankSyncBankTransactionReceiptArgs[fieldId]), err)
 SkipFieldError:
 	return offset, thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 ReadFieldEndError:
@@ -39591,7 +40719,7 @@ ReadStructEndError:
 	return offset, thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *BankSyncIcbcBankTransactionReceiptArgs) FastReadField1(buf []byte) (int, error) {
+func (p *BankSyncBankTransactionReceiptArgs) FastReadField1(buf []byte) (int, error) {
 	offset := 0
 
 	if v, l, err := bthrift.Binary.ReadString(buf[offset:]); err != nil {
@@ -39605,7 +40733,7 @@ func (p *BankSyncIcbcBankTransactionReceiptArgs) FastReadField1(buf []byte) (int
 	return offset, nil
 }
 
-func (p *BankSyncIcbcBankTransactionReceiptArgs) FastReadField2(buf []byte) (int, error) {
+func (p *BankSyncBankTransactionReceiptArgs) FastReadField2(buf []byte) (int, error) {
 	offset := 0
 
 	if v, l, err := bthrift.Binary.ReadString(buf[offset:]); err != nil {
@@ -39619,7 +40747,7 @@ func (p *BankSyncIcbcBankTransactionReceiptArgs) FastReadField2(buf []byte) (int
 	return offset, nil
 }
 
-func (p *BankSyncIcbcBankTransactionReceiptArgs) FastReadField3(buf []byte) (int, error) {
+func (p *BankSyncBankTransactionReceiptArgs) FastReadField3(buf []byte) (int, error) {
 	offset := 0
 
 	if v, l, err := bthrift.Binary.ReadI64(buf[offset:]); err != nil {
@@ -39633,38 +40761,54 @@ func (p *BankSyncIcbcBankTransactionReceiptArgs) FastReadField3(buf []byte) (int
 	return offset, nil
 }
 
+func (p *BankSyncBankTransactionReceiptArgs) FastReadField4(buf []byte) (int, error) {
+	offset := 0
+
+	if v, l, err := bthrift.Binary.ReadString(buf[offset:]); err != nil {
+		return offset, err
+	} else {
+		offset += l
+
+		p.BankType = v
+
+	}
+	return offset, nil
+}
+
 // for compatibility
-func (p *BankSyncIcbcBankTransactionReceiptArgs) FastWrite(buf []byte) int {
+func (p *BankSyncBankTransactionReceiptArgs) FastWrite(buf []byte) int {
 	return 0
 }
 
-func (p *BankSyncIcbcBankTransactionReceiptArgs) FastWriteNocopy(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+func (p *BankSyncBankTransactionReceiptArgs) FastWriteNocopy(buf []byte, binaryWriter bthrift.BinaryWriter) int {
 	offset := 0
-	offset += bthrift.Binary.WriteStructBegin(buf[offset:], "syncIcbcBankTransactionReceipt_args")
+	offset += bthrift.Binary.WriteStructBegin(buf[offset:], "syncBankTransactionReceipt_args")
 	if p != nil {
 		offset += p.fastWriteField3(buf[offset:], binaryWriter)
 		offset += p.fastWriteField1(buf[offset:], binaryWriter)
 		offset += p.fastWriteField2(buf[offset:], binaryWriter)
+		offset += p.fastWriteField4(buf[offset:], binaryWriter)
 	}
 	offset += bthrift.Binary.WriteFieldStop(buf[offset:])
 	offset += bthrift.Binary.WriteStructEnd(buf[offset:])
 	return offset
 }
 
-func (p *BankSyncIcbcBankTransactionReceiptArgs) BLength() int {
+func (p *BankSyncBankTransactionReceiptArgs) BLength() int {
 	l := 0
-	l += bthrift.Binary.StructBeginLength("syncIcbcBankTransactionReceipt_args")
+	l += bthrift.Binary.StructBeginLength("syncBankTransactionReceipt_args")
 	if p != nil {
 		l += p.field1Length()
 		l += p.field2Length()
 		l += p.field3Length()
+		l += p.field4Length()
 	}
 	l += bthrift.Binary.FieldStopLength()
 	l += bthrift.Binary.StructEndLength()
 	return l
 }
 
-func (p *BankSyncIcbcBankTransactionReceiptArgs) fastWriteField1(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+func (p *BankSyncBankTransactionReceiptArgs) fastWriteField1(buf []byte, binaryWriter bthrift.BinaryWriter) int {
 	offset := 0
 	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "beginDate", thrift.STRING, 1)
 	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.BeginDate)
@@ -39673,7 +40817,7 @@ func (p *BankSyncIcbcBankTransactionReceiptArgs) fastWriteField1(buf []byte, bin
 	return offset
 }
 
-func (p *BankSyncIcbcBankTransactionReceiptArgs) fastWriteField2(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+func (p *BankSyncBankTransactionReceiptArgs) fastWriteField2(buf []byte, binaryWriter bthrift.BinaryWriter) int {
 	offset := 0
 	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "endDate", thrift.STRING, 2)
 	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.EndDate)
@@ -39682,7 +40826,7 @@ func (p *BankSyncIcbcBankTransactionReceiptArgs) fastWriteField2(buf []byte, bin
 	return offset
 }
 
-func (p *BankSyncIcbcBankTransactionReceiptArgs) fastWriteField3(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+func (p *BankSyncBankTransactionReceiptArgs) fastWriteField3(buf []byte, binaryWriter bthrift.BinaryWriter) int {
 	offset := 0
 	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "organizationId", thrift.I64, 3)
 	offset += bthrift.Binary.WriteI64(buf[offset:], p.OrganizationId)
@@ -39691,7 +40835,16 @@ func (p *BankSyncIcbcBankTransactionReceiptArgs) fastWriteField3(buf []byte, bin
 	return offset
 }
 
-func (p *BankSyncIcbcBankTransactionReceiptArgs) field1Length() int {
+func (p *BankSyncBankTransactionReceiptArgs) fastWriteField4(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+	offset := 0
+	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "bankType", thrift.STRING, 4)
+	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.BankType)
+
+	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
+	return offset
+}
+
+func (p *BankSyncBankTransactionReceiptArgs) field1Length() int {
 	l := 0
 	l += bthrift.Binary.FieldBeginLength("beginDate", thrift.STRING, 1)
 	l += bthrift.Binary.StringLengthNocopy(p.BeginDate)
@@ -39700,7 +40853,7 @@ func (p *BankSyncIcbcBankTransactionReceiptArgs) field1Length() int {
 	return l
 }
 
-func (p *BankSyncIcbcBankTransactionReceiptArgs) field2Length() int {
+func (p *BankSyncBankTransactionReceiptArgs) field2Length() int {
 	l := 0
 	l += bthrift.Binary.FieldBeginLength("endDate", thrift.STRING, 2)
 	l += bthrift.Binary.StringLengthNocopy(p.EndDate)
@@ -39709,7 +40862,7 @@ func (p *BankSyncIcbcBankTransactionReceiptArgs) field2Length() int {
 	return l
 }
 
-func (p *BankSyncIcbcBankTransactionReceiptArgs) field3Length() int {
+func (p *BankSyncBankTransactionReceiptArgs) field3Length() int {
 	l := 0
 	l += bthrift.Binary.FieldBeginLength("organizationId", thrift.I64, 3)
 	l += bthrift.Binary.I64Length(p.OrganizationId)
@@ -39718,7 +40871,16 @@ func (p *BankSyncIcbcBankTransactionReceiptArgs) field3Length() int {
 	return l
 }
 
-func (p *BankSyncIcbcBankTransactionReceiptResult) FastRead(buf []byte) (int, error) {
+func (p *BankSyncBankTransactionReceiptArgs) field4Length() int {
+	l := 0
+	l += bthrift.Binary.FieldBeginLength("bankType", thrift.STRING, 4)
+	l += bthrift.Binary.StringLengthNocopy(p.BankType)
+
+	l += bthrift.Binary.FieldEndLength()
+	return l
+}
+
+func (p *BankSyncBankTransactionReceiptResult) FastRead(buf []byte) (int, error) {
 	var err error
 	var offset int
 	var l int
@@ -39771,13 +40933,13 @@ ReadStructEndError:
 }
 
 // for compatibility
-func (p *BankSyncIcbcBankTransactionReceiptResult) FastWrite(buf []byte) int {
+func (p *BankSyncBankTransactionReceiptResult) FastWrite(buf []byte) int {
 	return 0
 }
 
-func (p *BankSyncIcbcBankTransactionReceiptResult) FastWriteNocopy(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+func (p *BankSyncBankTransactionReceiptResult) FastWriteNocopy(buf []byte, binaryWriter bthrift.BinaryWriter) int {
 	offset := 0
-	offset += bthrift.Binary.WriteStructBegin(buf[offset:], "syncIcbcBankTransactionReceipt_result")
+	offset += bthrift.Binary.WriteStructBegin(buf[offset:], "syncBankTransactionReceipt_result")
 	if p != nil {
 	}
 	offset += bthrift.Binary.WriteFieldStop(buf[offset:])
@@ -39785,9 +40947,9 @@ func (p *BankSyncIcbcBankTransactionReceiptResult) FastWriteNocopy(buf []byte, b
 	return offset
 }
 
-func (p *BankSyncIcbcBankTransactionReceiptResult) BLength() int {
+func (p *BankSyncBankTransactionReceiptResult) BLength() int {
 	l := 0
-	l += bthrift.Binary.StructBeginLength("syncIcbcBankTransactionReceipt_result")
+	l += bthrift.Binary.StructBeginLength("syncBankTransactionReceipt_result")
 	if p != nil {
 	}
 	l += bthrift.Binary.FieldStopLength()
@@ -40482,6 +41644,22 @@ func (p *BankIcbcBankAccountSignatureQueryResult) GetResult() interface{} {
 	return p.Success
 }
 
+func (p *BankMinShengBankAccountSignatureApplyArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+func (p *BankMinShengBankAccountSignatureApplyResult) GetResult() interface{} {
+	return p.Success
+}
+
+func (p *BankMinShengBankAccountSignatureQueryArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+func (p *BankMinShengBankAccountSignatureQueryResult) GetResult() interface{} {
+	return p.Success
+}
+
 func (p *BankIcbcBankListTransactionDetailArgs) GetFirstArgument() interface{} {
 	return p.BeginDate
 }
@@ -40490,11 +41668,11 @@ func (p *BankIcbcBankListTransactionDetailResult) GetResult() interface{} {
 	return nil
 }
 
-func (p *BankSyncIcbcBankTransactionReceiptArgs) GetFirstArgument() interface{} {
+func (p *BankSyncBankTransactionReceiptArgs) GetFirstArgument() interface{} {
 	return p.BeginDate
 }
 
-func (p *BankSyncIcbcBankTransactionReceiptResult) GetResult() interface{} {
+func (p *BankSyncBankTransactionReceiptResult) GetResult() interface{} {
 	return nil
 }
 

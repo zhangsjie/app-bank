@@ -79,8 +79,10 @@ func NewServiceInfo() *kitex.ServiceInfo {
 		"systemRefusePaymentReceipt":                 kitex.NewMethodInfo(systemRefusePaymentReceiptHandler, newBankSystemRefusePaymentReceiptArgs, newBankSystemRefusePaymentReceiptResult, false),
 		"systemApprovePaymentReceipt":                kitex.NewMethodInfo(systemApprovePaymentReceiptHandler, newBankSystemApprovePaymentReceiptArgs, newBankSystemApprovePaymentReceiptResult, false),
 		"icbcBankAccountSignatureQuery":              kitex.NewMethodInfo(icbcBankAccountSignatureQueryHandler, newBankIcbcBankAccountSignatureQueryArgs, newBankIcbcBankAccountSignatureQueryResult, false),
+		"MinShengBankAccountSignatureApply":          kitex.NewMethodInfo(minShengBankAccountSignatureApplyHandler, newBankMinShengBankAccountSignatureApplyArgs, newBankMinShengBankAccountSignatureApplyResult, false),
+		"MinShengBankAccountSignatureQuery":          kitex.NewMethodInfo(minShengBankAccountSignatureQueryHandler, newBankMinShengBankAccountSignatureQueryArgs, newBankMinShengBankAccountSignatureQueryResult, false),
 		"icbcBankListTransactionDetail":              kitex.NewMethodInfo(icbcBankListTransactionDetailHandler, newBankIcbcBankListTransactionDetailArgs, newBankIcbcBankListTransactionDetailResult, false),
-		"syncIcbcBankTransactionReceipt":             kitex.NewMethodInfo(syncIcbcBankTransactionReceiptHandler, newBankSyncIcbcBankTransactionReceiptArgs, newBankSyncIcbcBankTransactionReceiptResult, false),
+		"syncBankTransactionReceipt":                 kitex.NewMethodInfo(syncBankTransactionReceiptHandler, newBankSyncBankTransactionReceiptArgs, newBankSyncBankTransactionReceiptResult, false),
 		"getBankTransactionReceipt":                  kitex.NewMethodInfo(getBankTransactionReceiptHandler, newBankGetBankTransactionReceiptArgs, newBankGetBankTransactionReceiptResult, false),
 	}
 	extra := map[string]interface{}{
@@ -1177,6 +1179,42 @@ func newBankIcbcBankAccountSignatureQueryResult() interface{} {
 	return api.NewBankIcbcBankAccountSignatureQueryResult()
 }
 
+func minShengBankAccountSignatureApplyHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	realArg := arg.(*api.BankMinShengBankAccountSignatureApplyArgs)
+	realResult := result.(*api.BankMinShengBankAccountSignatureApplyResult)
+	success, err := handler.(api.Bank).MinShengBankAccountSignatureApply(ctx, realArg.Req)
+	if err != nil {
+		return err
+	}
+	realResult.Success = &success
+	return nil
+}
+func newBankMinShengBankAccountSignatureApplyArgs() interface{} {
+	return api.NewBankMinShengBankAccountSignatureApplyArgs()
+}
+
+func newBankMinShengBankAccountSignatureApplyResult() interface{} {
+	return api.NewBankMinShengBankAccountSignatureApplyResult()
+}
+
+func minShengBankAccountSignatureQueryHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	realArg := arg.(*api.BankMinShengBankAccountSignatureQueryArgs)
+	realResult := result.(*api.BankMinShengBankAccountSignatureQueryResult)
+	success, err := handler.(api.Bank).MinShengBankAccountSignatureQuery(ctx, realArg.Req)
+	if err != nil {
+		return err
+	}
+	realResult.Success = success
+	return nil
+}
+func newBankMinShengBankAccountSignatureQueryArgs() interface{} {
+	return api.NewBankMinShengBankAccountSignatureQueryArgs()
+}
+
+func newBankMinShengBankAccountSignatureQueryResult() interface{} {
+	return api.NewBankMinShengBankAccountSignatureQueryResult()
+}
+
 func icbcBankListTransactionDetailHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
 	realArg := arg.(*api.BankIcbcBankListTransactionDetailArgs)
 
@@ -1195,22 +1233,22 @@ func newBankIcbcBankListTransactionDetailResult() interface{} {
 	return api.NewBankIcbcBankListTransactionDetailResult()
 }
 
-func syncIcbcBankTransactionReceiptHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
-	realArg := arg.(*api.BankSyncIcbcBankTransactionReceiptArgs)
+func syncBankTransactionReceiptHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	realArg := arg.(*api.BankSyncBankTransactionReceiptArgs)
 
-	err := handler.(api.Bank).SyncIcbcBankTransactionReceipt(ctx, realArg.BeginDate, realArg.EndDate, realArg.OrganizationId)
+	err := handler.(api.Bank).SyncBankTransactionReceipt(ctx, realArg.BeginDate, realArg.EndDate, realArg.OrganizationId, realArg.BankType)
 	if err != nil {
 		return err
 	}
 
 	return nil
 }
-func newBankSyncIcbcBankTransactionReceiptArgs() interface{} {
-	return api.NewBankSyncIcbcBankTransactionReceiptArgs()
+func newBankSyncBankTransactionReceiptArgs() interface{} {
+	return api.NewBankSyncBankTransactionReceiptArgs()
 }
 
-func newBankSyncIcbcBankTransactionReceiptResult() interface{} {
-	return api.NewBankSyncIcbcBankTransactionReceiptResult()
+func newBankSyncBankTransactionReceiptResult() interface{} {
+	return api.NewBankSyncBankTransactionReceiptResult()
 }
 
 func getBankTransactionReceiptHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
@@ -1865,6 +1903,26 @@ func (p *kClient) IcbcBankAccountSignatureQuery(ctx context.Context, req *api.Ic
 	return _result.GetSuccess(), nil
 }
 
+func (p *kClient) MinShengBankAccountSignatureApply(ctx context.Context, req *api.MinShengBankAccountSignatureRequest) (r string, err error) {
+	var _args api.BankMinShengBankAccountSignatureApplyArgs
+	_args.Req = req
+	var _result api.BankMinShengBankAccountSignatureApplyResult
+	if err = p.c.Call(ctx, "MinShengBankAccountSignatureApply", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) MinShengBankAccountSignatureQuery(ctx context.Context, req *api.MinShengBankAccountSignatureRequest) (r *api.MinShengBankAccountSignatureQueryResponse, err error) {
+	var _args api.BankMinShengBankAccountSignatureQueryArgs
+	_args.Req = req
+	var _result api.BankMinShengBankAccountSignatureQueryResult
+	if err = p.c.Call(ctx, "MinShengBankAccountSignatureQuery", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
 func (p *kClient) IcbcBankListTransactionDetail(ctx context.Context, beginDate string, endDate string, organizationId int64) (err error) {
 	var _args api.BankIcbcBankListTransactionDetailArgs
 	_args.BeginDate = beginDate
@@ -1877,13 +1935,14 @@ func (p *kClient) IcbcBankListTransactionDetail(ctx context.Context, beginDate s
 	return nil
 }
 
-func (p *kClient) SyncIcbcBankTransactionReceipt(ctx context.Context, beginDate string, endDate string, organizationId int64) (err error) {
-	var _args api.BankSyncIcbcBankTransactionReceiptArgs
+func (p *kClient) SyncBankTransactionReceipt(ctx context.Context, beginDate string, endDate string, organizationId int64, bankType string) (err error) {
+	var _args api.BankSyncBankTransactionReceiptArgs
 	_args.BeginDate = beginDate
 	_args.EndDate = endDate
 	_args.OrganizationId = organizationId
-	var _result api.BankSyncIcbcBankTransactionReceiptResult
-	if err = p.c.Call(ctx, "syncIcbcBankTransactionReceipt", &_args, &_result); err != nil {
+	_args.BankType = bankType
+	var _result api.BankSyncBankTransactionReceiptResult
+	if err = p.c.Call(ctx, "syncBankTransactionReceipt", &_args, &_result); err != nil {
 		return
 	}
 	return nil

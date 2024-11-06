@@ -51,6 +51,8 @@ type PaymentReceiptService interface {
 	pinganBankPayment(ctx context.Context, req *repo.PaymentReceiptDBData, payRemark string) (string, error)
 	PaymentReceiptSystemApprove(ctx context.Context, id int64) (err error)
 	PaymentReceiptSystemRefuse(ctx context.Context, id int64) (err error)
+	minShengBankPayment(ctx context.Context, req *repo.PaymentReceiptDBData, payRemark string) (string, error)
+	handleMinShengBankSyncPaymentReceipt(ctx context.Context, bankType, beginDate string, endDate string, organizationId int64) error
 }
 
 type paymentReceiptService struct {
@@ -66,6 +68,7 @@ type paymentReceiptService struct {
 	somsClient                               soms.Client
 	paymentReceiptApplicationCustomFieldRepo repo.PaymentReceiptApplicationCustomFieldRepo
 	invoiceClient                            invoice.Client
+	minShengBankSDK                          sdk.MinShengSDK
 }
 
 func (s *paymentReceiptService) ListPaymentReceipt(ctx context.Context, req *api.ListPaymentReceiptRequest) (resp *api.ListPaymentReceiptResponse, err error) {
@@ -306,6 +309,11 @@ func (s *paymentReceiptService) PaymentReceiptRun(ctx context.Context, id int64)
 					if err != nil {
 						return handler.HandleError(err)
 					}
+				case "4":
+					orderStatus, err = s.minShengBankPayment(ctx, paymentReceipt, payRemark)
+					if err != nil {
+						return handler.HandleError(err)
+					}
 				}
 			} else {
 				// 交易金额为0 直接变更为成功
@@ -466,6 +474,72 @@ func (s *paymentReceiptService) guilinBankPayment(ctx context.Context, req *repo
 	}
 
 	return bankTransferResponse.Body.OrderState, nil
+}
+
+func (s *paymentReceiptService) minShengBankPayment(ctx context.Context, req *repo.PaymentReceiptDBData, payRemark string) (string, error) {
+
+	// 企业识别码（民生银行）
+	organizationId, err2 := util.GetMetaInfoCurrentOrganizationId(ctx)
+	if err2 != nil {
+		return "", err2
+	}
+	bankAccount, err := s.baseClient.GetOrganizationBankAccount(ctx, &baseApi.OrganizationBankAccountData{
+		OrganizationId: organizationId,
+		Type:           enum.MinShengBankType,
+	})
+
+	isCross := "1" // 本行
+	if req.InsideOutsideBankType == "1" {
+		isCross = "0" // 跨行
+	}
+	var bankRoute string
+	if isCross == "0" {
+		bankRoute = "9" // 9-智能汇路
+	}
+	reqSeq, sfErr := util.SonyflakeID()
+	if sfErr != nil {
+		return "", handler.HandleError(sfErr)
+	}
+	resultMap, err := s.minShengBankSDK.BankTransfer(ctx, sdkStru.MinShengTransferRequest{
+		AcctNo:    req.PayAccount,
+		PayType:   enum.MinShengPayType,
+		IsCross:   isCross,
+		Currency:  enum.MinShengCurrencyTypeCNY,
+		TransAmt:  req.PayAmount,
+		BankRoute: bankRoute,
+		BankCode:  req.UnionBankNo,
+		BankName:  req.ReceiveAccountBankName,
+		OpenId:    bankAccount.OpenId,
+		ReqSeq:    reqSeq,
+		Usage:     payRemark,
+		CertNo:    req.OrderFlowNo,
+	})
+	if err != nil {
+		return "", handler.HandleError(err)
+	}
+	var orderStatus string
+	if resultMap["return_code"].(string) == "0000" {
+		// 判断执行结果
+		responseBusi := resultMap["response_busi"].(string)
+		var busiMap map[string]string
+		err = json.Unmarshal([]byte(responseBusi), &busiMap)
+		if err != nil {
+			return "", handler.HandleError(err)
+		}
+		if busiMap["resp_status"] == "S" {
+			// 交易进行中
+			orderStatus = enum.GuilinBankTransferHandling
+		} else {
+			orderStatus = enum.GuilinBankTransferFailResult
+		}
+	} else {
+		orderStatus = enum.GuilinBankTransferFailResult
+	}
+	if err = s.updatePaymentReceiptResult(ctx, *req, req.PayAmount, orderStatus,
+		resultMap["return_code"].(string), resultMap["return_msg"].(string), reqSeq); err != nil {
+		return "", handler.HandleError(err)
+	}
+	return orderStatus, nil
 }
 
 func (s *paymentReceiptService) updatePaymentReceiptResult(ctx context.Context, req repo.PaymentReceiptDBData, chargeFee float64, orderStatus, retCode, retMessage, orderFlowNo string) error {
@@ -836,6 +910,7 @@ func (s *paymentReceiptService) HandleSyncPaymentReceipt(ctx context.Context, be
 	s.handleGuilinBankSyncPaymentReceipt(ctx, enum.GuilinBankType, beginDate, endDate, organizationId)
 	s.handleSPDBankSyncPaymentReceipt(ctx, enum.SPDBankType, beginDate, endDate, organizationId)
 	s.handlePinganBankSyncPaymentReceipt(ctx, enum.PinganBankType, beginDate, endDate, organizationId)
+	s.handleMinShengBankSyncPaymentReceipt(ctx, enum.MinShengBankType, beginDate, endDate, organizationId)
 	return nil
 }
 
@@ -1100,6 +1175,115 @@ func (s *paymentReceiptService) handlePinganBankSyncPaymentReceipt(ctx context.C
 			}
 			if err = s.paymentReceiptRepo.UpdateById(ctx, paymentReceipt.Id, updateReceipt); err != nil {
 				zap.L().Info(fmt.Sprintf("HandlePinganBankSyncTransferReceipt更新paymentReceiptRepo失败:%v", err))
+				continue
+			}
+		}
+	}
+	return nil
+}
+
+func (s *paymentReceiptService) handleMinShengBankSyncPaymentReceipt(ctx context.Context, bankType, beginDate string, endDate string, organizationId int64) error {
+	//查询所有未完成的付款单据（进行中获取处理中的单据）
+	zap.L().Info("handleMinShengBankSyncPaymentReceipt 查询民生所有未完成的付款单据")
+	excludeOrderStates := []string{enum.GuilinBankTransferSuccessResult, enum.GuilinBankTransferFailResult, enum.GuilinBankTransferRefuseResult}
+	var createTimeParam []string
+	if beginDate != "" && beginDate != "" {
+		begin, err := util.ParseDate(beginDate)
+		if err != nil {
+			return handler.HandleError(err)
+		}
+		end, err := util.ParseDate(endDate)
+		if err != nil {
+			return handler.HandleError(err)
+		}
+		createTimeParam = append(createTimeParam, util.FormatTimeyyyyMMddBar(begin), util.FormatTimeyyyyMMddBar(end))
+	}
+	paymentReceiptList, _, err := s.paymentReceiptRepo.ListAll(ctx, "", 0, 0, &repo.PaymentReceiptDBParam{
+		ExcludeOrderStates:    excludeOrderStates,
+		IsOrderFlowNoNotEmpty: true,
+		PaymentReceiptDBData: repo.PaymentReceiptDBData{
+			BaseProcessDBData: repository.BaseProcessDBData{
+				BaseDBData: repository.BaseDBData{
+					OrganizationId: organizationId,
+				},
+			},
+			PayAccountType: bankType,
+		},
+		UpdateTime: createTimeParam,
+	})
+	if err != nil {
+		return handler.HandleError(err)
+	}
+	if paymentReceiptList != nil && len(*paymentReceiptList) > 0 {
+		for _, paymentReceipt := range *paymentReceiptList {
+
+			//处理账户空格
+			paymentReceipt.ReceiveAccount = strings.ReplaceAll(paymentReceipt.ReceiveAccount, " ", "")
+			paymentReceipt.PayAccount = strings.ReplaceAll(paymentReceipt.PayAccount, " ", "")
+
+			bankAccount, err := s.baseClient.GetOrganizationBankAccount(ctx, &baseApi.OrganizationBankAccountData{
+				OrganizationId: paymentReceipt.OrganizationId,
+				Type:           bankType,
+				Account:        paymentReceipt.PayAccount,
+			})
+			if err != nil {
+				zap.L().Info(fmt.Sprintf("HandleMinShengBankSyncTransferReceipt查询账号详情失败:%v", err))
+				continue
+			}
+			result, err := s.minShengBankSDK.QueryTransferResult(ctx, bankAccount.Account, paymentReceipt.OrderFlowNo, bankAccount.OpenId)
+			zap.L().Info(fmt.Sprintf("minShengBankSDK.QueryTransferResult查询转账结果:%v", result))
+			if err != nil {
+				zap.L().Info(fmt.Sprintf("HandleMinShengBankSyncTransferReceipt查询转账结果失败:%v", err))
+				continue
+			}
+			if result["return_code"] != "0000" {
+				zap.L().Info(fmt.Sprintf("minShengBankSDK.QueryTransferResult查询转账结果:%v", result))
+				continue
+			}
+
+			//1-审批中 2-审批拒绝/失败 3- 交易成功（跨行交易时仅代表银行提交清算机构成功，不代表实际入账成功）4-交易支付中 5-交易失败
+			// 转换成通用的状态字段
+			var orderStatus string
+			responseBusi := result["response_busi"].(string)
+			var busiMap map[string]string
+			err = json.Unmarshal([]byte(responseBusi), &busiMap)
+			if err != nil {
+				zap.L().Info(fmt.Sprintf("minShengBankSDK.QueryTransferResult转换response_busi异常:%v", err))
+				continue
+			}
+
+			if busiMap["resp_code"] != enum.MinShengRespCode {
+				zap.L().Info(fmt.Sprintf("minShengBankSDK.QueryTransferResult查询转账结果:%v", err))
+				continue
+			}
+
+			if busiMap["trans_status"] == "1" {
+				orderStatus = enum.GuilinBankTransferHandling
+			} else if busiMap["trans_status"] == "2" {
+				orderStatus = enum.GuilinBankTransferRefuseResult
+			} else if busiMap["trans_status"] == "3" {
+				orderStatus = enum.GuilinBankTransferSuccessResult
+			} else if busiMap["trans_status"] == "4" {
+				orderStatus = enum.GuilinBankTransferHandling
+			} else if busiMap["trans_status"] == "5" {
+				orderStatus = enum.GuilinBankTransferFailResult
+			}
+
+			//比较订单状态
+			if orderStatus == paymentReceipt.OrderStatus {
+				continue
+			}
+			updateReceipt := &repo.PaymentReceiptDBData{
+				OrderStatus: orderStatus,
+				OrderFlowNo: busiMap["trans_seq_no"], // 交易流水号
+				TransDate:   busiMap["trans_date"],   // 交易执行时间
+			}
+			if orderStatus != enum.GuilinBankTransferSuccessResult {
+				updateReceipt.RetCode = result["return_code"].(string)
+				updateReceipt.RetMessage = result["return_msg"].(string)
+			}
+			if err = s.paymentReceiptRepo.UpdateById(ctx, paymentReceipt.Id, updateReceipt); err != nil {
+				zap.L().Info(fmt.Sprintf("HandleMinShengBankSyncTransferReceipt更新paymentReceiptRepo失败:%v", err))
 				continue
 			}
 		}

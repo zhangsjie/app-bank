@@ -71,8 +71,10 @@ type Client interface {
 	SystemRefusePaymentReceipt(ctx context.Context, id int64, callOptions ...callopt.Option) (err error)
 	SystemApprovePaymentReceipt(ctx context.Context, id int64, callOptions ...callopt.Option) (err error)
 	IcbcBankAccountSignatureQuery(ctx context.Context, req *api.IcbcBankAccountSignatureRequest, callOptions ...callopt.Option) (r *api.IcbcBankAccountSignatureQueryResponse, err error)
+	MinShengBankAccountSignatureApply(ctx context.Context, req *api.MinShengBankAccountSignatureRequest, callOptions ...callopt.Option) (r string, err error)
+	MinShengBankAccountSignatureQuery(ctx context.Context, req *api.MinShengBankAccountSignatureRequest, callOptions ...callopt.Option) (r *api.MinShengBankAccountSignatureQueryResponse, err error)
 	IcbcBankListTransactionDetail(ctx context.Context, beginDate string, endDate string, organizationId int64, callOptions ...callopt.Option) (err error)
-	SyncIcbcBankTransactionReceipt(ctx context.Context, beginDate string, endDate string, organizationId int64, callOptions ...callopt.Option) (err error)
+	SyncBankTransactionReceipt(ctx context.Context, beginDate string, endDate string, organizationId int64, bankType string, callOptions ...callopt.Option) (err error)
 	GetBankTransactionReceipt(ctx context.Context, id int64, callOptions ...callopt.Option) (err error)
 }
 
@@ -405,14 +407,24 @@ func (p *kBankClient) IcbcBankAccountSignatureQuery(ctx context.Context, req *ap
 	return p.kClient.IcbcBankAccountSignatureQuery(ctx, req)
 }
 
+func (p *kBankClient) MinShengBankAccountSignatureApply(ctx context.Context, req *api.MinShengBankAccountSignatureRequest, callOptions ...callopt.Option) (r string, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.MinShengBankAccountSignatureApply(ctx, req)
+}
+
+func (p *kBankClient) MinShengBankAccountSignatureQuery(ctx context.Context, req *api.MinShengBankAccountSignatureRequest, callOptions ...callopt.Option) (r *api.MinShengBankAccountSignatureQueryResponse, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.MinShengBankAccountSignatureQuery(ctx, req)
+}
+
 func (p *kBankClient) IcbcBankListTransactionDetail(ctx context.Context, beginDate string, endDate string, organizationId int64, callOptions ...callopt.Option) (err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.IcbcBankListTransactionDetail(ctx, beginDate, endDate, organizationId)
 }
 
-func (p *kBankClient) SyncIcbcBankTransactionReceipt(ctx context.Context, beginDate string, endDate string, organizationId int64, callOptions ...callopt.Option) (err error) {
+func (p *kBankClient) SyncBankTransactionReceipt(ctx context.Context, beginDate string, endDate string, organizationId int64, bankType string, callOptions ...callopt.Option) (err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
-	return p.kClient.SyncIcbcBankTransactionReceipt(ctx, beginDate, endDate, organizationId)
+	return p.kClient.SyncBankTransactionReceipt(ctx, beginDate, endDate, organizationId, bankType)
 }
 
 func (p *kBankClient) GetBankTransactionReceipt(ctx context.Context, id int64, callOptions ...callopt.Option) (err error) {
