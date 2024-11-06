@@ -606,7 +606,7 @@ service bank {
     string MinShengBankAccountSignatureApply(1: minShengBankAccountSignatureRequest req)
     MinShengBankAccountSignatureQueryResponse MinShengBankAccountSignatureQuery(1:minShengBankAccountSignatureRequest req)
     void icbcBankListTransactionDetail(1: string beginDate, 2: string endDate, 3: i64 organizationId)
-    void syncIcbcBankTransactionReceipt(1: string beginDate, 2: string endDate, 3: i64 organizationId)
+    void syncBankTransactionReceipt(1: string beginDate, 2: string endDate, 3: i64 organizationId,4:string bankType)
     void getBankTransactionReceipt(1:i64 id)
 }
 struct IcbcBankAccountSignatureQueryResponse {

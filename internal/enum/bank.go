@@ -55,4 +55,6 @@ niWlJ6Runo5iFZXLAAAAFDAwMTAzMTg3NkAwMDEwMzE4NzZUAQIDBAUG
 const BankReceiptSyncLogKey = "bankReceiptDownloadSyncLog"
 const BankErrorLogKey = "bankErrorLog"
 
-const BankMinShengRequestUrl = "/api/cmbcRequest"
+const MinShengRequestUrl = "/api/cmbcRequest"
+const MinShengAppId = "bankConfig.minsheng.appId"
+const MinShengEnterpriseIdCode = "bankConfig.minsheng.enterpriseIdCode"

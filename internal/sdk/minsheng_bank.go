@@ -14,9 +14,9 @@ import (
 // 民生银行接口对接
 type MinShengSDK interface {
 	BankTransfer(ctx context.Context, req stru.MinShengTransferRequest) (map[string]interface{}, error)
-	QueryTransferResult(ctx context.Context, acctNo, orgReqSeq string) (map[string]interface{}, error)
-	ListTransactionDetail(ctx context.Context, accountNo, beginDate, endDate string, startIndex, endIndex int64) (map[string]interface{}, error)
-	GetTransactionDetailElectronicReceipt(ctx context.Context, acctNo, transSeqNo, enterAcctDate string) (map[string]interface{}, error)
+	QueryTransferResult(ctx context.Context, acctNo, orgReqSeq, openId string) (map[string]interface{}, error)
+	ListTransactionDetail(ctx context.Context, accountNo, beginDate, endDate, startIndex, endIndex, openId string) (map[string]interface{}, error)
+	GetTransactionDetailElectronicReceipt(ctx context.Context, acctNo, transSeqNo, enterAcctDate, openId string) (map[string]interface{}, error)
 	AuthRequest(ctx context.Context, entCifno, acctNo, reqSeq string) (map[string]interface{}, error)
 	QueryAuthStatus(ctx context.Context, srcReqSeq, reqSeq string) (map[string]interface{}, error)
 	//ReNewAuthRequest(ctx context.Context, openId, authCode string)
@@ -36,6 +36,9 @@ func (s *minShengSDK) BankTransfer(ctx context.Context, req stru.MinShengTransfe
 	busiParamMap["bank_route"] = req.BankRoute
 	busiParamMap["bank_code"] = req.BankCode // 开户行号
 	busiParamMap["bank_name"] = req.BankName // 开户行名
+	busiParamMap["usage"] = req.Usage        //用途
+	busiParamMap["cert_no"] = req.CertNo     //企业自制凭证号,可用于hostflow字段的填写
+	busiParamMap["open_id"] = req.OpenId
 	// 请求民生接口方法名
 	method := "settlement.transfer.ent_single_order"
 	// 民生接口版本号
@@ -47,7 +50,7 @@ func (s *minShengSDK) BankTransfer(ctx context.Context, req stru.MinShengTransfe
 	return response, nil
 }
 
-func (s *minShengSDK) QueryTransferResult(ctx context.Context, acctNo, orgReqSeq string) (map[string]interface{}, error) {
+func (s *minShengSDK) QueryTransferResult(ctx context.Context, acctNo, orgReqSeq, openId string) (map[string]interface{}, error) {
 	id, sfErr := util.SonyflakeID()
 	if sfErr != nil {
 		return nil, handler.HandleError(sfErr)
@@ -57,10 +60,11 @@ func (s *minShengSDK) QueryTransferResult(ctx context.Context, acctNo, orgReqSeq
 	busiParamMap["req_seq"] = id
 	busiParamMap["acct_no"] = acctNo
 	busiParamMap["org_req_seq"] = orgReqSeq
+	busiParamMap["open_id"] = openId
 	// 请求民生接口方法名
 	method := "settlement.transfer.ent_single_order_qry"
 	// 民生接口版本号
-	version := "V1.1"
+	version := "V1.0"
 	response, err := s.invokeMinSheng(ctx, method, version, busiParamMap)
 	if err != nil {
 		return nil, err
@@ -68,7 +72,7 @@ func (s *minShengSDK) QueryTransferResult(ctx context.Context, acctNo, orgReqSeq
 	return response, nil
 }
 
-func (s *minShengSDK) ListTransactionDetail(ctx context.Context, accountNo, beginDate, endDate string, startIndex, endIndex int64) (map[string]interface{}, error) {
+func (s *minShengSDK) ListTransactionDetail(ctx context.Context, accountNo, beginDate, endDate, startIndex, endIndex, openId string) (map[string]interface{}, error) {
 	id, sfErr := util.SonyflakeID()
 	if sfErr != nil {
 		return nil, handler.HandleError(sfErr)
@@ -82,6 +86,7 @@ func (s *minShengSDK) ListTransactionDetail(ctx context.Context, accountNo, begi
 	busiParamMap["date_to"] = endDate
 	busiParamMap["start_index"] = startIndex
 	busiParamMap["end_index"] = endIndex
+	busiParamMap["open_id"] = openId
 	// 请求民生接口方法名
 	method := "account.transinfo.detail_query"
 	// 民生接口版本号
@@ -93,7 +98,7 @@ func (s *minShengSDK) ListTransactionDetail(ctx context.Context, accountNo, begi
 	return response, nil
 }
 
-func (s *minShengSDK) GetTransactionDetailElectronicReceipt(ctx context.Context, acctNo, transSeqNo, enterAcctDate string) (map[string]interface{}, error) {
+func (s *minShengSDK) GetTransactionDetailElectronicReceipt(ctx context.Context, acctNo, transSeqNo, enterAcctDate, openId string) (map[string]interface{}, error) {
 	id, sfErr := util.SonyflakeID()
 	if sfErr != nil {
 		return nil, handler.HandleError(sfErr)
@@ -105,6 +110,7 @@ func (s *minShengSDK) GetTransactionDetailElectronicReceipt(ctx context.Context,
 	busiParamMap["acct_no"] = acctNo
 	busiParamMap["trans_seq_no"] = transSeqNo       // 交易流水号
 	busiParamMap["enter_acct_date"] = enterAcctDate // 明细入账日期
+	busiParamMap["open_id"] = openId
 	//busiParamMap["file_type"] = "PDF" // 默认就是PDF
 	// 请求民生接口方法名
 	method := "account.transinfo.electnote_download_new"
@@ -155,8 +161,8 @@ func (s *minShengSDK) QueryAuthStatus(ctx context.Context, srcReqSeq, reqSeq str
 
 func (s *minShengSDK) invokeMinSheng(ctx context.Context, method, version string, busiParamMap map[string]interface{}) (map[string]interface{}, error) {
 	var result map[string]interface{}
-	host := config.GetString("app.jsdk.domain", "") + enum.BankMinShengRequestUrl
-	
+	host := config.GetString("app.jsdk.domain", "") + enum.MinShengRequestUrl
+
 	zap.L().Info(fmt.Sprintf("调用民生接口请求，方法名：%s,版本：%s,参数：%+v", method, version, busiParamMap))
 	requestParamMap := make(map[string]interface{})
 	// 民生接口名称

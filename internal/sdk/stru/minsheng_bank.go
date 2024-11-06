@@ -16,6 +16,7 @@ type MinShengTransferRequest struct {
 	BankName  string  `json:"BankName"`  // 开户行名
 	OpenId    string  `json:"openId"`    // 授权码
 	Usage     string  `json:"usage"`     // 用途
+	CertNo    string  `json:"certNo"`    //企业自制凭证号,可用于hostflow字段的填写
 }
 
 type MinShengBankTransferResponse struct {

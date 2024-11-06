@@ -10,17 +10,20 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/pkg/sftp v1.13.6
 	github.com/satori/go.uuid v1.2.0
-	gitlab.yoyiit.com/youyi/app-base v0.0.0-20241016053317-a99921fc6024
-	gitlab.yoyiit.com/youyi/app-dingtalk v0.0.0-20230712070347-478fa7abbcbb
-	gitlab.yoyiit.com/youyi/app-finance v0.0.0-20240807024820-8eea2c4da16d
-	gitlab.yoyiit.com/youyi/app-invoice v0.0.0-20240815074051-f06a78a0c466
-	gitlab.yoyiit.com/youyi/app-oa v0.0.0-20241016052630-9f317e8d6c89
-	gitlab.yoyiit.com/youyi/app-soms v0.0.0-20241014083832-a0a310858fa1
-	gitlab.yoyiit.com/youyi/go-common v0.0.0-20240726025706-0f686156cc88
-	gitlab.yoyiit.com/youyi/go-core v0.0.0-20240807023746-01dacf888bb8
 	go.uber.org/zap v1.24.0
 	golang.org/x/crypto v0.23.0
 	gorm.io/gorm v1.24.5
+)
+
+require (
+	gitlab.yoyiit.com/youyi/app-base v0.0.0-20241017024458-32d86fc5223e
+	gitlab.yoyiit.com/youyi/app-dingtalk v0.0.0-20240813034036-522f7516e110
+	gitlab.yoyiit.com/youyi/app-finance v0.0.0-20241105092142-19f3333a1a2f
+	gitlab.yoyiit.com/youyi/app-invoice v0.0.0-20241017021019-3616751d9f49
+	gitlab.yoyiit.com/youyi/app-oa v0.0.0-20241104090903-fb36f99236f3
+	gitlab.yoyiit.com/youyi/app-soms v0.0.0-20241105065038-3f38b8a9f673
+	gitlab.yoyiit.com/youyi/go-common v0.0.0-20241030071815-0dbb1bcd7a6a
+	gitlab.yoyiit.com/youyi/go-core v0.0.0-20241104091638-5f306227d5e2
 )
 
 require (
@@ -45,10 +48,6 @@ require (
 	github.com/bytedance/sonic v1.11.8 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
-	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
-	github.com/chenzhuoyu/iasm v0.0.0-20230222070914-0b1b64b0e762 // indirect
-	github.com/choleraehyq/pid v0.0.16 // indirect
-	github.com/clbanning/mxj/v2 v2.5.6 // indirect
 	github.com/clbanning/mxj/v2 v2.5.6 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/configmanager v0.2.2 // indirect
@@ -147,11 +146,6 @@ require (
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
 	golang.org/x/arch v0.2.0 // indirect
-	golang.org/x/crypto v0.6.0 // indirect
-	golang.org/x/net v0.9.0 // indirect
-	golang.org/x/sync v0.5.0 // indirect
-	golang.org/x/sys v0.15.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
 	golang.org/x/sys v0.20.0 // indirect

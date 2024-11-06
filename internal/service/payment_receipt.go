@@ -309,7 +309,7 @@ func (s *paymentReceiptService) PaymentReceiptRun(ctx context.Context, id int64)
 					if err != nil {
 						return handler.HandleError(err)
 					}
-				case "3":
+				case "4":
 					orderStatus, err = s.minShengBankPayment(ctx, paymentReceipt, payRemark)
 					if err != nil {
 						return handler.HandleError(err)
@@ -477,15 +477,17 @@ func (s *paymentReceiptService) guilinBankPayment(ctx context.Context, req *repo
 }
 
 func (s *paymentReceiptService) minShengBankPayment(ctx context.Context, req *repo.PaymentReceiptDBData, payRemark string) (string, error) {
-	organizationBankConfig, err := s.baseClient.GetOrganizationBankConfig(ctx, &baseApi.OrganizationBankConfigData{
-		OrganizationId: req.OrganizationId,
+
+	// 企业识别码（民生银行）
+	organizationId, err2 := util.GetMetaInfoCurrentOrganizationId(ctx)
+	if err2 != nil {
+		return "", err2
+	}
+	bankAccount, err := s.baseClient.GetOrganizationBankAccount(ctx, &baseApi.OrganizationBankAccountData{
+		OrganizationId: organizationId,
 		Type:           enum.MinShengBankType,
 	})
-	if err != nil {
-		return "", handler.HandleError(err)
-	}
-	// 企业识别码（民生银行）
-	enterpriseIdentificationCode := organizationBankConfig.EnterpriseIdentificationCode
+
 	isCross := "1" // 本行
 	if req.InsideOutsideBankType == "1" {
 		isCross = "0" // 跨行
@@ -507,9 +509,10 @@ func (s *paymentReceiptService) minShengBankPayment(ctx context.Context, req *re
 		BankRoute: bankRoute,
 		BankCode:  req.UnionBankNo,
 		BankName:  req.ReceiveAccountBankName,
-		OpenId:    enterpriseIdentificationCode,
+		OpenId:    bankAccount.OpenId,
 		ReqSeq:    reqSeq,
 		Usage:     payRemark,
+		CertNo:    req.OrderFlowNo,
 	})
 	if err != nil {
 		return "", handler.HandleError(err)
@@ -1227,7 +1230,7 @@ func (s *paymentReceiptService) handleMinShengBankSyncPaymentReceipt(ctx context
 				zap.L().Info(fmt.Sprintf("HandleMinShengBankSyncTransferReceipt查询账号详情失败:%v", err))
 				continue
 			}
-			result, err := s.minShengBankSDK.QueryTransferResult(ctx, bankAccount.Account, paymentReceipt.OrderFlowNo)
+			result, err := s.minShengBankSDK.QueryTransferResult(ctx, bankAccount.Account, paymentReceipt.OrderFlowNo, bankAccount.OpenId)
 			zap.L().Info(fmt.Sprintf("minShengBankSDK.QueryTransferResult查询转账结果:%v", result))
 			if err != nil {
 				zap.L().Info(fmt.Sprintf("HandleMinShengBankSyncTransferReceipt查询转账结果失败:%v", err))

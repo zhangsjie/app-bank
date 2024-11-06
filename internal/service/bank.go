@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
@@ -115,7 +114,9 @@ type BankService interface {
 	MinShengBankAccountSignatureQuery(ctx context.Context, req *api.MinShengBankAccountSignatureRequest) (*api.MinShengBankAccountSignatureQueryResponse, error)
 	IcbcBankListTransactionDetail(ctx context.Context, beginDate string, endDate string, organizationId int64) error
 	SyncIcbcBankTransactionReceipt(ctx context.Context, beginDate string, endDate string, organizationId int64) error
+	SyncMinshengBankTransactionReceipt(ctx context.Context, beginDate string, endDate string, organizationId int64) error
 	GetBankTransactionReceipt(ctx context.Context, bankTransactionDetailId int64) error
+	SyncBankTransactionReceipt(ctx context.Context, beginDate string, endDate string, organizationId int64, bankType string) error
 }
 
 type bankService struct {
@@ -141,6 +142,16 @@ type bankService struct {
 	redisClient                              *store.RedisClient
 }
 
+func (s *bankService) SyncBankTransactionReceipt(ctx context.Context, beginDate string, endDate string, organizationId int64, bankType string) error {
+	switch bankType {
+	case enum.PinganBankType:
+		s.SyncIcbcBankTransactionReceipt(ctx, beginDate, endDate, organizationId)
+	case enum.MinShengBankType:
+		s.SyncMinshengBankTransactionReceipt(ctx, beginDate, endDate, organizationId)
+
+	}
+	return nil
+}
 func (s *bankService) SyncIcbcBankTransactionReceipt(ctx context.Context, beginDate string, endDate string, organizationId int64) error {
 	//先更新本地回单
 	_, err := s.icbcBank.IcbcReceiptFileDownload(ctx)
@@ -206,6 +217,44 @@ func (s *bankService) SyncIcbcBankTransactionReceipt(ctx context.Context, beginD
 					}
 				}
 
+			}
+		}
+	}
+	return nil
+}
+func (s *bankService) SyncMinshengBankTransactionReceipt(ctx context.Context, beginDate string, endDate string, organizationId int64) error {
+	//先更新本地回单
+	zap.L().Info(fmt.Sprintf("sSyncMingshengBankTransactionReceipt开始查询minsheng没有回单的流水"))
+	bankAccounts, err := s.baseClient.ListOrganizationBankAccount(ctx, &baseApi.ListOrganizationBankAccountRequest{
+		OrganizationId: organizationId,
+		Type:           enum.MinShengBankType,
+	})
+	if err != nil {
+		return handler.HandleError(err)
+	}
+	if bankAccounts == nil || len(bankAccounts) <= 0 {
+		return nil
+	}
+	for _, bankAccount := range bankAccounts {
+		//找到没有回单附件的流水
+		datas, _, err := s.bankTransactionDetailRepo.List(ctx, "-1", 0, 1000, &repo.BankTransactionDetailDBDataParam{
+			BankTransactionDetailDBData: repo.BankTransactionDetailDBData{
+				BaseDBData:        repository.BaseDBData{},
+				MerchantAccountId: bankAccount.Id,
+				TransferDate:      beginDate,
+			},
+			IsElectronicReceiptFileNull: false,
+		})
+
+		zap.L().Info(fmt.Sprintf("==minshengBankAccountListTransactionDetail%v", datas))
+		if err != nil {
+			zap.L().Error(fmt.Sprintf("s.ListTransactionDetail__error_info%s", err.Error()))
+			continue
+		}
+		if *datas != nil {
+			for _, data := range *datas {
+				//下载回单并上传到oss==>通过jsdk服务
+				s.minshengDownloadReceiptAndUpdatepPaymentReceipt(ctx, &data, bankAccount)
 			}
 		}
 	}
@@ -314,6 +363,42 @@ func (s *bankService) GetBankTransactionReceipt(ctx context.Context, bankTransac
 				}
 				zap.L().Info("GetBankTransactionReceipt 处理浦发电子凭证成功")
 			}
+		} else if account.Type == enum.MinShengBankType {
+			go func() {
+				s.minshengDownloadReceiptAndUpdatepPaymentReceipt(ctx, bankTransactionDetail, account)
+
+				receiptResponse, err := s.minShengBank.GetTransactionDetailElectronicReceipt(ctx, account.Account, bankTransactionDetail.OrderFlowNo, bankTransactionDetail.TransferDate, account.OpenId)
+				if err != nil {
+					zap.L().Info(fmt.Sprintf("GetBankTransactionReceipt 处理民生电子凭证失败,err=%+v", err))
+				}
+				if receiptResponse["return_code"] != "0000" {
+					zap.L().Info(fmt.Sprintf("GetBankTransactionReceipt 处理民生电子凭证失败查询回单结果:%+v", receiptResponse))
+				}
+				electronicReceiptFile := receiptResponse["response_busi"].(string)
+				err = s.bankTransactionDetailRepo.UpdateById(ctx, bankTransactionDetail.Id, &repo.BankTransactionDetailDBData{
+					ElectronicReceiptFile: electronicReceiptFile,
+				})
+				if err != nil {
+					zap.L().Error(fmt.Sprintf("GetBankTransactionReceipt-更新民生电子凭证失败: %v\n", err.Error()))
+				}
+				//更新单据的电子凭证
+				summary := bankTransactionDetail.Summary
+				//可,
+				if summary != "" && strings.Index(summary, "[") >= 0 && strings.Index(summary, "]") >= 0 {
+					serialNo := summary[strings.Index(summary, "[")+1 : strings.Index(summary, "]")]
+					paymentReceipt, err := s.paymentReceiptRepo.GetWithoutPermission(ctx, &repo.PaymentReceiptDBData{
+						Code: serialNo,
+					})
+					if err != nil {
+						zap.L().Error(fmt.Sprintf("GetBankTransactionReceipt-更新民生单据凭证失败: %v\n", err.Error()))
+					}
+					if paymentReceipt != nil {
+						paymentReceipt.ElectronicDocument = electronicReceiptFile
+					}
+					s.paymentReceiptRepo.UpdateById(ctx, bankTransactionDetail.Id, paymentReceipt)
+				}
+			}()
+
 		}
 	} else {
 		zap.L().Info(fmt.Sprintf("==GetIBankTransactionReceipt申请回单重复,此任务不在执行::id=%d", bankTransactionDetailId))
@@ -323,6 +408,39 @@ func (s *bankService) GetBankTransactionReceipt(ctx context.Context, bankTransac
 	}
 
 	return nil
+}
+
+func (s *bankService) minshengDownloadReceiptAndUpdatepPaymentReceipt(ctx context.Context, bankTransactionDetail *repo.BankTransactionDetailDBData, account *baseApi.OrganizationBankAccountData) {
+	receiptResponse, err := s.minShengBank.GetTransactionDetailElectronicReceipt(ctx, account.Account, bankTransactionDetail.OrderFlowNo, bankTransactionDetail.TransferDate, account.OpenId)
+	if err != nil {
+		zap.L().Info(fmt.Sprintf("GetBankTransactionReceipt 处理民生电子凭证失败,err=%+v", err))
+	}
+	if receiptResponse["return_code"] != "0000" {
+		zap.L().Info(fmt.Sprintf("GetBankTransactionReceipt 处理民生电子凭证失败查询回单结果:%+v", receiptResponse))
+	}
+	electronicReceiptFile := receiptResponse["response_busi"].(string)
+	err = s.bankTransactionDetailRepo.UpdateById(ctx, bankTransactionDetail.Id, &repo.BankTransactionDetailDBData{
+		ElectronicReceiptFile: electronicReceiptFile,
+	})
+	if err != nil {
+		zap.L().Error(fmt.Sprintf("GetBankTransactionReceipt-更新民生电子凭证失败: %v\n", err.Error()))
+	}
+	//更新单据的电子凭证
+	summary := bankTransactionDetail.Summary
+	//可,
+	if summary != "" && strings.Index(summary, "[") >= 0 && strings.Index(summary, "]") >= 0 {
+		serialNo := summary[strings.Index(summary, "[")+1 : strings.Index(summary, "]")]
+		paymentReceipt, err := s.paymentReceiptRepo.GetWithoutPermission(ctx, &repo.PaymentReceiptDBData{
+			Code: serialNo,
+		})
+		if err != nil {
+			zap.L().Error(fmt.Sprintf("GetBankTransactionReceipt-更新民生单据凭证失败: %v\n", err.Error()))
+		}
+		if paymentReceipt != nil {
+			paymentReceipt.ElectronicDocument = electronicReceiptFile
+		}
+		s.paymentReceiptRepo.UpdateById(ctx, bankTransactionDetail.Id, paymentReceipt)
+	}
 }
 
 func (s *bankService) IcbcBankListTransactionDetail(ctx context.Context, beginDate string, endDate string, organizationId int64) error {
@@ -338,7 +456,6 @@ func (s *bankService) IcbcBankListTransactionDetail(ctx context.Context, beginDa
 		return nil
 	}
 	for _, bankAccount := range bankAccounts {
-
 		datas, err := s.icbcBank.ListTransactionDetail(ctx, bankAccount.Account, beginDate, endDate, bankAccount.ZuId)
 		if err != nil {
 			return err
@@ -1500,14 +1617,14 @@ func (s *bankService) HandleMinShengBankTransactionDetail(ctx context.Context, b
 	}
 	if merchantAccounts != nil && len(merchantAccounts) > 0 {
 		for _, merchantAccount := range merchantAccounts {
-			result, err := s.minShengBank.ListTransactionDetail(ctx, merchantAccount.Account, beginDate, endDate, 1, 200)
+			result, err := s.minShengBank.ListTransactionDetail(ctx, merchantAccount.Account, beginDate, endDate, "1", "200", merchantAccount.OpenId)
 			if err != nil {
 				zap.L().Error(fmt.Sprintf("s.minShengBankSDK.ListTransactionDetail__error_info%s", err.Error()))
 				return handler.HandleError(err)
 			}
 			zap.L().Info(fmt.Sprintf("s.minShengBankSDK.ListTransactionDetail_info:%v", result))
 			if result["return_code"] != "0000" {
-				//zap.L().Info(fmt.Sprintf("s.minShengBankSDK.ListTransactionDetail_info查询转账结果:%v", result))
+				zap.L().Info(fmt.Sprintf("s.minShengBankSDK.ListTransactionDetail_info查询转账结果:%v", result))
 				continue
 			}
 			responseBusi := result["response_busi"].(string)
@@ -1540,7 +1657,7 @@ func (s *bankService) HandleMinShengBankTransactionDetail(ctx context.Context, b
 						return handler.HandleError(err)
 					}
 					if count == 0 {
-						receiptResponse, err := s.minShengBank.GetTransactionDetailElectronicReceipt(ctx, data.AcctNo, data.TransSeqNo, data.EnterAcctDate)
+						receiptResponse, err := s.minShengBank.GetTransactionDetailElectronicReceipt(ctx, data.AcctNo, data.TransSeqNo, data.EnterAcctDate, merchantAccount.OpenId)
 						if err != nil {
 							return err
 						}
@@ -1548,25 +1665,7 @@ func (s *bankService) HandleMinShengBankTransactionDetail(ctx context.Context, b
 							zap.L().Info(fmt.Sprintf("s.minShengBankSDK.GetTransactionDetailElectronicReceipt查询回单结果:%v", receiptResponse))
 							continue
 						}
-						receiptResponseBusi := receiptResponse["response_busi"].(string)
-						var receiptBusiMap map[string]string
-						err = json.Unmarshal([]byte(receiptResponseBusi), &receiptBusiMap)
-						if err != nil {
-							zap.L().Info(fmt.Sprintf("s.minShengBankSDK.ListTransactionDetail_info转换receipt_response_busi异常:%v", err))
-							continue
-						}
-						decodedBytes, err := base64.StdEncoding.DecodeString(receiptBusiMap["file_content"])
-						if err != nil {
-							zap.L().Info(fmt.Sprintf("Error decoding string:%v", err))
-							continue
-						}
-						var electronicReceiptFile string
-						if len(decodedBytes) > 0 {
-							electronicReceiptFile, err = store.UploadOSSFileBytes("pdf", ".pdf", decodedBytes, s.ossConfig, false)
-							if err != nil {
-								return err
-							}
-						}
+						electronicReceiptFile := receiptResponse["response_busi"].(string)
 
 						amount, _ := strconv.ParseFloat(data.Amount, 64)
 						balance, _ := strconv.ParseFloat(data.Balance, 64)
@@ -4300,20 +4399,12 @@ func (s *bankService) MinShengBankAccountSignatureApply(ctx context.Context, req
 	if account == nil || account.Id == 0 {
 		return "", handler.HandleNewError("账号不存在")
 	}
-	// 查询组织账号基础配置
-	config, err := s.baseClient.GetOrganizationBankConfig(ctx, &baseApi.OrganizationBankConfigData{
-		OrganizationId: req.OrganizationId,
-		Type:           "3", // 民生银行配置
-	})
-	if err != nil {
-		return "", handler.HandleError(err)
-	}
-	if config == nil || config.Id == 0 || config.EnterpriseIdentificationCode == "" {
-		return "", handler.HandleNewError("银行配置不存在，获取不到对应的企业识别码")
-	}
+
+	minShengEnterpriseIdCode := config.GetString(bankEnum.MinShengEnterpriseIdCode, "")
+
 	//生成请求流水号
 	msgId, _ := util.SonyflakeID()
-	result, err := s.minShengBank.AuthRequest(ctx, config.EnterpriseIdentificationCode, account.Account, msgId)
+	result, err := s.minShengBank.AuthRequest(ctx, minShengEnterpriseIdCode, account.Account, msgId)
 	if err != nil {
 		return "", handler.HandleError(err)
 	}
