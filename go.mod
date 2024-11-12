@@ -16,9 +16,12 @@ require (
 )
 
 require (
+	gitlab.yoyiit.com/youyi/app-base v0.0.0-20241112025931-57a8c1ac9c33
 	gitlab.yoyiit.com/youyi/app-dingtalk v0.0.0-20240813034036-522f7516e110
 	gitlab.yoyiit.com/youyi/app-finance v0.0.0-20241105092142-19f3333a1a2f
 	gitlab.yoyiit.com/youyi/app-invoice v0.0.0-20241111033805-b84a6dcb3d44
+	gitlab.yoyiit.com/youyi/app-oa v0.0.0-20241112030139-7c030b8942ec
+	gitlab.yoyiit.com/youyi/app-soms v0.0.0-20241014083832-a0a310858fa1
 	gitlab.yoyiit.com/youyi/go-common v0.0.0-20241030071815-0dbb1bcd7a6a
 	gitlab.yoyiit.com/youyi/go-core v0.0.0-20241104091638-5f306227d5e2
 )
@@ -139,7 +142,6 @@ require (
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
-	gitlab.yoyiit.com/youyi/app-base v0.0.0-20241111070211-3009e38052a1 // indirect
 	go.mongodb.org/mongo-driver v1.11.3 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
