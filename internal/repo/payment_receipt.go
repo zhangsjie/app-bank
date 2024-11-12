@@ -50,7 +50,6 @@ type PaymentReceiptDBData struct {
 	ElectronicDocumentPng  string
 	PaymentReason          string
 	PaymentId              int64
-	TransDate              string
 }
 
 type PaymentReceiptDBParam struct {

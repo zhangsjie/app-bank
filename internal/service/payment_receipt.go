@@ -1276,7 +1276,6 @@ func (s *paymentReceiptService) handleMinShengBankSyncPaymentReceipt(ctx context
 			updateReceipt := &repo.PaymentReceiptDBData{
 				OrderStatus: orderStatus,
 				OrderFlowNo: busiMap["trans_seq_no"], // 交易流水号
-				TransDate:   busiMap["trans_date"],   // 交易执行时间
 			}
 			if orderStatus != enum.GuilinBankTransferSuccessResult {
 				updateReceipt.RetCode = result["return_code"].(string)
