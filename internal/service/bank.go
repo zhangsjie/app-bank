@@ -4297,7 +4297,7 @@ func (s *bankService) PinganBankTransaction(ctx context.Context, organizationId 
 	serialNo = bankEnum.PinganFlexPrefix + serialNo
 	useE := req.PayRem // 给灵活用工的附言, 不用拼接字符串
 	request := sdkStru.PingAnBankTransferRequest{
-		MrchCode:           config.GetString(bankEnum.PinganPlatformAccount, ""),
+		MrchCode:           config.GetString(bankEnum.PinganIntelligenceMrchCode, ""),
 		CnsmrSeqNo:         serialNo2,
 		ThirdVoucher:       serialNo,
 		CcyCode:            "RMB",

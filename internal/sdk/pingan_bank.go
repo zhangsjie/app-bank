@@ -119,7 +119,9 @@ func (s *pinganBankSDK) BankTransfer(ctx context.Context, req stru.PingAnBankTra
 			ZuId:          zuId,
 		}
 	}
-
+	if req.OutAcctNo == config.GetString(enum.PinganIntelligenceAccountNo, "") {
+		request.InterfaceType = 2
+	}
 	var responseData stru.PingAnBankTransferResponse
 	err := util.PostHttpResult(ctx,
 		config.GetString(enum.PinganJsdkUrl, ""), &request, &responseData)
