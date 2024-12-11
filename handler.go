@@ -345,3 +345,8 @@ func (s *BankImpl) MinShengBankAccountSignatureQuery(ctx context.Context, req *a
 func (s *BankImpl) SyncBankTransactionReceipt(ctx context.Context, beginDate string, endDate string, organizationId int64, bankType string) (err error) {
 	return s.bankService.SyncBankTransactionReceipt(ctx, beginDate, endDate, organizationId, bankType)
 }
+
+// PinganBankTransaction implements the BankImpl interface.
+func (s *BankImpl) PinganBankTransaction(ctx context.Context, organizationId int64, req *api.BankTransferReceiptData) (resp *api.BankAccountTranscationResponse, err error) {
+	return s.bankService.PinganBankTransaction(ctx, organizationId, req)
+}

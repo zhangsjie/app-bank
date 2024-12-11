@@ -410,6 +410,13 @@ struct BankVirtualAccountTranscationResponse {
     4: string status
     5: string msg
 }
+struct BankAccountTranscationResponse {
+    1: i64 transferReceiptId
+    2: string serialNo
+    3: string acceptNo
+    4: string status
+    5: string msg
+}
 
 struct PaymentReceiptData {
 	1: i64 id
@@ -581,6 +588,7 @@ service bank {
 	void SyncVirtualAccountBalance()
 	VirtualAccountBalanceData QueryVirtualAccountBalance(1: i64 organizationId,2:string bankType)
 	BankVirtualAccountTranscationResponse spdBankVirtualAccountTranscation(1: i64 organizationId, 2: BankTransferReceiptData req)
+	BankAccountTranscationResponse PinganBankTransaction(1: i64 organizationId, 2: BankTransferReceiptData req)
 
     ListPaymentReceiptResponse listPaymentReceipt(1: ListPaymentReceiptRequest req)
     PaymentReceiptData getPaymentReceipt(1: i64 id)
@@ -608,6 +616,7 @@ service bank {
     void icbcBankListTransactionDetail(1: string beginDate, 2: string endDate, 3: i64 organizationId)
     void syncBankTransactionReceipt(1: string beginDate, 2: string endDate, 3: i64 organizationId,4:string bankType)
     void getBankTransactionReceipt(1:i64 id)
+    
 }
 struct IcbcBankAccountSignatureQueryResponse {
 1:string signatureapplystatus

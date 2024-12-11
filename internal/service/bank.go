@@ -117,6 +117,7 @@ type BankService interface {
 	SyncMinshengBankTransactionReceipt(ctx context.Context, beginDate string, endDate string, organizationId int64) error
 	GetBankTransactionReceipt(ctx context.Context, bankTransactionDetailId int64) error
 	SyncBankTransactionReceipt(ctx context.Context, beginDate string, endDate string, organizationId int64, bankType string) error
+	PinganBankTransaction(ctx context.Context, organizationId int64, req *api.BankTransferReceiptData) (*api.BankAccountTranscationResponse, error)
 }
 
 type bankService struct {
@@ -4230,6 +4231,137 @@ func (s *bankService) PinganBankVirtualAccountTranscation(ctx context.Context, o
 		return nil, handler.HandleError(err)
 	}
 	return &api.BankVirtualAccountTranscationResponse{
+		TransferReceiptId: transferReceiptId,
+		SerialNo:          serialNo,
+		AcceptNo:          bankTransferResponse.HostFlowNo,
+		Status:            orderState,
+		Msg:               "",
+	}, nil
+}
+func (s *bankService) PinganBankTransaction(ctx context.Context, organizationId int64, req *api.BankTransferReceiptData) (*api.BankAccountTranscationResponse, error) {
+
+	currentUserName, err := util.GetMetaInfoCurrentUserName(ctx)
+	if err != nil {
+		return nil, handler.HandleError(err)
+	}
+	account, err := s.baseClient.SimpleGetOrganizationBankAccount(ctx, &baseApi.OrganizationBankAccountData{
+		OrganizationId: organizationId,
+		Type:           enum.PinganBankType,
+	})
+	if err != nil {
+		zap.L().Error(fmt.Sprintf("未查询到组织下: %d的账号\n", organizationId))
+		return nil, handler.HandleError(err)
+	}
+	if req.RecAccount == "" {
+		return nil, errors.New("RecAccount must not empty")
+	}
+	if req.RecAccountName == "" {
+		return nil, errors.New("RecAccountName must not empty")
+	}
+	if req.PayAmount <= 0 {
+		return nil, errors.New("PayAmount must greater than 0")
+	}
+	if account.Account == "" {
+		return nil, errors.New("account must not empty")
+	}
+	if account.AccountName == "" {
+		return nil, errors.New("outAccountName must not empty")
+	}
+
+	// 1 行内 0 行外
+	ownItBankFlag := "1"
+	if req.PayAccountOpenBank != req.RecAccountOpenBank {
+		ownItBankFlag = "0"
+	}
+	// 同城异地标志
+	remitLocation := "1"
+	// 收款行名称 (当 ownItBankFlag =1即跨行转帐时必须输入)
+	payeeBankName := ""
+	// 收款行地址 (当 ownItBankFlag =1即跨行转帐时必须输入)
+	payeeBankAddress := ""
+	if ownItBankFlag == "0" {
+		//if req.RecAccountOpenBankFilling == "" {
+		//	return transferReceiptId, errors.New("payeeBankAddress must not empty")
+		//}
+		if req.RecAccountOpenBank == "" {
+			return nil, errors.New("payeeBankName must not empty")
+		}
+		// 1”—同城   “2”—异地；若无法区分，可默认送1-同城。
+		remitLocation = "1"
+		payeeBankAddress = req.RecAccountOpenBank // 先改成 RecAccountOpenBank, 之前是 RecAccountOpenBankFilling
+		payeeBankName = req.RecAccountOpenBank
+	}
+	// 和桂林不同, serialNo一天内唯一, 重新生成
+	serialNo, _ := util.SonyflakeID()
+	serialNo2, _ := util.SonyflakeID()
+	serialNo = bankEnum.PinganFlexPrefix + serialNo
+	useE := req.PayRem // 给灵活用工的附言, 不用拼接字符串
+	request := sdkStru.PingAnBankTransferRequest{
+		MrchCode:           config.GetString(bankEnum.PinganPlatformAccount, ""),
+		CnsmrSeqNo:         serialNo2,
+		ThirdVoucher:       serialNo,
+		CcyCode:            "RMB",
+		OutAcctNo:          account.Account,
+		OutAcctName:        account.AccountName,
+		InAcctNo:           req.RecAccount,
+		InAcctName:         req.RecAccountName,
+		InAcctBankName:     payeeBankName,
+		InAcctProvinceCode: payeeBankAddress,
+		InAcctBankNode:     req.UnionBankNo,
+		TranAmount:         strconv.FormatFloat(req.PayAmount, 'f', -1, 64),
+		UseEx:              useE,
+		UnionFlag:          ownItBankFlag,
+		AddrFlag:           remitLocation,
+	}
+
+	bankTransferResponse, err := s.pinganBankSDK.BankTransfer(ctx, request, account.ZuId)
+	if err != nil {
+		return nil, handler.HandleError(err)
+	}
+	// 处理订单状态
+	orderState := bankTransferResponse.Stt
+	if bankTransferResponse.Stt != "" {
+		orderState = enum.GetOrderState(bankTransferResponse.Stt, orderState)
+	}
+
+	payRem := fmt.Sprintf("%s[%s]", req.PayRem, serialNo)
+	transferReceiptId := int64(0)
+	if transferReceiptId, err = s.AddBankTransferReceipt(ctx, &api.BankTransferReceiptData{
+		OrganizationId: organizationId,
+		//ProcessInstanceId:  processInstanceDBData.Id,
+		OriginatorUserName:        currentUserName,
+		SerialNo:                  serialNo,
+		RecAccount:                req.RecAccount,
+		RecAccountName:            req.RecAccountName,
+		RecAccountOpenBankFilling: payeeBankAddress,
+		PayAmount:                 req.PayAmount,
+		CurrencyType:              enum.CurrencyTypeCNY,
+		PayRem:                    payRem,
+		//PubPriFlag:                pubPriFlag,
+		//RmtType:                   rmtType,
+		OrderState: orderState,
+		//ProcessBusinessId:         processInstanceDBData.BusinessId,
+		ProcessStatus:      enum.ProcessInstanceTotalStatusRunning,
+		Title:              fmt.Sprintf("%s%s", currentUserName, "发起的付款单据"),
+		PayAccount:         account.Account,
+		PayAccountName:     account.AccountName,
+		ChargeFee:          0.00,
+		RetCode:            bankTransferResponse.Stt,
+		RetMessage:         "",
+		OrderFlowNo:        bankTransferResponse.HostFlowNo,
+		ProcessComment:     req.ProcessComment,
+		CommentUserName:    req.CommentUserName,
+		RecBankType:        ownItBankFlag,
+		PayAccountOpenBank: req.PayAccountOpenBank,
+		RecAccountOpenBank: req.RecAccountOpenBank,
+		UnionBankNo:        req.UnionBankNo,
+		ClearBankNo:        req.ClearBankNo,
+		PayAccountType:     enum.PinganBankType,
+		DetailHostFlowNo:   bankTransferResponse.HostFlowNo,
+	}); err != nil {
+		return nil, handler.HandleError(err)
+	}
+	return &api.BankAccountTranscationResponse{
 		TransferReceiptId: transferReceiptId,
 		SerialNo:          serialNo,
 		AcceptNo:          bankTransferResponse.HostFlowNo,

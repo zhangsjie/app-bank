@@ -59,6 +59,7 @@ func NewServiceInfo() *kitex.ServiceInfo {
 		"SyncVirtualAccountBalance":                  kitex.NewMethodInfo(syncVirtualAccountBalanceHandler, newBankSyncVirtualAccountBalanceArgs, newBankSyncVirtualAccountBalanceResult, false),
 		"QueryVirtualAccountBalance":                 kitex.NewMethodInfo(queryVirtualAccountBalanceHandler, newBankQueryVirtualAccountBalanceArgs, newBankQueryVirtualAccountBalanceResult, false),
 		"spdBankVirtualAccountTranscation":           kitex.NewMethodInfo(spdBankVirtualAccountTranscationHandler, newBankSpdBankVirtualAccountTranscationArgs, newBankSpdBankVirtualAccountTranscationResult, false),
+		"PinganBankTransaction":                      kitex.NewMethodInfo(pinganBankTransactionHandler, newBankPinganBankTransactionArgs, newBankPinganBankTransactionResult, false),
 		"listPaymentReceipt":                         kitex.NewMethodInfo(listPaymentReceiptHandler, newBankListPaymentReceiptArgs, newBankListPaymentReceiptResult, false),
 		"getPaymentReceipt":                          kitex.NewMethodInfo(getPaymentReceiptHandler, newBankGetPaymentReceiptArgs, newBankGetPaymentReceiptResult, false),
 		"simpleGetPaymentReceipt":                    kitex.NewMethodInfo(simpleGetPaymentReceiptHandler, newBankSimpleGetPaymentReceiptArgs, newBankSimpleGetPaymentReceiptResult, false),
@@ -817,6 +818,24 @@ func newBankSpdBankVirtualAccountTranscationArgs() interface{} {
 
 func newBankSpdBankVirtualAccountTranscationResult() interface{} {
 	return api.NewBankSpdBankVirtualAccountTranscationResult()
+}
+
+func pinganBankTransactionHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	realArg := arg.(*api.BankPinganBankTransactionArgs)
+	realResult := result.(*api.BankPinganBankTransactionResult)
+	success, err := handler.(api.Bank).PinganBankTransaction(ctx, realArg.OrganizationId, realArg.Req)
+	if err != nil {
+		return err
+	}
+	realResult.Success = success
+	return nil
+}
+func newBankPinganBankTransactionArgs() interface{} {
+	return api.NewBankPinganBankTransactionArgs()
+}
+
+func newBankPinganBankTransactionResult() interface{} {
+	return api.NewBankPinganBankTransactionResult()
 }
 
 func listPaymentReceiptHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
@@ -1687,6 +1706,17 @@ func (p *kClient) SpdBankVirtualAccountTranscation(ctx context.Context, organiza
 	_args.Req = req
 	var _result api.BankSpdBankVirtualAccountTranscationResult
 	if err = p.c.Call(ctx, "spdBankVirtualAccountTranscation", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) PinganBankTransaction(ctx context.Context, organizationId int64, req *api.BankTransferReceiptData) (r *api.BankAccountTranscationResponse, err error) {
+	var _args api.BankPinganBankTransactionArgs
+	_args.OrganizationId = organizationId
+	_args.Req = req
+	var _result api.BankPinganBankTransactionResult
+	if err = p.c.Call(ctx, "PinganBankTransaction", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil
