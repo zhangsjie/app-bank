@@ -51,6 +51,7 @@ type Client interface {
 	SyncVirtualAccountBalance(ctx context.Context, callOptions ...callopt.Option) (err error)
 	QueryVirtualAccountBalance(ctx context.Context, organizationId int64, bankType string, callOptions ...callopt.Option) (r *api.VirtualAccountBalanceData, err error)
 	SpdBankVirtualAccountTranscation(ctx context.Context, organizationId int64, req *api.BankTransferReceiptData, callOptions ...callopt.Option) (r *api.BankVirtualAccountTranscationResponse, err error)
+	PinganBankTransaction(ctx context.Context, organizationId int64, req *api.BankTransferReceiptData, callOptions ...callopt.Option) (r *api.BankAccountTranscationResponse, err error)
 	ListPaymentReceipt(ctx context.Context, req *api.ListPaymentReceiptRequest, callOptions ...callopt.Option) (r *api.ListPaymentReceiptResponse, err error)
 	GetPaymentReceipt(ctx context.Context, id int64, callOptions ...callopt.Option) (r *api.PaymentReceiptData, err error)
 	SimpleGetPaymentReceipt(ctx context.Context, id int64, callOptions ...callopt.Option) (r *api.PaymentReceiptData, err error)
@@ -305,6 +306,11 @@ func (p *kBankClient) QueryVirtualAccountBalance(ctx context.Context, organizati
 func (p *kBankClient) SpdBankVirtualAccountTranscation(ctx context.Context, organizationId int64, req *api.BankTransferReceiptData, callOptions ...callopt.Option) (r *api.BankVirtualAccountTranscationResponse, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.SpdBankVirtualAccountTranscation(ctx, organizationId, req)
+}
+
+func (p *kBankClient) PinganBankTransaction(ctx context.Context, organizationId int64, req *api.BankTransferReceiptData, callOptions ...callopt.Option) (r *api.BankAccountTranscationResponse, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.PinganBankTransaction(ctx, organizationId, req)
 }
 
 func (p *kBankClient) ListPaymentReceipt(ctx context.Context, req *api.ListPaymentReceiptRequest, callOptions ...callopt.Option) (r *api.ListPaymentReceiptResponse, err error) {
