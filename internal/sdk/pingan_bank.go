@@ -11,7 +11,6 @@ import (
 	"gitlab.yoyiit.com/youyi/go-core/util"
 	"go.uber.org/zap"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -97,13 +96,14 @@ func (s *pinganBankSDK) BankTransfer(ctx context.Context, req stru.PingAnBankTra
 
 	//根据支付账号判断是否平台主账号
 	interfaceType := 1
-	interfaceName := "/bedl/SignleTransferPrepaidExpenses"
+	interfaceName := "/bedl/SignleTransferPrepaidExpenses" //账管家模式的接口
 	if req.OutAcctNo == config.GetString(enum.PinganPlatformAccount, "") {
-		interfaceType = 1 //普通银企业务
 		interfaceName = "/bedl/CorSingleTransfer"
-	} else if req.OutAcctNo == config.GetString(enum.PinganPlatformAccount, "") {
+		req.MrchCode = config.GetString(enum.PinganMrchCode, "")
+	} else if req.OutAcctNo == config.GetString(enum.PinganIntelligenceAccountNo, "") {
 		interfaceType = 2 //灵工平台接口
 		interfaceName = "/bedl/CorSingleTransfer"
+		req.MrchCode = config.GetString(enum.PinganIntelligenceMrchCode, "")
 	}
 	request = &stru.PingAnBankRequestBody{
 		RequestBody:   string(requestBodyJson),
@@ -229,7 +229,7 @@ func (s *pinganBankSDK) ListTransactionDetail(ctx context.Context, account strin
 		pageNumStr := strconv.Itoa(pageNum)
 		pageSizeStr := strconv.Itoa(pageSize)
 		requestBody := &stru.PinganHistoryTransactionDetailsRequest{
-			MrchCode:   config.GetString("bankConfig.pingAn.accountKeeper.mrchCode", ""),
+			MrchCode:   config.GetString(enum.PinganIntelligenceMrchCode, ""),
 			CnsmrSeqNo: serialNo,
 			AcctNo:     account,
 			CcyCode:    "RMB",
@@ -240,18 +240,18 @@ func (s *pinganBankSDK) ListTransactionDetail(ctx context.Context, account strin
 		}
 		requestBodyJson, _ := json.Marshal(requestBody)
 		var request *stru.PingAnBankRequestBody
-		if config.GetString(enum.PinganPlatformAccount, "") == account {
-			request = &stru.PingAnBankRequestBody{
-				RequestBody:   string(requestBodyJson),
-				InterfaceName: "/bedl/InquiryAccountDayHistoryTransactionDetails",
-			}
-		} else {
-			request = &stru.PingAnBankRequestBody{
-				RequestBody:   string(requestBodyJson),
-				InterfaceName: "/bedl/InquiryAccountDayHistoryTransactionDetails",
-				ZuId:          zuId,
-			}
+
+		interfaceType := 1
+		if account == config.GetString(enum.PinganIntelligenceAccountNo, "") {
+			requestBody.MrchCode = config.GetString(enum.PinganIntelligenceMrchCode, "")
+			interfaceType = 2 //灵工平台接口
 		}
+		request = &stru.PingAnBankRequestBody{
+			RequestBody:   string(requestBodyJson),
+			InterfaceName: "/bedl/InquiryAccountDayHistoryTransactionDetails",
+			InterfaceType: interfaceType,
+		}
+
 		// 返回的对象
 		var responseData stru.PinganHistoryTransactionDetailsResponse
 		err := util.PostHttpResult(ctx, config.GetString(enum.PinganJsdkUrl, ""), &request, &responseData)
@@ -274,26 +274,15 @@ func (s *pinganBankSDK) ListTransactionDetail(ctx context.Context, account strin
 }
 func (s *pinganBankSDK) QueryTransferResult(ctx context.Context, ThirdVoucher, zuId, accountNo string) (*stru.PinganSignleTransferQueryResponse, error) {
 	CnsmrSeqNo, _ := util.SonyflakeID()
-	mrchCode := ""
-	interfaceName := ""
-	interfaceType := 0
-
-	if strings.HasPrefix(ThirdVoucher, enum.PinganFlexPrefix) {
-		//灵活用工的转账
-		mrchCode = config.GetString(enum.PinganIntelligenceMrchCode, "")
+	mrchCode := config.GetString(enum.PinganMrchCode, "")
+	interfaceName := "/bedl/SignleTransferPrepaidExpensesProgressQuery"
+	interfaceType := 1
+	if accountNo == config.GetString(enum.PinganPlatformAccount, "") {
 		interfaceName = "/bedl/CorSingleTransferQuery"
-		interfaceType = 2
-		zuId = ""
-	} else {
-		//银企转账
+	} else if accountNo == config.GetString(enum.PinganIntelligenceAccountNo, "") {
 		mrchCode = config.GetString(enum.PinganIntelligenceMrchCode, "")
-		if config.GetString(enum.PinganPlatformAccount, "") != accountNo {
-			//账管+模式
-			interfaceName = "/bedl/SignleTransferPrepaidExpensesProgressQuery"
-		} else {
-			//网银模式
-			interfaceName = "/bedl/CorSingleTransferQuery"
-		}
+		interfaceType = 2 //灵工平台接口
+		interfaceName = "/bedl/CorSingleTransferQuery"
 	}
 	requestBody := &stru.PinganSignleTransferQueryRequest{
 		MrchCode:         mrchCode,
