@@ -12,6 +12,8 @@ import (
 	"gitlab.yoyiit.com/youyi/app-dingtalk/rpc_dingtalk"
 	"gitlab.yoyiit.com/youyi/app-finance/kitex_gen/api/finance"
 	"gitlab.yoyiit.com/youyi/app-finance/rpc_finance"
+	"gitlab.yoyiit.com/youyi/app-flex/kitex_gen/api/flex"
+	"gitlab.yoyiit.com/youyi/app-flex/rpc_flex"
 	"gitlab.yoyiit.com/youyi/app-invoice/kitex_gen/api/invoice"
 	"gitlab.yoyiit.com/youyi/app-invoice/rpc_invoice"
 	"gitlab.yoyiit.com/youyi/app-oa/kitex_gen/api/oa"
@@ -23,20 +25,20 @@ import (
 
 var ProviderSet = wire.NewSet(NewBankService, store.NewKafkaProducer, rpc_dingtalk.NewDingtalkClient, store.NewOSSConfig,
 	rpc_base.NewBaseClient, NewPaymentReceiptService, rpc_oa.NewOAClient, NewPdfToImageService, process.NewProcessAuthRepo,
-	rpc_soms.NewSomsClient, rpc_finance.NewFinanceClient, rpc_invoice.NewInvoiceClient, store.NewRedisClient)
+	rpc_soms.NewSomsClient, rpc_finance.NewFinanceClient, rpc_invoice.NewInvoiceClient, store.NewRedisClient, rpc_flex.NewFlexClient)
 
 func NewBankService(baseClient base.Client, guilinBankSDK sdk.GuilinBankSDK, spdBankSDK sdk.SPDBankSDK, pinganBankSDK sdk.PinganBankSDK,
 	bankTransferReceiptRepo repo.BankTransferReceiptRepo, kafkaProducer *store.KafkaProducer, dingtalkClient dingtalk.Client,
 	bankTransactionDetailRepo repo.BankTransactionDetailRepo, bankTransactionDetailProcessInstanceRepo repo.BankTransactionDetailProcessInstanceRepo,
 	ossConfig *store.OSSConfig, bankCode repo.BankCodeRepo, businessPayrollRepo repo.BankBusinessPayrollRepo,
 	businessPayrollDetailRepo repo.BankBusinessPayrollDetailRepo, oaClient oa.Client, paymentReceiptRepo repo.PaymentReceiptRepo, pdfToImageService PdfToImageService, financeClient finance.Client,
-	icbcbankSDK sdk.IcbcBankSDK, redisClient *store.RedisClient, minShengBank sdk.MinShengSDK) BankService {
+	icbcbankSDK sdk.IcbcBankSDK, redisClient *store.RedisClient, minShengBank sdk.MinShengSDK, flexClient flex.Client) BankService {
 	return &bankService{baseClient, guilinBankSDK, spdBankSDK, pinganBankSDK,
 		bankTransferReceiptRepo, kafkaProducer, dingtalkClient,
 		bankTransactionDetailRepo, bankTransactionDetailProcessInstanceRepo,
 		ossConfig, bankCode, businessPayrollRepo,
 		businessPayrollDetailRepo, oaClient, paymentReceiptRepo,
-		pdfToImageService, financeClient, icbcbankSDK, minShengBank, redisClient}
+		pdfToImageService, financeClient, icbcbankSDK, minShengBank, redisClient, flexClient}
 }
 
 func NewPaymentReceiptService(paymentReceiptSubProcess *sub_process.PaymentReceiptSubProcess, baseClient base.Client,
