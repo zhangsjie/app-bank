@@ -16,6 +16,8 @@ import (
 	dingtalkApi "gitlab.yoyiit.com/youyi/app-dingtalk/kitex_gen/api"
 	"gitlab.yoyiit.com/youyi/app-dingtalk/kitex_gen/api/dingtalk"
 	"gitlab.yoyiit.com/youyi/app-finance/kitex_gen/api/finance"
+	flexApi "gitlab.yoyiit.com/youyi/app-flex/kitex_gen/api"
+	"gitlab.yoyiit.com/youyi/app-flex/kitex_gen/api/flex"
 	oaApi "gitlab.yoyiit.com/youyi/app-oa/kitex_gen/api"
 	"gitlab.yoyiit.com/youyi/app-oa/kitex_gen/api/oa"
 	"gitlab.yoyiit.com/youyi/go-common/enum"
@@ -141,6 +143,7 @@ type bankService struct {
 	icbcBank                                 sdk.IcbcBankSDK
 	minShengBank                             sdk.MinShengSDK
 	redisClient                              *store.RedisClient
+	flexClient                               flex.Client
 }
 
 func (s *bankService) SyncBankTransactionReceipt(ctx context.Context, beginDate string, endDate string, organizationId int64, bankType string) error {
@@ -2041,6 +2044,7 @@ func (s *bankService) HandlePinganBankTransactionDetail(ctx context.Context, ban
 		if datas != nil {
 			var addDatas []repo.BankTransactionDetailDBData
 			feeMap := make(map[string]string)
+			var rechargeList []*flexApi.FlexVirtualAccountRechargeFlowItem
 			for _, data := range datas {
 				count, err := s.bankTransactionDetailRepo.Count(ctx, &repo.BankTransactionDetailDBDataParam{
 					BankTransactionDetailDBData: repo.BankTransactionDetailDBData{
@@ -2125,6 +2129,21 @@ func (s *bankService) HandlePinganBankTransactionDetail(ctx context.Context, ban
 						ExtField1:          data.TranFee,
 					}
 
+					if strings.Contains(data.AbstractStrDesc, "服务费") && bankAccount.AccountName == config.GetString(bankEnum.PinganIntelligenceAccountName, "") && data.DcFlag == "C" {
+						rechargeList = append(rechargeList, &flexApi.FlexVirtualAccountRechargeFlowItem{
+							RecAccountNo:      bankAccount.Account,
+							RecAccountName:    bankAccount.AccountName,
+							PayAccountNo:      oppAccountNo,
+							PayAccountName:    oppAccountName,
+							RechargeAmount:    tranAmount,
+							Summary:           data.AbstractStrDesc,
+							OrderStatus:       enum.ProcessInstanceTotalStatusRunning,
+							ResMessage:        "",
+							ResCode:           "",
+							TransferReceiptId: 0,
+							OrderFlowNo:       data.HostTrace,
+						})
+					}
 					if data.DcFlag == "C" {
 						// 扩展字段3：用来标识-收款确认单同步状态（0-待同步 1-同步中 2-同步成功 3-同步失败）
 						transactionDetailDBData.ExtField3 = "0"
@@ -2156,6 +2175,11 @@ func (s *bankService) HandlePinganBankTransactionDetail(ctx context.Context, ban
 						return handler.HandleError(err)
 					}
 				}
+			}
+			if len(rechargeList) > 0 {
+				s.flexClient.SyncVirtualAccountRechargeFlow(ctx, &flexApi.FlexVirtualAccountRechargeFlowData{
+					Data: rechargeList,
+				})
 			}
 			if len(addDatas) > 0 {
 				var addDetails []repo.BankTransactionDetailDBData
@@ -4319,10 +4343,16 @@ func (s *bankService) PinganBankTransaction(ctx context.Context, organizationId 
 		AddrFlag:           remitLocation,
 	}
 
-	bankTransferResponse, err := s.pinganBankSDK.BankTransfer(ctx, request, account.ZuId)
-	if err != nil {
-		return nil, handler.HandleError(err)
+	//todo
+	bankTransferResponse := &sdkStru.PingAnBankTransferResponse{
+		OutAcctName: request.OutAcctName,
+		HostFlowNo:  "orderFlowNo2",
+		Stt:         "20",
 	}
+	//bankTransferResponse, err := s.pinganBankSDK.BankTransfer(ctx, request, account.ZuId)
+	//if err != nil {
+	//	return nil, handler.HandleError(err)
+	//}
 	// 处理订单状态
 	orderState := bankTransferResponse.Stt
 	if bankTransferResponse.Stt != "" {

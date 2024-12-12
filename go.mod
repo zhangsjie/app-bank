@@ -10,37 +10,35 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/pkg/sftp v1.13.6
 	github.com/satori/go.uuid v1.2.0
+	gitlab.yoyiit.com/youyi/app-base v0.0.0-20241205025026-ebc13997ec38
+	gitlab.yoyiit.com/youyi/app-dingtalk v0.0.0-20240813034036-522f7516e110
+	gitlab.yoyiit.com/youyi/app-finance v0.0.0-20241212015426-cb053714f34a
+	gitlab.yoyiit.com/youyi/app-flex v0.0.0-20241212101059-3ddd4e94c42c
+	gitlab.yoyiit.com/youyi/app-invoice v0.0.0-20241118033129-dc4973e46695
+	gitlab.yoyiit.com/youyi/app-oa v0.0.0-20241212025727-6318ad9ba48c
+	gitlab.yoyiit.com/youyi/app-soms v0.0.0-20241212081437-261abcc7cc0c
+	gitlab.yoyiit.com/youyi/go-common v0.0.0-20241030071815-0dbb1bcd7a6a
+	gitlab.yoyiit.com/youyi/go-core v0.0.0-20241107071826-361664b56ed6
 	go.uber.org/zap v1.24.0
 	golang.org/x/crypto v0.23.0
 	gorm.io/gorm v1.24.5
 )
 
 require (
-	gitlab.yoyiit.com/youyi/app-base v0.0.0-20241112025931-57a8c1ac9c33
-	gitlab.yoyiit.com/youyi/app-dingtalk v0.0.0-20240813034036-522f7516e110
-	gitlab.yoyiit.com/youyi/app-finance v0.0.0-20241105092142-19f3333a1a2f
-	gitlab.yoyiit.com/youyi/app-invoice v0.0.0-20241111033805-b84a6dcb3d44
-	gitlab.yoyiit.com/youyi/app-oa v0.0.0-20241112030139-7c030b8942ec
-	gitlab.yoyiit.com/youyi/app-soms v0.0.0-20241014083832-a0a310858fa1
-	gitlab.yoyiit.com/youyi/go-common v0.0.0-20241030071815-0dbb1bcd7a6a
-	gitlab.yoyiit.com/youyi/go-core v0.0.0-20241104091638-5f306227d5e2
-)
-
-require (
 	github.com/Shopify/sarama v1.38.1 // indirect
 	github.com/alibabacloud-go/alibabacloud-gateway-spi v0.0.4 // indirect
-	github.com/alibabacloud-go/darabonba-openapi/v2 v2.0.4 // indirect
+	github.com/alibabacloud-go/darabonba-openapi/v2 v2.0.5 // indirect
 	github.com/alibabacloud-go/debug v0.0.0-20190504072949-9472017b5c68 // indirect
 	github.com/alibabacloud-go/dysmsapi-20170525/v3 v3.0.6 // indirect
 	github.com/alibabacloud-go/endpoint-util v1.1.0 // indirect
 	github.com/alibabacloud-go/openapi-util v0.1.0 // indirect
-	github.com/alibabacloud-go/tea v1.2.0 // indirect
+	github.com/alibabacloud-go/tea v1.2.1 // indirect
 	github.com/alibabacloud-go/tea-utils v1.4.5 // indirect
 	github.com/alibabacloud-go/tea-utils/v2 v2.0.4 // indirect
-	github.com/alibabacloud-go/tea-xml v1.1.2 // indirect
+	github.com/alibabacloud-go/tea-xml v1.1.3 // indirect
 	github.com/aliyun/alibaba-cloud-sdk-go v1.63.66 // indirect
 	github.com/aliyun/aliyun-oss-go-sdk v2.2.6+incompatible // indirect
-	github.com/aliyun/credentials-go v1.2.3 // indirect
+	github.com/aliyun/credentials-go v1.3.1 // indirect
 	github.com/apolloconfig/agollo/v4 v4.3.0 // indirect
 	github.com/axgle/mahonia v0.0.0-20180208002826-3358181d7394 // indirect
 	github.com/bsm/redislock v0.9.3 // indirect
