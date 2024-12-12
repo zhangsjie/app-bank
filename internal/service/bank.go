@@ -2994,9 +2994,14 @@ func (s *bankService) QuerySPDBankAccountBalance(ctx context.Context, accountNo 
 	}, nil
 }
 func (s *bankService) QueryPinganBankAccountBalance(ctx context.Context, accountNo string, zuId string) (*api.QueryAccountBalanceResponse, error) {
+	mrchCode := config.GetString(bankEnum.PinganMrchCode, "")
+	if accountNo == config.GetString(bankEnum.PinganIntelligenceAccountNo, "") {
+		//如果是灵工账号,那么换成灵工的配置
+		mrchCode = config.GetString(bankEnum.PinganIntelligenceMrchCode, "")
+	}
 	res, err := s.pinganBankSDK.QueryAccountBalance(ctx, accountNo,
 		config.GetString(bankEnum.PinganJsdkUrl, ""),
-		config.GetString(bankEnum.PinganMrchCode, ""), zuId)
+		mrchCode, zuId)
 	if err != nil {
 		return nil, handler.HandleError(err)
 	}
@@ -4297,12 +4302,12 @@ func (s *bankService) PinganBankTransaction(ctx context.Context, organizationId 
 	serialNo = bankEnum.PinganFlexPrefix + serialNo
 	useE := req.PayRem // 给灵活用工的附言, 不用拼接字符串
 	request := sdkStru.PingAnBankTransferRequest{
-		MrchCode:           config.GetString(bankEnum.PinganPlatformAccount, ""),
+		MrchCode:           config.GetString(bankEnum.PinganIntelligenceMrchCode, ""),
 		CnsmrSeqNo:         serialNo2,
 		ThirdVoucher:       serialNo,
 		CcyCode:            "RMB",
-		OutAcctNo:          account.Account,
-		OutAcctName:        account.AccountName,
+		OutAcctNo:          req.PayAccount,
+		OutAcctName:        req.PayAccountName,
 		InAcctNo:           req.RecAccount,
 		InAcctName:         req.RecAccountName,
 		InAcctBankName:     payeeBankName,

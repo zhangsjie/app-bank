@@ -94,30 +94,21 @@ func (s *pinganBankSDK) ListVirtualTransactionDetail(ctx context.Context, accoun
 func (s *pinganBankSDK) BankTransfer(ctx context.Context, req stru.PingAnBankTransferRequest, zuId string) (*stru.PingAnBankTransferResponse, error) {
 	requestBodyJson, _ := json.Marshal(req)
 	var request *stru.PingAnBankRequestBody
-	if req.PaymentModeType == "" {
-		if config.GetString(enum.PinganPlatformAccount, "") == req.OutAcctNo {
-			request = &stru.PingAnBankRequestBody{
-				RequestBody:   string(requestBodyJson),
-				InterfaceName: "/bedl/CorSingleTransfer",
-			}
-		} else {
-			request = &stru.PingAnBankRequestBody{
-				RequestBody:   string(requestBodyJson),
-				InterfaceName: "/bedl/SignleTransferPrepaidExpenses",
-				ZuId:          zuId,
-			}
-		}
-	} else if req.PaymentModeType == "1" {
-		request = &stru.PingAnBankRequestBody{
-			RequestBody:   string(requestBodyJson),
-			InterfaceName: "/bedl/CorSingleTransfer",
-		}
-	} else {
-		request = &stru.PingAnBankRequestBody{
-			RequestBody:   string(requestBodyJson),
-			InterfaceName: "/bedl/SignleTransferPrepaidExpenses",
-			ZuId:          zuId,
-		}
+
+	//根据支付账号判断是否平台主账号
+	interfaceType := 1
+	interfaceName := "/bedl/SignleTransferPrepaidExpenses"
+	if req.OutAcctNo == config.GetString(enum.PinganPlatformAccount, "") {
+		interfaceType = 1 //普通银企业务
+		interfaceName = "/bedl/CorSingleTransfer"
+	} else if req.OutAcctNo == config.GetString(enum.PinganPlatformAccount, "") {
+		interfaceType = 2 //灵工平台接口
+		interfaceName = "/bedl/CorSingleTransfer"
+	}
+	request = &stru.PingAnBankRequestBody{
+		RequestBody:   string(requestBodyJson),
+		InterfaceName: interfaceName,
+		InterfaceType: interfaceType,
 	}
 
 	var responseData stru.PingAnBankTransferResponse
@@ -197,6 +188,13 @@ func (s *pinganBankSDK) QueryAccountBalance(ctx context.Context, accountNo strin
 		request = &stru.PingAnBankRequestBody{
 			RequestBody:   string(requestBodyJson),
 			InterfaceName: "/bedl/CorAcctBalanceQuery",
+			InterfaceType: 1,
+		}
+	} else if config.GetString(enum.PinganIntelligenceAccountNo, "") == accountNo {
+		request = &stru.PingAnBankRequestBody{
+			RequestBody:   string(requestBodyJson),
+			InterfaceName: "/bedl/CorAcctBalanceQuery",
+			InterfaceType: 2,
 		}
 	} else {
 		request = &stru.PingAnBankRequestBody{
