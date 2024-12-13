@@ -2956,6 +2956,9 @@ func (s *bankService) GetBalanceMonthChartData(ctx context.Context, req *api.Mon
 }
 
 func (s *bankService) QueryAccountBalance(ctx context.Context, req *api.QueryAccountBalanceRequest) (*api.QueryAccountBalanceResponse, error) {
+	if req.AccountNo == config.GetString(bankEnum.PinganIntelligenceAccountNo, "") || req.AccountNo == config.GetString(bankEnum.PinganPlatformAccount, "") {
+		return s.QueryPinganBankAccountBalance(ctx, req.AccountNo, "")
+	}
 	// 先根据accountNo 查询是哪个银行类型的, 然后再调用不同银行的接口
 	bankAccount, err := s.baseClient.GetOrganizationBankAccount(ctx, &baseApi.OrganizationBankAccountData{
 		OrganizationId: req.OrganizationId,
