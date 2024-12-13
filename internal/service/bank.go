@@ -4273,14 +4273,7 @@ func (s *bankService) PinganBankTransaction(ctx context.Context, organizationId 
 	if err != nil {
 		return nil, handler.HandleError(err)
 	}
-	account, err := s.baseClient.SimpleGetOrganizationBankAccount(ctx, &baseApi.OrganizationBankAccountData{
-		OrganizationId: organizationId,
-		Type:           enum.PinganBankType,
-	})
-	if err != nil {
-		zap.L().Error(fmt.Sprintf("未查询到组织下: %d的账号\n", organizationId))
-		return nil, handler.HandleError(err)
-	}
+
 	if req.RecAccount == "" {
 		return nil, errors.New("RecAccount must not empty")
 	}
@@ -4290,10 +4283,10 @@ func (s *bankService) PinganBankTransaction(ctx context.Context, organizationId 
 	if req.PayAmount <= 0 {
 		return nil, errors.New("PayAmount must greater than 0")
 	}
-	if account.Account == "" {
+	if req.PayAccount == "" {
 		return nil, errors.New("account must not empty")
 	}
-	if account.AccountName == "" {
+	if req.PayAccountName == "" {
 		return nil, errors.New("outAccountName must not empty")
 	}
 
@@ -4378,8 +4371,8 @@ func (s *bankService) PinganBankTransaction(ctx context.Context, organizationId 
 		//ProcessBusinessId:         processInstanceDBData.BusinessId,
 		ProcessStatus:      enum.ProcessInstanceTotalStatusRunning,
 		Title:              fmt.Sprintf("%s%s", currentUserName, "发起的付款单据"),
-		PayAccount:         account.Account,
-		PayAccountName:     account.AccountName,
+		PayAccount:         req.PayAccount,
+		PayAccountName:     req.PayAccountName,
 		ChargeFee:          0.00,
 		RetCode:            bankTransferResponse.Stt,
 		RetMessage:         "",
