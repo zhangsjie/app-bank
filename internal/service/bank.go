@@ -4339,16 +4339,11 @@ func (s *bankService) PinganBankTransaction(ctx context.Context, organizationId 
 		AddrFlag:           remitLocation,
 	}
 
-	//todo
-	bankTransferResponse := &sdkStru.PingAnBankTransferResponse{
-		OutAcctName: request.OutAcctName,
-		HostFlowNo:  "orderFlowNo2",
-		Stt:         "20",
+	//sdk
+	bankTransferResponse, err := s.pinganBankSDK.BankTransfer(ctx, request, "")
+	if err != nil {
+		return nil, handler.HandleError(err)
 	}
-	//bankTransferResponse, err := s.pinganBankSDK.BankTransfer(ctx, request, account.ZuId)
-	//if err != nil {
-	//	return nil, handler.HandleError(err)
-	//}
 	// 处理订单状态
 	orderState := bankTransferResponse.Stt
 	if bankTransferResponse.Stt != "" {
