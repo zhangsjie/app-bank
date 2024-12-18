@@ -1632,21 +1632,22 @@ func (s *bankService) HandleMinShengBankTransactionDetail(ctx context.Context, b
 				continue
 			}
 			responseBusi := result["response_busi"].(string)
-			var busiMap map[string]string
-			err = json.Unmarshal([]byte(responseBusi), &busiMap)
-			if err != nil {
-				zap.L().Info(fmt.Sprintf("s.minShengBankSDK.ListTransactionDetail_info转换response_busi异常:%v", err))
-				continue
-			}
-			var minShengTransactionDetails []stru.MinShengTransactionDetailResponse
-			err = json.Unmarshal([]byte(busiMap["result_list"]), &minShengTransactionDetails)
+
+			// 将map重新编码为JSON，然后解码为目标结构体
+			//jsonBytes, err := json.Marshal(responseBusi)
+			var minShengTransactionResponse stru.MinShengTransactionResponse
+			err = json.Unmarshal([]byte(responseBusi), &minShengTransactionResponse)
 			if err != nil {
 				zap.L().Info(fmt.Sprintf("s.minShengBankSDK.ListTransactionDetail_info转换result_list异常:%v", err))
 				continue
 			}
-			if minShengTransactionDetails != nil && len(minShengTransactionDetails) > 0 {
+			const layoutISO = "2006-01-02"
+			const layoutISOTime = "150405"
+			const outputLayout = "20060102"
+			const outputLayTime = "15:04:05"
+			if len(minShengTransactionResponse.Items) > 0 {
 				var addDatas []repo.BankTransactionDetailDBData
-				for _, data := range minShengTransactionDetails {
+				for _, data := range minShengTransactionResponse.Items {
 					count, err := s.bankTransactionDetailRepo.Count(ctx, &repo.BankTransactionDetailDBDataParam{
 						BankTransactionDetailDBData: repo.BankTransactionDetailDBData{
 							BaseDBData: repository.BaseDBData{
@@ -1661,23 +1662,42 @@ func (s *bankService) HandleMinShengBankTransactionDetail(ctx context.Context, b
 						return handler.HandleError(err)
 					}
 					if count == 0 {
-						receiptResponse, err := s.minShengBank.GetTransactionDetailElectronicReceipt(ctx, data.AcctNo, data.TransSeqNo, data.EnterAcctDate, merchantAccount.OpenId)
+
+						// 解析时间字符串
+						t, err := time.Parse(layoutISO, data.EnterAcctDate)
 						if err != nil {
+							fmt.Println("Error parsing time:", err)
 							return err
 						}
+						transDate := t.Format(outputLayout)
+
+						t2, err := time.Parse(layoutISOTime, data.Timestamp)
+						if err != nil {
+							fmt.Println("Error parsing time:", err)
+							return err
+						}
+						transTime := t2.Format(outputLayTime)
+
+						receiptResponse, err := s.minShengBank.GetTransactionDetailElectronicReceipt(ctx, data.AcctNo, data.TransSeqNo, transDate, merchantAccount.OpenId)
+						if err != nil {
+							zap.L().Info(fmt.Sprintf("s.minShengBankSDK.GetTransactionDetailElectronicReceipt下载回单失败:%v", receiptResponse))
+						}
 						if receiptResponse["return_code"] != "0000" {
-							zap.L().Info(fmt.Sprintf("s.minShengBankSDK.GetTransactionDetailElectronicReceipt查询回单结果:%v", receiptResponse))
-							continue
+							zap.L().Info(fmt.Sprintf("s.minShengBankSDK.GetTransactionDetailElectronicReceipt下载回单结果:%v", receiptResponse))
 						}
 						electronicReceiptFile := receiptResponse["response_busi"].(string)
 
-						amount, _ := strconv.ParseFloat(data.Amount, 64)
-						balance, _ := strconv.ParseFloat(data.Balance, 64)
+						//amount, _ := strconv.ParseFloat(data.Amount, 64)
+						//balance, _ := strconv.ParseFloat(data.Balance, 64)
+						payAmount := 0.0
+						recAmount := 0.0
 						tranChannel := ""
 						if data.DcFlag == "1" {
 							tranChannel = "PAY"
+							payAmount = data.Amount
 						} else if data.DcFlag == "2" {
 							tranChannel = "REC"
+							recAmount = data.Amount
 						}
 						transactionDetailDBData := repo.BankTransactionDetailDBData{
 							BaseDBData: repository.BaseDBData{
@@ -1685,13 +1705,13 @@ func (s *bankService) HandleMinShengBankTransactionDetail(ctx context.Context, b
 							},
 							MerchantAccountId:     merchantAccount.Id,
 							MerchantAccountName:   merchantAccount.AccountName,
-							PayAmount:             amount,
-							RecAmount:             amount,
-							TransferDate:          data.EnterAcctDate,
-							TransferTime:          data.Timestamp,
+							PayAmount:             payAmount,
+							RecAmount:             recAmount,
+							TransferDate:          transDate,
+							TransferTime:          transDate + transTime,
 							TranChannel:           tranChannel,
 							CurrencyType:          data.Currency,
-							Balance:               balance,
+							Balance:               data.Balance,
 							OrderFlowNo:           data.TransSeqNo,
 							HostFlowNo:            data.TransSeqNo,
 							Summary:               data.Explain,

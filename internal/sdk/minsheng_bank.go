@@ -109,7 +109,7 @@ func (s *minShengSDK) GetTransactionDetailElectronicReceipt(ctx context.Context,
 	busiParamMap["qry_type"] = "1" // 查询模式 1-交易流水查询（交易明细查询）
 	busiParamMap["acct_no"] = acctNo
 	busiParamMap["trans_seq_no"] = transSeqNo       // 交易流水号
-	busiParamMap["enter_acct_date"] = enterAcctDate // 明细入账日期
+	busiParamMap["enter_acct_date"] = enterAcctDate // 明细入账日期 yyyyMMdd
 	busiParamMap["open_id"] = openId
 	//busiParamMap["file_type"] = "PDF" // 默认就是PDF
 	// 请求民生接口方法名
