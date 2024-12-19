@@ -500,19 +500,22 @@ func (s *paymentReceiptService) minShengBankPayment(ctx context.Context, req *re
 	if sfErr != nil {
 		return "", handler.HandleError(sfErr)
 	}
+	amount := strconv.FormatFloat(req.PayAmount, 'f', 2, 64)
 	resultMap, err := s.minShengBankSDK.BankTransfer(ctx, sdkStru.MinShengTransferRequest{
-		AcctNo:    req.PayAccount,
-		PayType:   enum.MinShengPayType,
-		IsCross:   isCross,
-		Currency:  enum.MinShengCurrencyTypeCNY,
-		TransAmt:  req.PayAmount,
-		BankRoute: bankRoute,
-		BankCode:  req.UnionBankNo,
-		BankName:  req.ReceiveAccountBankName,
-		OpenId:    bankAccount.OpenId,
-		ReqSeq:    reqSeq,
-		Usage:     payRemark,
-		CertNo:    req.OrderFlowNo,
+		ReqSeq:        reqSeq,
+		AcctNo:        req.PayAccount,
+		PayType:       enum.MinShengPayType,
+		IsCross:       isCross,
+		Currency:      enum.MinShengCurrencyTypeCNY,
+		TransAmt:      amount,
+		BankRoute:     bankRoute,
+		BankCode:      req.UnionBankNo,
+		BankName:      req.ReceiveAccountBankName,
+		OpenId:        bankAccount.OpenId,
+		Usage:         payRemark,
+		CertNo:        reqSeq,
+		PayeeAcctNo:   req.ReceiveAccount,
+		PayeeAcctName: req.ReceiveAccountName,
 	})
 	if err != nil {
 		return "", handler.HandleError(err)
@@ -535,7 +538,7 @@ func (s *paymentReceiptService) minShengBankPayment(ctx context.Context, req *re
 	} else {
 		orderStatus = enum.GuilinBankTransferFailResult
 	}
-	if err = s.updatePaymentReceiptResult(ctx, *req, req.PayAmount, orderStatus,
+	if err = s.updatePaymentReceiptResult(ctx, *req, 0, orderStatus,
 		resultMap["return_code"].(string), resultMap["return_msg"].(string), reqSeq); err != nil {
 		return "", handler.HandleError(err)
 	}

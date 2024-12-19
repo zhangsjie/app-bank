@@ -37,8 +37,14 @@ func (s *minShengSDK) BankTransfer(ctx context.Context, req stru.MinShengTransfe
 	busiParamMap["bank_code"] = req.BankCode // 开户行号
 	busiParamMap["bank_name"] = req.BankName // 开户行名
 	busiParamMap["usage"] = req.Usage        //用途
-	busiParamMap["cert_no"] = req.CertNo     //企业自制凭证号,可用于hostflow字段的填写
+	//busiParamMap["cert_no"] = req.CertNo     //企业自制凭证号,可用于hostflow字段的填写
 	busiParamMap["open_id"] = req.OpenId
+	busiParamMap["payee_acct_no"] = req.PayeeAcctNo
+	busiParamMap["payee_acct_name"] = req.PayeeAcctName
+	busiParamMap["fast_auth_flag"] = "2"
+
+	//若快捷审批标识fastAuthFlag 值为 1，则校验通过为快捷审批模式，不通过则报错;
+	//若快捷审批标识fastAuthFlag 为其他，则不进行校验，为预填单模式;若快捷审批标识fastAuthFlag 不上送，则校验通过为快捷审批模式，不通为预填单模式
 	// 请求民生接口方法名
 	method := "settlement.transfer.ent_single_order"
 	// 民生接口版本号
