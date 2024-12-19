@@ -5,20 +5,21 @@ type MinShengBaseResponse struct {
 	ReturnMsg  string `json:"return_msg"`
 }
 type MinShengTransferRequest struct {
-	ReqSeq        string `json:"reqSeq"`        // 请求流水号
-	AcctNo        string `json:"acctNo"`        // 账号
-	PayType       string `json:"payType"`       // 支付方式 1直接支付，2 附条件支付 暂时支持1
-	IsCross       string `json:"isCross"`       // 0-他行 1-本行
-	Currency      string `json:"currency"`      // 仅仅支持人民币 CNY
-	TransAmt      string `json:"transAmt"`      // 转账金额
-	BankRoute     string `json:"bankRoute"`     // 汇路
-	BankCode      string `json:"BankCode"`      //开户行号
-	BankName      string `json:"BankName"`      // 开户行名
-	OpenId        string `json:"openId"`        // 授权码
-	Usage         string `json:"usage"`         // 用途
-	CertNo        string `json:"certNo"`        //企业自制凭证号,可用于hostflow字段的填写
-	PayeeAcctNo   string `json:"payeeAcctNo"`   //收款账号
-	PayeeAcctName string `json:"payeeAcctName"` //收款账户名称
+	ReqSeq            string `json:"reqSeq"`            // 请求流水号
+	AcctNo            string `json:"acctNo"`            // 账号
+	PayType           string `json:"payType"`           // 支付方式 1直接支付，2 附条件支付 暂时支持1
+	IsCross           string `json:"isCross"`           // 0-他行 1-本行
+	Currency          string `json:"currency"`          // 仅仅支持人民币 CNY
+	TransAmt          string `json:"transAmt"`          // 转账金额
+	BankRoute         string `json:"bankRoute"`         // 汇路
+	BankCode          string `json:"BankCode"`          //开户行号
+	BankName          string `json:"BankName"`          // 开户行名
+	OpenId            string `json:"openId"`            // 授权码
+	Usage             string `json:"usage"`             // 用途
+	CertNo            string `json:"certNo"`            //企业自制凭证号,可用于hostflow字段的填写
+	PayeeAcctNo       string `json:"payeeAcctNo"`       //收款账号
+	PayeeAcctName     string `json:"payeeAcctName"`     //收款账户名称
+	PublicPrivateFlag string `json:"publicPrivateFlag"` // 对公对私 0-对公 1-对私
 }
 
 type MinShengBankTransferResponse struct {

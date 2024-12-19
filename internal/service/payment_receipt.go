@@ -502,20 +502,21 @@ func (s *paymentReceiptService) minShengBankPayment(ctx context.Context, req *re
 	}
 	amount := strconv.FormatFloat(req.PayAmount, 'f', 2, 64)
 	resultMap, err := s.minShengBankSDK.BankTransfer(ctx, sdkStru.MinShengTransferRequest{
-		ReqSeq:        reqSeq,
-		AcctNo:        req.PayAccount,
-		PayType:       enum.MinShengPayType,
-		IsCross:       isCross,
-		Currency:      enum.MinShengCurrencyTypeCNY,
-		TransAmt:      amount,
-		BankRoute:     bankRoute,
-		BankCode:      req.UnionBankNo,
-		BankName:      req.ReceiveAccountBankName,
-		OpenId:        bankAccount.OpenId,
-		Usage:         payRemark,
-		CertNo:        reqSeq,
-		PayeeAcctNo:   req.ReceiveAccount,
-		PayeeAcctName: req.ReceiveAccountName,
+		ReqSeq:            reqSeq,
+		AcctNo:            req.PayAccount,
+		PayType:           enum.MinShengPayType,
+		IsCross:           isCross,
+		Currency:          enum.MinShengCurrencyTypeCNY,
+		TransAmt:          amount,
+		BankRoute:         bankRoute,
+		BankCode:          req.UnionBankNo,
+		BankName:          req.ReceiveAccountBankName,
+		OpenId:            bankAccount.OpenId,
+		Usage:             payRemark,
+		CertNo:            reqSeq,
+		PayeeAcctNo:       req.ReceiveAccount,
+		PayeeAcctName:     req.ReceiveAccountName,
+		PublicPrivateFlag: req.PublicPrivateFlag,
 	})
 	if err != nil {
 		return "", handler.HandleError(err)
@@ -1233,7 +1234,7 @@ func (s *paymentReceiptService) handleMinShengBankSyncPaymentReceipt(ctx context
 				zap.L().Info(fmt.Sprintf("HandleMinShengBankSyncTransferReceipt查询账号详情失败:%v", err))
 				continue
 			}
-			result, err := s.minShengBankSDK.QueryTransferResult(ctx, bankAccount.Account, paymentReceipt.OrderFlowNo, bankAccount.OpenId)
+			result, err := s.minShengBankSDK.QueryTransferResult(ctx, bankAccount.Account, paymentReceipt.OrderFlowNo, bankAccount.OpenId, paymentReceipt.PublicPrivateFlag)
 			zap.L().Info(fmt.Sprintf("minShengBankSDK.QueryTransferResult查询转账结果:%v", result))
 			if err != nil {
 				zap.L().Info(fmt.Sprintf("HandleMinShengBankSyncTransferReceipt查询转账结果失败:%v", err))

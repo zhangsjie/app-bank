@@ -14,7 +14,7 @@ import (
 // 民生银行接口对接
 type MinShengSDK interface {
 	BankTransfer(ctx context.Context, req stru.MinShengTransferRequest) (map[string]interface{}, error)
-	QueryTransferResult(ctx context.Context, acctNo, orgReqSeq, openId string) (map[string]interface{}, error)
+	QueryTransferResult(ctx context.Context, acctNo, orgReqSeq, openId, publicPrivateFlag string) (map[string]interface{}, error)
 	ListTransactionDetail(ctx context.Context, accountNo, beginDate, endDate, startIndex, endIndex, openId string) (map[string]interface{}, error)
 	GetTransactionDetailElectronicReceipt(ctx context.Context, acctNo, transSeqNo, enterAcctDate, openId string) (map[string]interface{}, error)
 	AuthRequest(ctx context.Context, entCifno, acctNo, reqSeq string) (map[string]interface{}, error)
@@ -43,12 +43,18 @@ func (s *minShengSDK) BankTransfer(ctx context.Context, req stru.MinShengTransfe
 	busiParamMap["payee_acct_name"] = req.PayeeAcctName
 	busiParamMap["fast_auth_flag"] = "2"
 
-	//若快捷审批标识fastAuthFlag 值为 1，则校验通过为快捷审批模式，不通过则报错;
-	//若快捷审批标识fastAuthFlag 为其他，则不进行校验，为预填单模式;若快捷审批标识fastAuthFlag 不上送，则校验通过为快捷审批模式，不通为预填单模式
-	// 请求民生接口方法名
-	method := "settlement.transfer.ent_single_order"
+	var method string
+	var version string
+	//0:对公 1:对私
+	if req.PublicPrivateFlag == "0" {
+		method = "settlement.transfer.ent_single_order"
+		version = "V1.0"
+	} else if req.PublicPrivateFlag == "1" {
+		method = "settlement.reimburse.single"
+		version = "V1.0"
+		busiParamMap["usage"] = "办公费"
+	}
 	// 民生接口版本号
-	version := "V1.0"
 	response, err := s.invokeMinSheng(ctx, method, version, busiParamMap)
 	if err != nil {
 		return nil, err
@@ -56,7 +62,7 @@ func (s *minShengSDK) BankTransfer(ctx context.Context, req stru.MinShengTransfe
 	return response, nil
 }
 
-func (s *minShengSDK) QueryTransferResult(ctx context.Context, acctNo, orgReqSeq, openId string) (map[string]interface{}, error) {
+func (s *minShengSDK) QueryTransferResult(ctx context.Context, acctNo, orgReqSeq, openId, publicPrivateFlag string) (map[string]interface{}, error) {
 	id, sfErr := util.SonyflakeID()
 	if sfErr != nil {
 		return nil, handler.HandleError(sfErr)
@@ -67,10 +73,23 @@ func (s *minShengSDK) QueryTransferResult(ctx context.Context, acctNo, orgReqSeq
 	busiParamMap["acct_no"] = acctNo
 	busiParamMap["org_req_seq"] = orgReqSeq
 	busiParamMap["open_id"] = openId
-	// 请求民生接口方法名
-	method := "settlement.transfer.ent_single_order_qry"
-	// 民生接口版本号
-	version := "V1.0"
+
+	var method string
+	var version string
+
+	if publicPrivateFlag == "0" {
+		// 请求民生接口方法名
+		method = "settlement.transfer.ent_single_order_qry"
+		// 民生接口版本号
+		version = "V1.0"
+	} else if publicPrivateFlag == "1" {
+
+		// 请求民生接口方法名
+		method = "settlement.reimburse.single_query"
+		// 民生接口版本号
+		version = "V1.0"
+	}
+
 	response, err := s.invokeMinSheng(ctx, method, version, busiParamMap)
 	if err != nil {
 		return nil, err
