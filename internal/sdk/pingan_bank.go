@@ -229,7 +229,6 @@ func (s *pinganBankSDK) ListTransactionDetail(ctx context.Context, account strin
 		pageNumStr := strconv.Itoa(pageNum)
 		pageSizeStr := strconv.Itoa(pageSize)
 		requestBody := &stru.PinganHistoryTransactionDetailsRequest{
-			MrchCode:   config.GetString(enum.PinganIntelligenceMrchCode, ""),
 			CnsmrSeqNo: serialNo,
 			AcctNo:     account,
 			CcyCode:    "RMB",
@@ -238,17 +237,25 @@ func (s *pinganBankSDK) ListTransactionDetail(ctx context.Context, account strin
 			PageNo:     pageNumStr,
 			PageSize:   pageSizeStr,
 		}
-		requestBodyJson, _ := json.Marshal(requestBody)
+
 		var request *stru.PingAnBankRequestBody
 
 		interfaceType := 1
-		if account == config.GetString(enum.PinganIntelligenceAccountNo, "") {
-			requestBody.MrchCode = config.GetString(enum.PinganIntelligenceMrchCode, "")
+		interfaceName := "/bedl/InquiryAccountDayHistoryTransactionDetails"
+
+		if account == config.GetString(enum.PinganPlatformAccount, "") {
+			interfaceType = 1
+			interfaceName = "/bedl/InquiryAccountDayHistoryTransactionDetails"
+			requestBody.MrchCode = config.GetString(enum.PinganMrchCode, "")
+		} else if account == config.GetString(enum.PinganIntelligenceAccountNo, "") {
 			interfaceType = 2 //灵工平台接口
+			interfaceName = "/bedl/InquiryAccountDayHistoryTransactionDetails"
+			requestBody.MrchCode = config.GetString(enum.PinganIntelligenceMrchCode, "")
 		}
+		requestBodyJson, _ := json.Marshal(requestBody)
 		request = &stru.PingAnBankRequestBody{
 			RequestBody:   string(requestBodyJson),
-			InterfaceName: "/bedl/InquiryAccountDayHistoryTransactionDetails",
+			InterfaceName: interfaceName,
 			InterfaceType: interfaceType,
 		}
 

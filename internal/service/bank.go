@@ -1458,11 +1458,11 @@ func (s *bankService) HandleTransactionDetail(ctx context.Context, beginDate str
 		yesterdayString := util.FormatTimeyyyyMMdd(yesterday)
 		s.HandlePinganBankTransactionDetail(ctx, enum.PinganBankType, beginDate, yesterdayString, organizationId)
 	}
-	//若endDate==今天,那么要分成两部分来进行
-	s.HandlePinganBankVirtualTransactionDetail(ctx, enum.PinganBankType, beginDate, endDate, organizationId)
-	if endDate == util.FormatTimeyyyyMMdd(now) {
-		s.HandlePinganBankVirtualTransactionDetail(ctx, enum.PinganBankType, endDate, endDate, organizationId)
-	}
+	////若endDate==今天,那么要分成两部分来进行
+	//s.HandlePinganBankVirtualTransactionDetail(ctx, enum.PinganBankType, beginDate, endDate, organizationId)
+	//if endDate == util.FormatTimeyyyyMMdd(now) {
+	//	s.HandlePinganBankVirtualTransactionDetail(ctx, enum.PinganBankType, endDate, endDate, organizationId)
+	//}
 	//查询工商银行
 	s.IcbcBankListTransactionDetail(ctx, beginDate, endDate, organizationId)
 	return nil
@@ -2118,6 +2118,7 @@ func (s *bankService) HandlePinganBankTransactionDetail(ctx context.Context, ban
 					if err != nil {
 						continue
 					}
+					summary := data.AbstractStrDesc + "-" + data.Purpose
 					transactionDetailDBData := repo.BankTransactionDetailDBData{
 						BaseDBData: repository.BaseDBData{
 							OrganizationId: bankAccount.OrganizationId,
@@ -2140,7 +2141,7 @@ func (s *bankService) HandlePinganBankTransactionDetail(ctx context.Context, ban
 						VouchersType:       "",
 						VouchersNo:         "",
 						SummaryNo:          data.AbstractStr,
-						Summary:            data.AbstractStrDesc,
+						Summary:            summary,
 						AcctNo:             oppAccountNo,
 						AccountName:        oppAccountName,
 						AccountOpenNode:    oppAccountBankName,
