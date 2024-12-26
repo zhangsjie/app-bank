@@ -2751,18 +2751,26 @@ func (s *bankService) HandlePinganBankSyncTransferReceipt(ctx context.Context, b
 	if transferReceiptList != nil && len(*transferReceiptList) > 0 {
 		zap.L().Info(fmt.Sprintf("pinganBankSDK.QueryTransferResult当前批次处理平安%v条数据,data=%v", len(*transferReceiptList), transferReceiptList))
 		for _, transferReceipt := range *transferReceiptList {
-
-			bankAccount, err := s.baseClient.GetOrganizationBankAccount(ctx, &baseApi.OrganizationBankAccountData{
-				OrganizationId: transferReceipt.OrganizationId,
-				Type:           bankType,
-				Account:        transferReceipt.PayAccount,
-			})
-			if err != nil {
-				zap.L().Info(fmt.Sprintf("HandlePinganBankSyncTransferReceipt查询账号详情失败:%v", err))
-				continue
+			//区分是否灵活用工的转账请求,以此来判断用哪个账号
+			account := ""
+			zuId := ""
+			if strings.HasPrefix(transferReceipt.SerialNo, bankEnum.PinganFlexPrefix) {
+				account = config.GetString(bankEnum.PinganIntelligenceAccountNo, "")
+			} else {
+				bankAccount, err := s.baseClient.GetOrganizationBankAccount(ctx, &baseApi.OrganizationBankAccountData{
+					OrganizationId: transferReceipt.OrganizationId,
+					Type:           bankType,
+					Account:        transferReceipt.PayAccount,
+				})
+				if err != nil {
+					zap.L().Info(fmt.Sprintf("HandlePinganBankSyncTransferReceipt查询账号详情失败:%v", err))
+					continue
+				}
+				zuId = bankAccount.ZuId
+				account = transferReceipt.PayAccount
 			}
 
-			result, err := s.pinganBankSDK.QueryTransferResult(ctx, transferReceipt.SerialNo, bankAccount.ZuId, bankAccount.Account)
+			result, err := s.pinganBankSDK.QueryTransferResult(ctx, transferReceipt.SerialNo, zuId, account)
 			zap.L().Info(fmt.Sprintf("pinganBankSDK.QueryTransferResult查询转账结果:%v", result))
 			if err != nil {
 				zap.L().Info(fmt.Sprintf("HandlePinganBankSyncTransferReceipt查询转账结果失败:%v", err))
@@ -2774,6 +2782,9 @@ func (s *bankService) HandlePinganBankSyncTransferReceipt(ctx context.Context, b
 			// 获取映射的订单状态
 			result.Stt = enum.GetOrderState(result.Stt, result.Stt)
 			zap.L().Info(fmt.Sprintf("enum.GetOrderState获取平安的状态:%v", result.Stt))
+			if result.IsBack == "1" { //1:代表银行退票,收款行表示账号异常退回该转账
+				result.Stt = enum.GuilinBankTransferRejectResult
+			}
 			//比较订单状态
 			if result.Stt == transferReceipt.OrderState {
 				zap.L().Info(fmt.Sprintf("transferReceipt.OrderState当前交易状态没有更新result.Stt:%v,transferReceipt.OrderState:%v", result.Stt, transferReceipt.OrderState))
