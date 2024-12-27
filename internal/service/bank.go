@@ -2065,6 +2065,11 @@ func (s *bankService) HandlePinganBankTransactionDetail(ctx context.Context, ban
 			var addDatas []repo.BankTransactionDetailDBData
 			feeMap := make(map[string]string)
 			var rechargeList []*flexApi.FlexVirtualAccountRechargeFlowItem
+
+			const layoutISOTime = "150405"
+
+			const outputLayTime = "15:04:05"
+
 			for _, data := range datas {
 				count, err := s.bankTransactionDetailRepo.Count(ctx, &repo.BankTransactionDetailDBDataParam{
 					BankTransactionDetailDBData: repo.BankTransactionDetailDBData{
@@ -2095,7 +2100,16 @@ func (s *bankService) HandlePinganBankTransactionDetail(ctx context.Context, ban
 					if err != nil {
 						continue
 					}
+					// 解析时间字符串
 
+					transDate := data.AcctDate
+
+					t2, err := time.Parse(layoutISOTime, data.TxTime)
+					if err != nil {
+						fmt.Println("Error parsing time:", err)
+						return err
+					}
+					transTime := t2.Format(outputLayTime)
 					//对方银行
 					oppAccountNo := ""
 					oppAccountName := ""
@@ -2130,8 +2144,8 @@ func (s *bankService) HandlePinganBankTransactionDetail(ctx context.Context, ban
 						PayAmount:           payAmount,
 						RecAmount:           recAmount,
 						BsnType:             "TR", // 写死TR: 转账
-						TransferDate:        data.AcctDate,
-						TransferTime:        data.TxTime,
+						TransferDate:        transDate,
+						TransferTime:        transDate + transTime,
 						TranChannel:         "",
 						CurrencyType:        "CNY",
 						Balance:             acctBalance,
