@@ -2164,7 +2164,7 @@ func (s *bankService) HandlePinganBankTransactionDetail(ctx context.Context, ban
 						ExtField1:          data.TranFee,
 					}
 
-					if bankAccount.Account == config.GetString(bankEnum.PinganIntelligenceAccountNo, "") && data.DcFlag == "C" {
+					if data.InAcctNo == config.GetString(bankEnum.PinganIntelligenceAccountNo, "") && data.DcFlag == "C" {
 						rechargeList = append(rechargeList, &flexApi.FlexVirtualAccountRechargeFlowItem{
 							RecAccountNo:      bankAccount.Account,
 							RecAccountName:    bankAccount.AccountName,
